@@ -33,6 +33,10 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 | Security review | `skills/harness/security-review/SKILL.md` |
 | Context pressure | `skills/harness/strategic-compact/SKILL.md` |
 | Architecture decisions | `skills/harness/architecture-decision-records/SKILL.md` |
+| Project memory (decisions, instincts, handoff) | `.memory/README.md` |
+| Local FREEPDB1 sandbox and promotion audit | `local-dev/README.md` |
+| Static verification of changed files | `scripts/verify-apex-change.ps1` |
+| v3 blueprint corrections and rejected claims | `docs/adr/0004-v3-blueprint-corrections.md` |
 
 **Path mapping.** The vendored routers use upstream repository-root paths. Resolve `apex/...` as `skills/apex/...` and `db/...` as `skills/db/...` when following those routers.
 
@@ -46,6 +50,8 @@ Use `skills/apex-domains/SKILL.md` for work that crosses business meaning and im
 4. **APEXLang implementation** — version lock, file map, component selection, validation.
 
 For a new feature, do not jump to pages. Establish the domain model, rule catalogue, and page map first. Keep business rules in PL/SQL packages; page processes orchestrate calls. Every accepted rule needs one implementation home and a test.
+
+PL/SQL mode also reads `skills/apex-domains/references/smartdb-plsql.md` for the TAPI/XAPI contract, PL/Scope checks, utPLSQL, and target-version SQL compatibility. APEX design mode also reads `skills/apex-domains/references/universal-theme.md` for Theme 42, template, accessibility, and compiler-truth rules.
 
 ## Multi-harness entry points
 
@@ -93,10 +99,11 @@ The project constitution is already initialized at `.specify/memory/constitution
 
 Then run the APEX gates:
 
-1. **Validate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory <app-dir>`
-2. **Review**: use the `apex-reviewer` subagent for APEXLang, SQL, security, and performance.
-3. **Deploy** (only on explicit request): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-dir> -WhatIf` first, then run without `-WhatIf`.
-4. **Verify**: follow `skills/apex-delivery/SKILL.md` and produce a PASS/FAIL report.
+1. **Static verify**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apex-change.ps1 -AppDirectory <app-dir>`; use `-Strict` for a release candidate.
+2. **Validate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory <app-dir>`
+3. **Review**: use the `apex-reviewer` subagent for APEXLang, SQL, security, and performance.
+4. **Deploy** (only on explicit request): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-dir> -WhatIf` first, then run without `-WhatIf`.
+5. **Verify**: follow `skills/apex-delivery/SKILL.md` and produce a PASS/FAIL report.
 
 ## Environment
 
@@ -110,7 +117,9 @@ Run the harness setup before APEX commands:
 - `JAVA_HOME`: JDK 21 (installed at `C:\Program Files\Microsoft\jdk-*`).
 - `SQLCL_BIN`: defaults to `tools\sqlcl\bin\sql.exe`.
 - `SQLCL_CONNECTION_STRING`: set by the user for deploy; never commit it.
+- `TARGET_DB_VERSION`: confirm `19c`, `23ai`, or `26ai` before using newer SQL. The compatibility matrix is in `skills/apex-domains/references/smartdb-plsql.md`.
 - SQLcl 26.3+ is expected. `apex validate` requires no database connection; `apex import` does.
+- OpenCode v2 (2.x) is required because `opencode.jsonc` uses the v2 `permissions` ruleset. Run `scripts/install-opencode-v2.ps1` once; `set-env.ps1` puts `tools\opencode-v2` first on `PATH`. `harness-doctor.ps1` fails if the config is rejected.
 
 ## APEXLang conventions
 
@@ -118,15 +127,26 @@ Run the harness setup before APEX commands:
 - Do not copy template docs or `scaffold-example/` containers into an app root.
 - `.apx` files must use LF line endings. SQLcl's APEX parser rejects CRLF with misleading token errors. If validation reports CRLF, run `scripts/normalize-apx-tree.ps1 -AppDirectory <app-dir>` and re-validate.
 - Resolve the target app directory before editing. If `applications/` is missing, ask for the exact app directory; do not silently create or relocate apps.
-- Keep raw grammar, the full component registry, and template trees out of context. Use the skill's `apexctl.mjs` projections.
+- Keep raw grammar, the full component registry, and template trees out of context. Use the 26.1 generation skill's `tools/apexctl.mjs` projections (restored at the pinned upstream commit).
+- For 26.2, there is no generation skill; author with the 26.2 inventory and example applications.
 - For a new app from requirements plus schema metadata, follow `skills/apex/apexlang/26.1/apexlang-generation/references/workflows/apexlang/workflow-create-app-from-fr-and-model.md`.
 
 ## Database safety
 
 - Prefer `skills/db/agent/schema-discovery.md` before writing SQL against an unknown schema.
+- Use SQLcl MCP (`oracle-sqlcl`) for live schema discovery. Query the catalog at task start; do not cache table or column lists in memory files.
 - Wrap multi-statement changes in explicit transactions with a rollback path.
 - Never run `DROP`, `TRUNCATE`, `DELETE` without a `WHERE` clause, or `ALTER SYSTEM` without explicit approval.
+- Local `FREEPDB1` may use full schema access for development. Commercial and shared targets are read-only by default; use a least-privilege saved connection and a separate approval for changes.
+- The optional local sandbox and the read-only promotion audit are documented in `local-dev/README.md`.
+- Do not require `uc-apx`: it has no license. Do not treat `tree-sitter-plsql` as a gate until a tested grammar and query suite are recorded in an ADR.
 - For migrations, follow `skills/db/devops/schema-migrations.md` and `skills/db/migrations/migration-assessment.md`.
+
+## Project memory
+
+- Read `.memory/README.md` at the start of long-running work; update `session-handoff.md` at a task boundary.
+- `decisions.md` is for project decisions smaller than an ADR. `instincts.md` requires evidence; it is not a place for guesses.
+- Never store credentials, connection strings, wallet contents, generated SQL output, or schema caches in `.memory/`.
 
 ## Quality gates
 

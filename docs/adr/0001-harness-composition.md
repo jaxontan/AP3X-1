@@ -1,6 +1,6 @@
 # ADR-0001: Compose the harness from Oracle skills, Spec Kit, and curated ECC skills
 
-- Status: Accepted
+- Status: Accepted; MCP deferral superseded by ADR-0003
 - Date: 2026-10-27
 
 ## Context
@@ -28,7 +28,7 @@ Installing every available skill would create a large, overlapping routing surfa
 - **Full ECC install.** Rejected: 311 skills and 71 agents are mostly general software engineering, require a global config, and would dilute APEX routing. The curated subset covers the harness needs.
 - **Oracle skills only.** Rejected: no specification process, no eval or verification discipline, and no clear deployment gate.
 - **Spec Kit only.** Rejected: no Oracle domain knowledge, no SQLcl validation, and no database safety rules.
-- **MCP database server first.** Deferred: a live database tool is useful, but it adds a credential-bearing service before the basic validate/deploy loop is proven. SQLcl wrappers are the smaller first step.
+- **MCP database server first.** Deferred: a live database tool is useful, but it adds a credential-bearing service before the basic validate/deploy loop is proven. SQLcl wrappers are the smaller first step. Superseded by ADR-0003 after the offline validate/deploy loop was proven.
 
 ## Consequences
 

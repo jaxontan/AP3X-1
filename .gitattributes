@@ -8,6 +8,7 @@
 *.jsonc text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+*.env.example text eol=lf
 *.sh text eol=lf
 *.py text eol=lf
 *.txt text eol=lf
@@ -16,8 +17,9 @@
 *.html text eol=lf
 *.css text eol=lf
 
-# Windows scripts stay CRLF-friendly for PowerShell 5.1.
+# Windows scripts stay CRLF-friendly for PowerShell 5.1 and cmd.exe.
 *.ps1 text eol=crlf
+*.cmd text eol=crlf
 
 # Binary assets.
 *.png binary

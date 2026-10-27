@@ -10,14 +10,46 @@
 
   "instructions": ["AGENTS.md"],
   "skills": ["./skills"],
+
+  // Live database access through the SQLcl MCP server. Connections are
+  // pre-saved with `conn -save ... -savepwd`; no credentials live here.
+  // -R 1 allows SQL and most SQLcl commands but blocks host/OS escapes.
+  // Run `scripts/set-env.ps1` before starting OpenCode so `sql` is on PATH.
+  "mcp": {
+    "timeout": {
+      "startup": 60000
+    },
+    "servers": {
+      "oracle-sqlcl": {
+        "type": "local",
+        "command": ["cmd", "/c", "scripts\\sqlcl-mcp.cmd"],
+        "environment": {
+          "JAVA_TOOL_OPTIONS": "-Djava.awt.headless=true -Dfile.encoding=UTF-8"
+        },
+        "codemode": false
+      }
+    }
+  },
+
+  // OpenCode v2 permission rules. The last matching rule wins, so broad
+  // rules come first and narrower exceptions follow. OpenCode v1 rejects
+  // this key; use OpenCode v2 (the opencode2 shim) for this project.
   "permissions": [
     { "action": "shell", "resource": "*", "effect": "allow" },
+
+    // SQLcl MCP tools are the live-database boundary. SQL is allowed;
+    // AGENTS.md still requires explicit approval for destructive changes.
+    { "action": "oracle-sqlcl_*", "resource": "*", "effect": "allow" },
 
     // Destructive filesystem and git operations need confirmation.
     { "action": "shell", "resource": "*Remove-Item*", "effect": "ask" },
     { "action": "shell", "resource": "*rm *", "effect": "ask" },
+    { "action": "shell", "resource": "rm *", "effect": "ask" },
     { "action": "shell", "resource": "*git push*", "effect": "ask" },
     { "action": "shell", "resource": "*git reset --hard*", "effect": "ask" },
+    { "action": "shell", "resource": "*git clean*", "effect": "ask" },
+    { "action": "shell", "resource": "*git checkout --*", "effect": "ask" },
+    { "action": "shell", "resource": "*git restore*", "effect": "ask" },
 
     // Database changes need confirmation. Read-only SQL stays allowed.
     { "action": "shell", "resource": "*apex import*", "effect": "ask" },
@@ -26,17 +58,22 @@
     { "action": "shell", "resource": "*delete *", "effect": "ask" },
     { "action": "shell", "resource": "*alter system*", "effect": "ask" },
 
-    // Keep credentials out of model context.
-    { "action": "read", "resource": "**/.env", "effect": "deny" },
-    { "action": "read", "resource": "**/.env.*", "effect": "deny" },
-    { "action": "read", "resource": "**/*.pem", "effect": "deny" },
-    { "action": "read", "resource": "**/*.key", "effect": "deny" },
-    { "action": "read", "resource": "**/*.p12", "effect": "deny" },
-    { "action": "read", "resource": "**/*.jks", "effect": "deny" },
-    { "action": "read", "resource": "**/cwallet.sso", "effect": "deny" },
+    // V2 defaults to allowing paths outside the workspace. The harness keeps
+    // the stricter v1 default and asks before crossing that boundary.
+    { "action": "external_directory", "resource": "*", "effect": "ask" },
+
+    // Keep credentials out of model context. In v2, "*" also matches "/",
+    // so these patterns cover root-level files and nested directories.
+    { "action": "read", "resource": "*.env", "effect": "deny" },
+    { "action": "read", "resource": "*.env.*", "effect": "deny" },
+    { "action": "read", "resource": "*.pem", "effect": "deny" },
+    { "action": "read", "resource": "*.key", "effect": "deny" },
+    { "action": "read", "resource": "*.p12", "effect": "deny" },
+    { "action": "read", "resource": "*.jks", "effect": "deny" },
+    { "action": "read", "resource": "*cwallet.sso", "effect": "deny" },
 
     // Templates are safe to read and are useful setup references.
-    { "action": "read", "resource": "**/.env.example", "effect": "allow" }
+    { "action": "read", "resource": "*.env.example", "effect": "allow" }
   ],
   "watcher": {
     "ignore": ["tools/**", "node_modules/**", ".git/**"]

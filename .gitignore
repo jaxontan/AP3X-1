@@ -1,5 +1,6 @@
-# Local toolchain (SQLcl is ~124 MB)
-tools/
+# Local toolchain (SQLcl is ~124 MB). Anchor to the repository root so the
+# vendored APEXLang generation `tools/` directory is not ignored.
+/tools/
 
 # Dependencies
 node_modules/
@@ -19,6 +20,9 @@ ewallet.p12
 .opencode/node_modules/
 .opencode/*.local.*
 .specify/feature.json
+local-dev/uc-local-apex-dev/
+snapshot_*.csv
+promotion_audit_*.txt
 
 # Editor and OS noise
 .vscode/

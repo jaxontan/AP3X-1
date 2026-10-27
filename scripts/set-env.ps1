@@ -1,9 +1,9 @@
 # Dot-source this file to configure the APEX harness environment:
 #   . .\scripts\set-env.ps1
 #
-# It locates the installed JDK and the project-local SQLcl, prepends them to
-# PATH, and sets SQLCL_BIN when it is not already set. It does not set or print
-# SQLCL_CONNECTION_STRING.
+# It locates the installed JDK, uv/Spec Kit, and the project-local SQLcl,
+# prepends them to PATH, and sets SQLCL_BIN when it is not already set. It does
+# not set or print SQLCL_CONNECTION_STRING.
 
 $HarnessRoot = Split-Path -Parent $PSScriptRoot
 $SqlclHome = Join-Path $HarnessRoot 'tools\sqlcl'
@@ -24,6 +24,13 @@ if ($env:JAVA_HOME) {
     }
 }
 
+$uvBin = Join-Path $env:USERPROFILE '.local\bin'
+if (Test-Path (Join-Path $uvBin 'uv.exe')) {
+    if ($env:Path -notlike "*$uvBin*") {
+        $env:Path = "$uvBin;$env:Path"
+    }
+}
+
 $sqlclExe = Join-Path $SqlclHome 'bin\sql.exe'
 if (Test-Path $sqlclExe) {
     $sqlclBin = Join-Path $SqlclHome 'bin'
@@ -32,6 +39,14 @@ if (Test-Path $sqlclExe) {
     }
     if (-not $env:SQLCL_BIN) {
         $env:SQLCL_BIN = $sqlclExe
+    }
+}
+
+$openCodeHome = Join-Path $HarnessRoot 'tools\opencode-v2'
+$openCodeExe = Join-Path $openCodeHome 'opencode.exe'
+if (Test-Path $openCodeExe) {
+    if ($env:Path -notlike "*$openCodeHome*") {
+        $env:Path = "$openCodeHome;$env:Path"
     }
 }
 

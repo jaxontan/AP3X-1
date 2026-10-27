@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "oracle-sqlcl": {
+      "command": "cmd",
+      "args": ["/c", "scripts\\sqlcl-mcp.cmd"],
+      "env": {
+        "JAVA_TOOL_OPTIONS": "-Djava.awt.headless=true -Dfile.encoding=UTF-8"
+      }
+    }
+  }
+}

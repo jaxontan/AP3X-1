@@ -26,10 +26,27 @@ Recommended adoption:
 - Oracle Skills repository: https://github.com/oracle/skills
   - APEX routing: `skills/apex/SKILL.md`
   - Database routing: `skills/db/SKILL.md`
+  - 26.1 generation tool: `skills/apex/apexlang/26.1/apexlang-generation/tools/apexctl.mjs`
 - GitHub Spec Kit: https://github.com/github/spec-kit
   - Specification workflow: `.specify/templates/` and `.opencode/commands/speckit.*.md`
 - ECC: https://github.com/affaan-m/ECC
   - Curated meta-skills: `skills/harness/`
+
+## Local development and promotion
+
+- `United-Codes/uc-local-apex-dev`: https://github.com/United-Codes/uc-local-apex-dev
+  - MIT; optional local `FREEPDB1` sandbox pinned to branch `26-2` by `scripts/install-local-apex.ps1`.
+  - Requires Docker or Podman. The sandbox has not been executed on this machine.
+- `United-Codes/uc-apx`: https://github.com/United-Codes/uc-apx
+  - No license. Reviewed only; not vendored, required, or invoked.
+- `AndreasMaierDe/tree-sitter-plsql`: https://github.com/AndreasMaierDe/tree-sitter-plsql
+  - Stale and incomplete. Not a gate; no `.scm` queries are shipped.
+- SQLcl 26.3 `PROJECT` and `SKILLS` commands: verify with `sql -R 1` and `help project` / `help skills`. Projects create `.dbtools/project.config.json`.
+
+## Project memory
+
+- `.memory/README.md` — what is safe to persist.
+- Do not use `.memory/` for live schema metadata or credentials. Query the parsing schema through SQLcl MCP instead.
 
 ## OpenCode
 

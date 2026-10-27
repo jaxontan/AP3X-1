@@ -1,8 +1,8 @@
 # Provenance and Installed Components
 
-Recorded: 2026-10-27
+Recorded: 2026-10-28
 
-This harness composes three upstream layers: Oracle domain skills, a spec-driven delivery process, and a small set of agent-harness meta-skills. This file records exactly what was installed, from where, and under which license.
+This harness composes three upstream layers: Oracle domain skills, a spec-driven delivery process, and a small set of agent-harness meta-skills. It also has optional local-development and project-memory layers. This file records exactly what was installed, from where, and under which license.
 
 ## 1. Oracle Skills (domain layer)
 
@@ -19,6 +19,21 @@ APEXlang routing:
 - `skills/apex/apexlang/SKILL.md` selects 26.1 or 26.2 from `mmdVersion`.
 - 26.1 includes `apexlang-generation`, `apexlang-compile`, `apexlang-deploy`, `apexlang-inventory`, and `apexlang-example-applications`.
 - 26.2 includes compile, deploy, inventory, and example applications. It has no generation skill; author with 26.2 inventory and examples only.
+
+### Restored 26.1 generation tools
+
+The initial vendored copy of `skills/apex/apexlang/26.1/apexlang-generation/` was missing its `tools/` directory, so the skill's documented `apexctl.mjs` commands were unavailable. The directory was restored from the same pinned upstream commit (`014cdb29f12dfa6a689bbe8a80ee1c5f0bf15be1`) via `raw.githubusercontent.com`:
+
+- `tools/apexctl.mjs`
+- `tools/compiler-truth-audit.mjs`
+- `tools/query-valid-props.mjs`
+- `tools/query-valid-props-context.mjs`
+- `tools/query-valid-props-normalize.mjs`
+- `tools/query-valid-props-runtime.mjs`
+- `tools/query-valid-props-semantics.mjs`
+- `tools/query-valid-props-template-components.mjs`
+
+`node tools/apexctl.mjs --help` succeeds and lists the workspace, new-app, runtime, and predeploy commands. Only `--help` was exercised; the runtime and database-backed paths were not.
 
 ### Windows line endings
 
@@ -82,14 +97,35 @@ ECC skills are generic and occasionally mention Claude Code-specific commands. T
 | --- | --- | --- | --- |
 | Microsoft OpenJDK 21 | 21.0.13 | `C:\Program Files\Microsoft\jdk-21.0.13.21-hotspot` | `winget install Microsoft.OpenJDK.21` |
 | Oracle SQLcl | 26.3.0 | `tools\sqlcl` | https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip |
-| Node.js | 24.19.0 | system | pre-existing |
+| Node.js | 24.21.0 | system | pre-existing |
 | Python | 3.12.10 | system | pre-existing |
-| uv | 0.12.19 | system | pre-existing |
-| OpenCode | 2.0.32 | system | pre-existing |
+| uv | 0.13.6 | `%USERPROFILE%\.local\bin` | Official `astral.sh/uv` installer |
+| specify-cli | 1.2.3 | `%USERPROFILE%\.local\bin` | `uv tool install specify-cli` |
+| OpenCode | 2.2.0 | `tools\opencode-v2` | Standalone Windows x64 zip via `scripts/install-opencode-v2.ps1` |
+
+OpenCode v1 rejects the project's v2 `permissions` ruleset. The project-local v2 binary is selected by `scripts/set-env.ps1`; the installer also writes an `opencode2.cmd` shim beside it.
 
 `tools/` is gitignored because SQLcl is a 124 MB binary distribution. Recreate it with `scripts/install-sqlcl.ps1`.
 
 ## 5. Reviewed but not vendored
+
+### United-Codes/uc-apx
+
+- Repository: https://github.com/United-Codes/uc-apx
+- License: none (GitHub API returns `null` for the license)
+- Decision: not used as a dependency, vendor target, or gate. A repository without a license does not grant redistribution or derivative-use rights. The harness does not run `uc-apx skills sync` or require its Agent Skills format.
+
+### United-Codes/uc-local-apex-dev
+
+- Repository: https://github.com/United-Codes/uc-local-apex-dev
+- License: MIT
+- Decision: optional local sandbox only. The harness wrapper pins `26-2` because this repository supports APEX 26.1 and 26.2; the upstream default branch (`26-4`) is newer than the supported lock. Requires Docker or Podman, and the sandbox was not executed on this machine.
+
+### tree-sitter PL/SQL
+
+- `AndreasMaierDe/tree-sitter-plsql` is stale and incomplete.
+- The proposed `njank/tree-sitter-plsql` link is not a verified fork; the cited Graphify issue is about a different problem.
+- Decision: no tree-sitter grammar or `.scm` query ships as a gate. Use SQLcl `apex validate`, Oracle compilation and `USER_ERRORS`, PL/Scope, and `scripts/verify-apex-change.ps1`.
 
 ### srinivaskikkuru/Developer-Cookbook
 
@@ -116,7 +152,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\normalize-apx-tree
 # skills\db\SKILL.md if the copy overwrote it (see section 1 above).
 ```
 
-After updating, validate one 26.1 and one 26.2 example application again. Re-adding the Oracle trees also replaces the APEX license notice; keep `skills/ORACLE-LICENSE.txt` current.
+After updating, confirm `skills/apex/apexlang/26.1/apexlang-generation/tools/apexctl.mjs` exists and `node tools/apexctl.mjs --help` succeeds. Then validate one 26.1 and one 26.2 example application again. Re-adding the Oracle trees also replaces the APEX license notice; keep `skills/ORACLE-LICENSE.txt` current.
+
+Do not run SQLcl `skills sync` against the vendored tree without review: it can overwrite the version-locked skills and the LF/path-mapping adaptations. If SQLcl skills are used, sync into a temporary location and diff first.
 
 Update Spec Kit:
 
@@ -131,12 +169,18 @@ Update curated ECC skills: re-clone ECC, review the diff for the 10 selected ski
 
 These files are authored for this harness, not copied from an upstream catalog:
 
-- `skills/apex-domains/` — four-domain workflow, references, templates, and design-review checklist.
+- `skills/apex-domains/` — four-domain workflow, references, templates, and design-review checklist, including `smartdb-plsql.md` and `universal-theme.md`.
 - `skills/apex-delivery/` — APEX delivery and verification gates.
+- `scripts/verify-apex-change.ps1` and `.opencode/commands/apex.verify.md` — changed-file verification gate.
+- `scripts/install-local-apex.ps1`, `local-dev/` — optional `FREEPDB1` sandbox, snapshot, and promotion audit.
+- `.memory/` — decisions, evidence-backed instincts, and session handoff templates.
+- `db/README.md` — database artifact routing note; no parallel database tree.
 - `CLAUDE.md`, `.claude/skills/oracle-apex/SKILL.md` — Claude Code and VS Code Claude adapter.
 - `.agents/skills/oracle-apex.md`, `.agents/rules/oracle-apex.md` — DSH and Antigravity adapters.
 - `.opencode/agents/` and `.opencode/commands/apex.*` — OpenCode roles and APEX commands.
 - `docs/harnesses/README.md` — host pairing matrix and no-API-key setup.
 - `docs/adr/0002-multi-harness-and-four-domains.md` — rationale for the adapter and four-domain design.
+- `docs/adr/0003-sqlcl-mcp-live-schema.md` — SQLcl MCP live-schema decision.
+- `docs/adr/0004-v3-blueprint-corrections.md` — v3 blueprint adoption and rejected claims.
 
 The harness does not require an API key. Host login state and local models are environment concerns; no credentials are stored in the repository.

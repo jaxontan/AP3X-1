@@ -18,11 +18,20 @@ The Oracle APEX harness is host-agnostic. `AGENTS.md` is the canonical instructi
 ## OpenCode
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-opencode-v2.ps1
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 . .\scripts\set-env.ps1
+opencode --version
 opencode
 ```
 
-`opencode.jsonc` pins a free model by default. Change it only to another zero-cost model. The harness denies reads of `.env`, `.pem`, `.key`, `.p12`, `.jks`, and wallet files.
+If the machine policy blocks dot-sourcing, the process-scoped line is required; it does not change the machine policy. You can also run scripts individually with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
+
+`opencode.jsonc` pins a free model by default. Change it only to another zero-cost model.
+
+The project also configures the SQLcl MCP server as `oracle-sqlcl`. Check it with `opencode2 mcp list`; it should report `connected`. The wrapper is `scripts/sqlcl-mcp.cmd` and requires the local JDK/SQLcl paths from `set-env.ps1`. Keep the permission for `oracle-sqlcl_*` at `ask` unless you intentionally want unattended database calls.
+
+The project uses the OpenCode v2 `permissions` ruleset, not the legacy v1 `permission` object. v1 fails with `V2 permissions are not supported by OpenCode V1`; install v2 or run it through the `opencode2` shim. `install-opencode-v2.ps1` places the standalone Windows x64 binary in `tools\opencode-v2\`, and `set-env.ps1` puts it first on `PATH`. The harness allows routine shell work, asks before destructive filesystem/git operations and database DDL/DML, asks before paths outside the workspace, and denies reads of `.env`, `.pem`, `.key`, `.p12`, `.jks`, and wallet files. Use `opencode debug config` to verify the resolved rules; `harness-doctor.ps1` fails if the config is rejected.
 
 ## Codex CLI
 

@@ -21,11 +21,12 @@ function Get-ToolPath {
 
 $sqlclPath = if ($env:SQLCL_BIN -and (Test-Path $env:SQLCL_BIN)) { $env:SQLCL_BIN } else { $null }
 $specifyPath = Get-ToolPath 'specify' (Join-Path $env:USERPROFILE '.local\bin\specify.exe')
+$uvPath = Get-ToolPath 'uv' (Join-Path $env:USERPROFILE '.local\bin\uv.exe')
 
 $checks = @(
     [pscustomobject]@{ Name = 'Node.js';    Path = (Get-ToolPath 'node');                     Required = $true;  Version = $(if (Get-Command node -ErrorAction SilentlyContinue) { node --version } else { '' }) }
     [pscustomobject]@{ Name = 'Python';     Path = (Get-ToolPath 'python');                   Required = $true;  Version = $(if (Get-Command python -ErrorAction SilentlyContinue) { python --version 2>&1 } else { '' }) }
-    [pscustomobject]@{ Name = 'uv';         Path = (Get-ToolPath 'uv');                       Required = $true;  Version = $(if (Get-Command uv -ErrorAction SilentlyContinue) { uv --version } else { '' }) }
+    [pscustomobject]@{ Name = 'uv';         Path = $uvPath;                                 Required = $true;  Version = $(if ($uvPath) { (& $uvPath --version) 2>&1 } else { '' }) }
     [pscustomobject]@{ Name = 'Spec Kit';   Path = $specifyPath;                              Required = $true;  Version = $(if ($specifyPath) { (& $specifyPath --version) 2>&1 } else { '' }) }
     [pscustomobject]@{ Name = 'OpenCode';   Path = (Get-ToolPath 'opencode');                 Required = $true;  Version = $(if (Get-Command opencode -ErrorAction SilentlyContinue) { opencode --version } else { '' }) }
     [pscustomobject]@{ Name = 'Java';       Path = (Get-ToolPath 'java');                     Required = $true;  Version = $(if (Get-Command java -ErrorAction SilentlyContinue) { (java -version 2>&1 | Select-Object -First 1) } else { '' }) }
@@ -65,6 +66,7 @@ $requiredFiles = @(
     '.opencode\commands\apex.apexlang.md',
     '.specify\memory\constitution.md',
     'scripts\normalize-apx-tree.ps1',
+    'scripts\install-opencode-v2.ps1',
     'docs\PROVENANCE.md',
     'docs\harnesses\README.md'
 )
@@ -82,6 +84,24 @@ foreach ($relative in $requiredFiles) {
 
 $skillCount = (Get-ChildItem (Join-Path $root 'skills') -Recurse -File -Filter 'SKILL.md' -ErrorAction SilentlyContinue | Measure-Object).Count
 Write-Host ('SKILL.md files: {0}' -f $skillCount)
+
+Write-Host ''
+Write-Host 'OpenCode v2 config' -ForegroundColor Cyan
+if (Get-Command opencode -ErrorAction SilentlyContinue) {
+    $configResult = & opencode debug config 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host 'OK       v2 permissions accepted' -ForegroundColor Green
+    }
+    else {
+        Write-Host 'FAIL     opencode rejected opencode.jsonc' -ForegroundColor Red
+        $detail = ($configResult -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -First 5) -join [Environment]::NewLine
+        Write-Host $detail -ForegroundColor DarkGray
+        $failures.Add('OpenCode v2 config')
+    }
+}
+else {
+    Write-Host 'SKIP     opencode not on PATH' -ForegroundColor Yellow
+}
 
 Write-Host ''
 Write-Host 'Optional harnesses' -ForegroundColor Cyan
