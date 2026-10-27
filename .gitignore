@@ -1,0 +1,30 @@
+# Local toolchain (SQLcl is ~124 MB)
+tools/
+
+# Dependencies
+node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+cwallet.sso
+ewallet.p12
+
+# Local runtime state
+.opencode/node_modules/
+.opencode/*.local.*
+.specify/feature.json
+
+# Editor and OS noise
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+Thumbs.db

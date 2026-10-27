@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "apex",
+
+  // Zero-cost defaults. Do not replace these with a paid API model.
+  // Other free options: opencode/flint-40b-free, opencode/glm-5.3-flash-free,
+  // opencode/mimo-v2.6-flash-free.
+  "model": "opencode/deepseek-v4.1-flash-free",
+  "small_model": "opencode/glm-5.3-flash-free",
+
+  "instructions": ["AGENTS.md"],
+  "skills": ["./skills"],
+  "permissions": [
+    { "action": "shell", "resource": "*", "effect": "allow" },
+
+    // Destructive filesystem and git operations need confirmation.
+    { "action": "shell", "resource": "*Remove-Item*", "effect": "ask" },
+    { "action": "shell", "resource": "*rm *", "effect": "ask" },
+    { "action": "shell", "resource": "*git push*", "effect": "ask" },
+    { "action": "shell", "resource": "*git reset --hard*", "effect": "ask" },
+
+    // Database changes need confirmation. Read-only SQL stays allowed.
+    { "action": "shell", "resource": "*apex import*", "effect": "ask" },
+    { "action": "shell", "resource": "*drop *", "effect": "ask" },
+    { "action": "shell", "resource": "*truncate *", "effect": "ask" },
+    { "action": "shell", "resource": "*delete *", "effect": "ask" },
+    { "action": "shell", "resource": "*alter system*", "effect": "ask" },
+
+    // Keep credentials out of model context.
+    { "action": "read", "resource": "**/.env", "effect": "deny" },
+    { "action": "read", "resource": "**/.env.*", "effect": "deny" },
+    { "action": "read", "resource": "**/*.pem", "effect": "deny" },
+    { "action": "read", "resource": "**/*.key", "effect": "deny" },
+    { "action": "read", "resource": "**/*.p12", "effect": "deny" },
+    { "action": "read", "resource": "**/*.jks", "effect": "deny" },
+    { "action": "read", "resource": "**/cwallet.sso", "effect": "deny" },
+
+    // Templates are safe to read and are useful setup references.
+    { "action": "read", "resource": "**/.env.example", "effect": "allow" }
+  ],
+  "watcher": {
+    "ignore": ["tools/**", "node_modules/**", ".git/**"]
+  }
+}
