@@ -19,7 +19,7 @@ services:
     image: container-registry.oracle.com/database/adb-free:latest
     container_name: apex-disposable-db
     ports:
-      - "1521:1522"
+      - "1521:1521"
       - "1522:1522"
       - "8443:8443"
     environment:

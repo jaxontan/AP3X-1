@@ -5,7 +5,9 @@ param(
 
     [string]$ConnectionString = $env:SQLCL_CONNECTION_STRING,
 
-    [switch]$Local
+    [switch]$Local,
+
+    [string]$Workspace
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,6 +73,19 @@ if ($bomFiles.Count -gt 0) {
     exit 2
 }
 
+if ($Local) {
+    if (-not $ConnectionString) {
+        $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
+        $localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'myatp' }
+        $ConnectionString = "ADMIN/`"$localPwd`"@localhost:1521/$localService"
+    }
+    if (-not $Workspace) {
+        $Workspace = 'EXPENSE'
+    }
+}
+
+$workspaceClause = if ($Workspace) { "-workspace `"$Workspace`"" } else { "" }
+
 $commands = @"
 begin
   apex_application_install.set_auto_install_sup_obj(
@@ -78,18 +93,13 @@ begin
   );
 end;
 /
-apex import -input "$resolved"
+apex import -input "$resolved" $workspaceClause
 exit
 "@
 
-if ($Local -and -not $ConnectionString) {
-    $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
-    $ConnectionString = "ADMIN/$localPwd@localhost:1521/FREEPDB1"
-}
-
 Write-Host "Application directory: $resolved"
 Write-Host "SQLcl: $env:SQLCL_BIN"
-Write-Host ("Target connection: {0}" -f $(if ($ConnectionString) { $(if ($Local) { 'local sandbox (ADMIN@localhost:1521/FREEPDB1)' } else { '(set; hidden)' }) } else { '(not set)' }))
+Write-Host ("Target connection: {0}" -f $(if ($ConnectionString) { $(if ($Local) { "local sandbox (ADMIN@localhost:1521/$localService, workspace: $Workspace)" } else { '(set; hidden)' }) } else { '(not set)' }))
 
 if ($WhatIfPreference) {
     Write-Host ''
@@ -107,7 +117,14 @@ if (-not $PSCmdlet.ShouldProcess($resolved, 'Import the APEX application into th
     exit 0
 }
 
-$output = $commands | & $env:SQLCL_BIN $ConnectionString 2>&1
+$tempDeployFile = [System.IO.Path]::GetTempFileName()
+try {
+    [System.IO.File]::WriteAllText($tempDeployFile, $commands, (New-Object System.Text.UTF8Encoding($false)))
+    $output = Get-Content -LiteralPath $tempDeployFile | & $env:SQLCL_BIN $ConnectionString 2>&1
+}
+finally {
+    Remove-Item -LiteralPath $tempDeployFile -ErrorAction SilentlyContinue
+}
 $status = $LASTEXITCODE
 $text = $output | Out-String
 $text.TrimEnd() | Write-Host
