@@ -82,13 +82,19 @@ Open the repository root in VS Code so the extension sees `CLAUDE.md` and `.clau
 
 ## Antigravity
 
-Install Antigravity from <https://antigravity.google/> and open this repository as the workspace. Sign in with a Google account. The free tier does not require an API key.
+Install Antigravity from <https://antigravity.google/> or use the Antigravity CLI (`agy`). Sign in with a Google account; the free tier does not require an API key.
 
-Antigravity reads:
+```powershell
+# Launch the Antigravity CLI in this repository:
+agy
+```
 
-- `AGENTS.md`
-- `.agents/rules/*.md`
-- `.agents/skills/` bridge files
+Antigravity automatically reads:
+
+- `AGENTS.md` (root instructions and rules)
+- `.agents/rules/*.md` (project guidelines)
+- `.agents/skills/` (skill bridges)
+- `.mcp.json` (SQLcl MCP server integration)
 
 The free tier has quotas. For heavy work, use it for design/review and run the deterministic APEX validation locally with SQLcl.
 

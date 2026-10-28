@@ -35,11 +35,18 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 When successful, the doctor checks all tools and files, ending with `Harness is ready.`
 
 ### 3. Launch Your AI Assistant
-Start your preferred agent (e.g., OpenCode):
+Start your preferred agent:
 ```powershell
+# OpenCode:
 opencode
+
+# Or Antigravity CLI:
+agy
+
+# Or Claude Code:
+claude
 ```
-*(Or open this repository directly in Antigravity, Claude Code, or Codex).*
+*(Or open this repository directly in the Antigravity IDE, VS Code, or Codex).*
 
 ### 4. Build & Validate
 Use the built-in commands inside your agent chat:

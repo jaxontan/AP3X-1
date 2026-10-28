@@ -176,10 +176,17 @@ $optionalHarnesses = @(
         Version = $(if (Get-Command claude -ErrorAction SilentlyContinue) { claude --version } else { '' })
         Adapter = 'CLAUDE.md + .claude/skills'
     }
+    $agyPath = Get-ToolPath 'agy' (Join-Path $env:LOCALAPPDATA 'agy\bin\agy.exe')
+    $antigravityPath = if ($agyPath) { $agyPath } else { Get-ToolPath 'antigravity' }
+    $antigravityVersion = if ($antigravityPath) {
+        $raw = (& $antigravityPath --version 2>&1 | Select-Object -First 1)
+        if ($agyPath -and -not (Get-Command antigravity -ErrorAction SilentlyContinue)) { "agy $raw" } else { $raw }
+    } else { '' }
+
     [pscustomobject]@{
         Name    = 'Antigravity'
-        Path    = (Get-ToolPath 'antigravity')
-        Version = $(if (Get-Command antigravity -ErrorAction SilentlyContinue) { antigravity --version } else { '' })
+        Path    = $antigravityPath
+        Version = $antigravityVersion
         Adapter = 'AGENTS.md + .agents'
     }
     [pscustomobject]@{
