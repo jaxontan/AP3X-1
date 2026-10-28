@@ -63,6 +63,109 @@ Use the built-in commands and skills inside your agent chat:
 
 ---
 
+## 🔄 End-to-End Pipeline Walkthrough: Idea ➔ APEX App
+
+This harness uses a **Four-Domain Engineering Pipeline** that transforms natural language business requirements into validated, production-grade Oracle APEX applications without skipping architecture, data integrity, or security checks.
+
+```mermaid
+flowchart LR
+    A["1. Specify<br/>/speckit-specify"] --> B["2. Architecture<br/>/apex-design"]
+    B --> C["3. PL/SQL Logic<br/>/apex-plsql"]
+    C --> D["4. APEX Declarative<br/>/apex-apexlang"]
+    D --> E["5. Validation Gate<br/>/apex-validate"]
+    E --> F["6. Deploy Preview<br/>/apex-deploy"]
+```
+
+### 📋 Example: "Expense Reimbursement & Approval"
+
+Here is how a real feature travels through the harness:
+
+#### Step 1: Specify Business Rules (`/speckit-specify` or `/speckit.specify`)
+Prompt your assistant inside chat:
+> `/speckit-specify Build an expense approval workflow where employees submit expense claims, managers review them, and claims over $1,000 require director approval. Rejections require a mandatory reason.`
+
+**What the agent produces:**
+Spec Kit creates a formal feature specification with traceable business rule IDs:
+- `BR-EXP-001`: Expense claims $\le \$1,000$ require manager approval; claims $> \$1,000$ route to Director level.
+- `BR-EXP-002`: Rejection requires a mandatory, non-empty justification comment.
+- `BR-EXP-003`: Only claims in `DRAFT` or `SUBMITTED` status can be modified or withdrawn.
+
+---
+
+#### Step 2: Architecture & Domain Modeling (`/apex-design` or `/apex.design`)
+The agent maps business rules into an architecture blueprint:
+- **Data Model:**
+  - Table `EXPENSES (id, employee_id, amount, description, status, approved_by, reject_reason, created_at)`
+  - Check constraints for lifecycle statuses (`DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED`).
+- **PL/SQL API Contract:**
+  - Package `pkg_expense_mgmt` with procedures `submit_claim()`, `approve_claim()`, and `reject_claim()`.
+- **APEX Page Map:**
+  - **Page 1 (Dashboard):** Summary Cards with pending count badges & expense charts.
+  - **Page 10 (My Expenses):** Interactive Grid with a modal entry form.
+  - **Page 20 (Approval Queue):** Cards region with "Approve" / "Reject" action dialogs protected by the `MUST_BE_MANAGER` authorization scheme.
+
+---
+
+#### Step 3: PL/SQL Implementation (`/apex-plsql` or `/apex.plsql`)
+Business logic is implemented inside database packages (following the SmartDB contract):
+```sql
+create or replace package pkg_expense_mgmt as
+  procedure submit_claim(p_claim_id in number);
+  procedure approve_claim(p_claim_id in number, p_approver_id in number);
+  procedure reject_claim(p_claim_id in number, p_approver_id in number, p_reason in varchar2);
+end pkg_expense_mgmt;
+/
+```
+> [!NOTE]
+> Keeping business rules inside PL/SQL ensures data integrity, makes logic unit-testable via utPLSQL, and prevents complex SQL from leaking into APEX page processes.
+
+---
+
+#### Step 4: Generate Declarative APEXLang (`/apex-apexlang` or `/apex.apexlang`)
+The agent creates declarative `.apx` files under `applications/expense_app/`:
+```text
+applications/expense_app/
+├── .apex/
+│   └── apexlang.json                 # Version-locked to APEX 26.1 or 26.2
+├── application.apx                   # App definition, theme & navigation
+├── pages/
+│   ├── page-1.apx                    # Dashboard Cards & Reports
+│   ├── page-10.apx                   # My Expenses Interactive Grid & Modal Form
+│   └── page-20.apx                   # Approval Queue (with authorization rules)
+└── shared-components/
+    └── authorization-schemes.apx     # MUST_BE_MANAGER scheme definition
+```
+
+---
+
+#### Step 5: Deterministic Validation Gate (`/apex-validate` or `/apex.validate`)
+Before any database import, the app tree is validated offline against the SQLcl APEX compiler:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory applications/expense_app
+```
+**Output:**
+```text
+Validating application in applications/expense_app...
+Validation successful
+0 errors, 0 warnings.
+```
+> [!IMPORTANT]
+> The validation gate fails if there are compile diagnostics, UTF-8 BOM characters, CRLF line endings, or `ORA-` errors.
+
+---
+
+#### Step 6: Safe Deployment Preview & Import (`/apex-deploy` or `/apex.deploy`)
+Deployments are strictly gated and previewed first using `-WhatIf`:
+```powershell
+# 1. Preview the import plan safely
+powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory applications/expense_app -WhatIf
+
+# 2. Deploy to target APEX instance once approved
+powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory applications/expense_app
+```
+
+---
+
 ## 🐳 Disposable Local Database (DB + APEX + ORDS)
 
 To test and develop locally without touching production or shared databases, you can spin up a disposable local database.
