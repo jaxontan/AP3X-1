@@ -53,23 +53,23 @@ Use the built-in commands and skills inside your agent chat:
 
 | Step | OpenCode Command | Antigravity (`agy`) Skill | Description |
 | :--- | :--- | :--- | :--- |
-| **1. Specify** | `/speckit.specify <feature>` | `/speckit-specify <feature>` | Define requirements and user stories |
+| **1. Requirements** | Prompt or `requirements.md` | Prompt or `requirements.md` | Natural language feature scope & rules |
 | **2. Design** | `/apex.design <feature>` | `/apex-design <feature>` | Draft domain model, business rules, & page map |
 | **3. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
-| **4. APEXLang** | `/apex.apexlang applications/<app>` | `/apex-apexlang applications/<app>` | Generate clean `.apx` APEXLang declarative code |
-| **5. Validate** | `/apex.validate applications/<app>` | `/apex-validate applications/<app>` | Deterministic APEX compile & validation gate |
+| **4. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
+| **5. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
 
-*(Note: In Antigravity `agy`, skills use hyphens (`-`) like `/speckit-specify`, or you can simply ask in natural language like `"Specify a new customer portal feature"`).*
+*(Note: Validation runs automatically whenever APEXLang code is generated or modified).*
 
 ---
 
 ## 🔄 End-to-End Pipeline Walkthrough: Idea ➔ APEX App
 
-This harness uses a **Four-Domain Engineering Pipeline** that transforms natural language business requirements into validated, production-grade Oracle APEX applications without skipping architecture, data integrity, or security checks.
+This harness uses a **streamlined vibe coding workflow** that transforms natural language business requirements directly into validated, production-grade Oracle APEX applications without unnecessary ceremony:
 
 ```mermaid
 flowchart LR
-    A["1. Specify<br/>/speckit-specify"] --> B["2. Architecture<br/>/apex-design"]
+    A["1. Idea / requirements.md"] --> B["2. Architecture<br/>/apex-design"]
     B --> C["3. PL/SQL Logic<br/>/apex-plsql"]
     C --> D["4. APEX Declarative<br/>/apex-apexlang"]
     D --> E["5. Validation Gate<br/>/apex-validate"]
@@ -80,12 +80,12 @@ flowchart LR
 
 Here is how a real feature travels through the harness:
 
-#### Step 1: Specify Business Rules (`/speckit-specify` or `/speckit.specify`)
-Prompt your assistant inside chat:
-> `/speckit-specify Build an expense approval workflow where employees submit expense claims, managers review them, and claims over $1,000 require director approval. Rejections require a mandatory reason.`
+#### Step 1: Define Requirements (Prompt or `requirements.md`)
+Prompt your assistant inside chat or provide a `requirements.md`:
+> `Build an expense approval workflow where employees submit expense claims, managers review them, and claims over $1,000 require director approval. Rejections require a mandatory reason.`
 
-**What the agent produces:**
-Spec Kit creates a formal feature specification with traceable business rule IDs:
+**What the agent establishes:**
+Key business rules and workflow constraints:
 - `BR-EXP-001`: Expense claims $\le \$1,000$ require manager approval; claims $> \$1,000$ route to Director level.
 - `BR-EXP-002`: Rejection requires a mandatory, non-empty justification comment.
 - `BR-EXP-003`: Only claims in `DRAFT` or `SUBMITTED` status can be modified or withdrawn.
@@ -141,13 +141,14 @@ applications/expense_app/
 #### Step 5: Deterministic Validation Gate (`/apex-validate` or `/apex.validate`)
 Before any database import, the app tree is validated offline against the SQLcl APEX compiler:
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory applications/expense_app
+powershell -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory working/app
 ```
 **Output:**
 ```text
-Validating application in applications/expense_app...
-Validation successful
-0 errors, 0 warnings.
+Validating APEX application: ...\working\app
+SQLcl: ...\tools\sqlcl\bin\sql.exe
+Validation successful.
+APEX validation PASSED.
 ```
 > [!IMPORTANT]
 > The validation gate fails if there are compile diagnostics, UTF-8 BOM characters, CRLF line endings, or `ORA-` errors.
@@ -158,10 +159,10 @@ Validation successful
 Deployments are strictly gated and previewed first using `-WhatIf`:
 ```powershell
 # 1. Preview the import plan safely
-powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory applications/expense_app -WhatIf
+powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app -WhatIf
 
 # 2. Deploy to target APEX instance once approved
-powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory applications/expense_app
+powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app
 ```
 
 ---
@@ -210,15 +211,6 @@ docker compose down -v
 
 ## 🛠️ Core Commands Reference
 
-### 📋 Feature Specification (GitHub Spec Kit)
-| Command | Purpose |
-| :--- | :--- |
-| `/speckit.specify <idea>` | Write a business specification (what & why, no tech lock-in) |
-| `/speckit.clarify` | Identify and resolve requirement gaps |
-| `/speckit.plan` | Generate domain model, data schema, PL/SQL API, and page architecture |
-| `/speckit.tasks` | Break down the plan into ordered, testable steps |
-| `/speckit.implement` | Execute tasks and build application files |
-
 ### 🎯 APEX & PL/SQL Domain Commands
 | Command | Purpose |
 | :--- | :--- |
@@ -230,7 +222,7 @@ docker compose down -v
 | Command | Purpose |
 | :--- | :--- |
 | `/apex.verify <app-dir>` | Static verification of changed files against rules |
-| `/apex.validate <app-dir>` | Run SQLcl APEX compiler validation (must report `Validation successful`) |
+| *(Auto-Validation)* | Automatically executes on every `.apx` save/generation |
 | `/apex.review <app-dir>` | Trigger subagent review for APEXLang, security, SQL, and accessibility |
 | `/apex.deploy <app-dir>` | Import into target DB (`-WhatIf` preview first; requires approval) |
 

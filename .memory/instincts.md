@@ -25,3 +25,12 @@ Record only patterns that have been observed more than once or that prevented a 
 - Corrective action: `scripts/validate-apex-app.ps1` now checks LF and BOM before SQLcl and fails on compile diagnostics, `Error:`, `FILE_IGNORED`, and `ORA-` output even when the exit code is 0. `normalize-apx-tree.ps1` strips a UTF-8 BOM and converts CRLF to LF.
 - Confidence: high
 - Supersedes: none
+### Dynamic SQL guards in APEX authorization schemes prevent ORA-06550 Day 0 crashes
+
+- Date: 2026-10-28
+- Scope: APEX authorization schemes referencing application tables (`shared-components/authorizations.apx`)
+- Pattern: Static SQL queries (`select ... into ... from custom_table`) inside APEX authorization schemes fail at parse/compilation time with `ORA-06550: PL/SQL: ORA-00942: table or view does not exist` if the application is accessed before schema tables are created. Because it is a parse-time error, runtime exception handlers (`WHEN NO_DATA_FOUND` / `WHEN OTHERS`) cannot catch it, causing unhandled APEX crashes (`APEX.AUTHORIZATION.UNHANDLED_ERROR`).
+- Evidence: Runtime import of an APEX application crashed with `ORA-06550 / ORA-00942` on custom authorization schemes when the underlying user profile table had not yet been created in the target schema.
+- Corrective action: In APEX authorization schemes, check dictionary table presence (`select count(*) into l_count from user_tables where table_name = '...'`) and execute queries against custom tables via dynamic SQL (`execute immediate ... into ... using ...`). Include a safe bootstrap fallback or handle `sqlcode = -942` gracefully.
+- Confidence: high
+- Supersedes: none

@@ -80,7 +80,7 @@ if ($Local) {
         $ConnectionString = "ADMIN/`"$localPwd`"@localhost:1521/$localService"
     }
     if (-not $Workspace) {
-        $Workspace = 'EXPENSE'
+        $Workspace = if ($env:APEX_WORKSPACE) { $env:APEX_WORKSPACE } else { 'DEV' }
     }
 }
 

@@ -5,7 +5,7 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 ## Operating rules
 
 1. **Evidence over claims.** Never report success without the command, file, or validation output that proves it. If a check was not run, say so.
-2. **Validate before deploy.** A generated or edited app tree must pass the APEX validation gate before any import. Deploy only when the user explicitly asks to deploy.
+2. **Auto-validate on generate or modify.** Whenever an APEXLang file (`.apx`) under `working/app/` is created, regenerated, or modified, the agent MUST immediately execute `scripts/normalize-apx-tree.ps1 -AppDirectory working/app` and `scripts/validate-apex-app.ps1 -AppDirectory working/app` in the same turn before presenting the response. Never ask the user to run validation manually. The tree must report `Validation successful` with 0 compile diagnostics. Deploy only when the user explicitly asks to deploy.
 3. **Version lock.** Never mix APEXLang skills, inventories, or example applications from different APEX versions.
 4. **Read-only by default on databases.** Use `SELECT` and metadata queries unless the user explicitly authorizes a change. Follow `skills/db/agent/destructive-op-guards.md` and `skills/db/agent/safe-dml-patterns.md`.
 5. **No secrets in files.** Never write passwords, connection strings, tokens, or wallet contents into the repository. Use `SQLCL_CONNECTION_STRING` or a SQLcl saved connection.
@@ -86,26 +86,53 @@ Setup matrix and no-key paths: `docs/harnesses/README.md`.
 
 ## Default delivery workflow
 
-Use Spec Kit commands for non-trivial work:
+The harness supports two lean vibe coding workflows without multi-phase specification ceremony:
 
-```text
-/speckit.specify        # what and why, no implementation details
-/speckit.clarify        # optional, when requirements are ambiguous
-/speckit.plan           # domain model, APEX architecture, PL/SQL API, APEXLang file map
-/speckit.tasks          # ordered, testable work items
-/speckit.implement      # build the .apx tree
-```
+1. **Greenfield Vibe Coding (New Application)**:
+   - Provide a natural language prompt or a single `working/requirements.md` file describing features, actors, and rules.
+   - The agent designs the domain model, generates the schema and seed SQL scripts under `working/database/`, and scaffolds the full APEXLang tree under `working/app/`.
+   - Run the normalization and validation gates (`scripts/validate-apex-app.ps1 -AppDirectory working/app`).
 
-The project constitution is already initialized at `.specify/memory/constitution.md`. Run `/speckit.constitution` only when amending it. For a smaller domain task, use `/apex.design`, `/apex.plsql`, or `/apex.apexlang` directly and still run the APEX gates.
+2. **Brownfield Vibe Coding (Improve Existing Application)**:
+   - Point directly to the target page or shared component in `working/app/` (e.g., "Add an export button on Page 10" or "Require a rejection reason in review dialog").
+   - The agent edits the targeted `.apx` or `.sql` files directly.
+   - Run the validation gate.
+
+For specialized guidance during vibe coding, use the domain commands directly:
+- `/apex.design` (analyze rules & page map)
+- `/apex.plsql` (packages, business rules, tapi/xapi)
+- `/apex.apexlang` (implement declarative .apx changes)
 
 Then run the APEX gates:
 
-1. **Static verify**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apex-change.ps1 -AppDirectory <app-dir>`; use `-Strict` for a release candidate.
-2. **Validate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory <app-dir>`
+1. **Static verify**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apex-change.ps1 -AppDirectory working/app`; use `-Strict` for a release candidate.
+2. **Validate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory working/app`
 3. **Review**: use the `apex-reviewer` subagent for APEXLang, SQL, security, and performance.
-4. **Deploy** (only on explicit request and after the user approves the named target): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-dir> -WhatIf` first, then run without `-WhatIf`.
+4. **Deploy** (only on explicit request and after the user approves the named target): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app -WhatIf` first, then run without `-WhatIf`.
 5. **Verify**: follow `skills/apex-delivery/SKILL.md` and produce a PASS/FAIL report.
-6. **Export and drift-check** (after import, when the target supports APEXLang export): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-dir> -CompareDirectory <app-dir>`. Treat drift as a failure and explain it.
+6. **Export and drift-check** (after import, when the target supports APEXLang export): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-dir> -CompareDirectory working/app`. Treat drift as a failure and explain it.
+
+## Project & Working Directory Structure (1 Project per Harness Repo)
+
+This harness repo is disposable and dedicated to **one project**. All deliverables are organized cleanly inside the `working/` directory:
+
+```text
+working/
+├── requirements.md               # Feature prompt, requirements, and user stories
+├── design.md                     # Architecture blueprint: domain model, rule catalogue, page map
+├── database/                     # Oracle Database artifacts
+│   ├── schema.sql                # Tables, constraints, indexes, and seed data
+│   ├── packages/                 # TAPI & XAPI business logic packages (pks / pkb)
+│   └── tests/                    # utPLSQL test suites
+└── app/                          # APEXLang declarative application tree
+    ├── .apex/                    # apexlang.json version lock
+    ├── application.apx           # Application manifest
+    ├── deployments/              # Deployment target configs
+    ├── page-groups.apx           # Navigation groups
+    ├── pages/                    # Page definition files (p00001-*.apx, etc.)
+    ├── shared-components/        # Authorizations, lists, LOVs, themes, templates
+    └── supporting-objects/       # Export scripts and install manifests
+```
 
 ## Environment
 
@@ -126,10 +153,10 @@ Run the harness setup before APEX commands (from the repository root):
 
 ## APEXLang conventions
 
-- New apps live under `applications/<app>/` and publish only runtime artifacts: `.apex/`, `application.apx`, `deployments/`, `page-groups.apx`, `pages/`, `shared-components/`, and `supporting-objects/`.
+- Application runtime artifacts live under `working/app/` (or `applications/<app>/`) and publish only runtime artifacts: `.apex/`, `application.apx`, `deployments/`, `page-groups.apx`, `pages/`, `shared-components/`, and `supporting-objects/`.
 - Do not copy template docs or `scaffold-example/` containers into an app root.
 - `.apx` files must use UTF-8 without a BOM and LF line endings. SQLcl's APEX parser rejects CRLF and treats a BOM as source text. The validation gate fails on CRLF, BOM, compile diagnostics, `ORA-` errors, and `FILE_IGNORED` even when SQLcl prints `Validation successful`. Run `scripts/normalize-apx-tree.ps1 -AppDirectory <app-dir>` to fix line endings and a UTF-8 BOM, then re-validate.
-- Resolve the target app directory before editing. If `applications/` is missing, ask for the exact app directory; do not silently create or relocate apps.
+- Resolve the target app directory before editing. If `working/app/` is missing, ask for the exact app directory; do not silently create or relocate apps.
 - Keep raw grammar, the full component registry, and template trees out of context. Use the 26.1 generation skill's `tools/apexctl.mjs` projections (restored at the pinned upstream commit).
 - For 26.2, there is no generation skill; author with the 26.2 inventory and example applications.
 - For a new app from requirements plus schema metadata, follow `skills/apex/apexlang/26.1/apexlang-generation/references/workflows/apexlang/workflow-create-app-from-fr-and-model.md`.

@@ -29,7 +29,6 @@ $checks = @(
     [pscustomobject]@{ Name = 'Node.js';    Path = (Get-ToolPath 'node');                     Required = $true;  Version = $(if (Get-Command node -ErrorAction SilentlyContinue) { node --version } else { '' }) }
     [pscustomobject]@{ Name = 'Python';     Path = (Get-ToolPath 'python');                   Required = $true;  Version = $(if (Get-Command python -ErrorAction SilentlyContinue) { python --version 2>&1 } else { '' }) }
     [pscustomobject]@{ Name = 'uv';         Path = $uvPath;                                 Required = $true;  Version = $(if ($uvPath) { (& $uvPath --version) 2>&1 } else { '' }) }
-    [pscustomobject]@{ Name = 'Spec Kit';   Path = $specifyPath;                              Required = $true;  Version = $(if ($specifyPath) { (& $specifyPath --version) 2>&1 } else { '' }) }
     [pscustomobject]@{ Name = 'OpenCode';   Path = (Get-ToolPath 'opencode');                 Required = $true;  Version = $(if (Get-Command opencode -ErrorAction SilentlyContinue) { opencode --version } else { '' }) }
     [pscustomobject]@{ Name = 'Java';       Path = (Get-ToolPath 'java');                     Required = $true;  Version = $(if (Get-Command java -ErrorAction SilentlyContinue) { (java -version 2>&1 | Select-Object -First 1) } else { '' }) }
     [pscustomobject]@{ Name = 'SQLcl';      Path = $sqlclPath;                                Required = $true;  Version = $(if ($sqlclPath) { (& $sqlclPath -V 2>&1 | Select-Object -First 1) } else { '' }) }
@@ -68,7 +67,6 @@ $requiredFiles = @(
     '.opencode\commands\apex.apexlang.md',
     '.claude\settings.json',
     '.mcp.json',
-    '.specify\memory\constitution.md',
     'skills\harness\error-triage\SKILL.md',
     'scripts\normalize-apx-tree.ps1',
     'scripts\validate-apex-app.ps1',

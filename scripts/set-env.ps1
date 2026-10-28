@@ -50,5 +50,10 @@ if (Test-Path $openCodeExe) {
     }
 }
 
+# Ensure pipeline encoding to native processes (like SQLcl) is UTF-8 without BOM
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+
 # SQLCL_CONNECTION_STRING is intentionally left alone. Validation works without
 # it; deploy-apex-app.ps1 reports a clear error when a deployment needs it.
