@@ -3,7 +3,9 @@ param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$AppDirectory,
 
-    [string]$ConnectionString = $env:SQLCL_CONNECTION_STRING
+    [string]$ConnectionString = $env:SQLCL_CONNECTION_STRING,
+
+    [switch]$Local
 )
 
 $ErrorActionPreference = 'Stop'
@@ -80,9 +82,14 @@ apex import -input "$resolved"
 exit
 "@
 
+if ($Local -and -not $ConnectionString) {
+    $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
+    $ConnectionString = "ADMIN/$localPwd@localhost:1521/FREEPDB1"
+}
+
 Write-Host "Application directory: $resolved"
 Write-Host "SQLcl: $env:SQLCL_BIN"
-Write-Host ("Target connection: {0}" -f $(if ($ConnectionString) { '(set; hidden)' } else { '(not set)' }))
+Write-Host ("Target connection: {0}" -f $(if ($ConnectionString) { $(if ($Local) { 'local sandbox (ADMIN@localhost:1521/FREEPDB1)' } else { '(set; hidden)' }) } else { '(not set)' }))
 
 if ($WhatIfPreference) {
     Write-Host ''
