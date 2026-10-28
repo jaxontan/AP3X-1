@@ -6,8 +6,8 @@ When vibe coding with your assistant (or building manually), all project assets 
 
 ```text
 working/
-├── requirements.md               # User prompt, feature requirements, and user stories
-├── design.md                     # Architecture blueprint: ER model, rule catalogue, page map
+├── page-design/                  # User-defined page map and UI architecture
+│   └── requirement.md            # Authoritative page map, regions, items & rules
 ├── database/                     # Oracle Database artifacts
 │   ├── schema.sql                # Tables, constraints, indexes, and seed data
 │   ├── packages/                 # TAPI & XAPI business logic packages (pks / pkb)

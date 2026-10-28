@@ -89,8 +89,9 @@ Setup matrix and no-key paths: `docs/harnesses/README.md`.
 The harness supports two lean vibe coding workflows without multi-phase specification ceremony:
 
 1. **Greenfield Vibe Coding (New Application)**:
-   - Provide a natural language prompt or a single `working/requirements.md` file describing features, actors, and rules.
-   - The agent designs the domain model, generates the schema and seed SQL scripts under `working/database/`, and scaffolds the full APEXLang tree under `working/app/`.
+   - Provide a natural language prompt or define the page map & requirements in `working/page-design/requirement.md`.
+   - When `working/page-design/requirement.md` is provided, the agent MUST strictly follow the user's page layout, page numbers, and component specifications rather than inventing an arbitrary architecture.
+   - The agent generates the schema and seed SQL scripts under `working/database/`, and scaffolds the full APEXLang tree under `working/app/` matching the user's design.
    - Run the normalization and validation gates (`scripts/validate-apex-app.ps1 -AppDirectory working/app`).
 
 2. **Brownfield Vibe Coding (Improve Existing Application)**:
@@ -118,8 +119,8 @@ This harness repo is disposable and dedicated to **one project**. All deliverabl
 
 ```text
 working/
-├── requirements.md               # Feature prompt, requirements, and user stories
-├── design.md                     # Architecture blueprint: domain model, rule catalogue, page map
+├── page-design/                  # User-defined page map and UI architecture
+│   └── requirement.md            # Authoritative page map, regions, items & rules
 ├── database/                     # Oracle Database artifacts
 │   ├── schema.sql                # Tables, constraints, indexes, and seed data
 │   ├── packages/                 # TAPI & XAPI business logic packages (pks / pkb)
