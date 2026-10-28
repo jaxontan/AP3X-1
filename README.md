@@ -10,7 +10,7 @@ A developer harness for building, validating, and deploying Oracle APEX applicat
 In PowerShell, make sure your working directory is the repository root:
 ```powershell
 # Clone the repository (if not already cloned)
-git clone https://github.com/<your-org>/Oracle_Apex-Harness.git
+git clone https://github.com/jaxontan/Oracle_Apex-Harness.git
 
 # Navigate into the project root folder
 cd Oracle_Apex-Harness
@@ -194,9 +194,12 @@ This repository works with multiple host assistants without paid API keys:
 
 ```text
 Oracle_Apex-Harness/
-├── applications/             # Generated APEXLang applications (.apx files)
+├── working/                  # Project deliverables (page-design/, database/, app/)
+│   ├── page-design/          # User-defined page architecture (requirement.md)
+│   ├── database/             # Schemas, PL/SQL packages, and utPLSQL tests
+│   └── app/                  # Declarative APEXLang application tree (.apx)
 ├── local-dev/                # Disposable database (docker-compose.yml & audit scripts)
-├── scripts/                  # Automation scripts (doctor, validate, deploy, normalize)
+├── scripts/                  # Automation scripts (doctor, validate, deploy, normalize, watch)
 ├── skills/                   # Vendored Oracle APEX, APEXLang, DB, & ECC meta-skills
 ├── tools/                    # Local toolchain (SQLcl 26.3, OpenCode v2)
 ├── AGENTS.md                 # Master agent operating rules and skill routing
