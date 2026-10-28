@@ -109,7 +109,7 @@ Then run the APEX gates:
 
 ## Environment
 
-Run the harness setup before APEX commands:
+Run the harness setup before APEX commands (from the repository root):
 
 ```powershell
 . .\scripts\set-env.ps1

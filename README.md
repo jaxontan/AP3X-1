@@ -4,10 +4,24 @@ A developer harness for building, validating, and deploying Oracle APEX applicat
 
 ---
 
-## ⚡ Quick Start (3 Steps)
+## ⚡ Quick Start
 
-### 1. Initialize the Environment
-In PowerShell:
+### 1. Clone & Open the Repository Root
+In PowerShell, make sure your working directory is the repository root:
+```powershell
+# Clone the repository (if not already cloned)
+git clone https://github.com/<your-org>/Oracle_Apex-Harness.git
+
+# Navigate into the project root folder
+cd Oracle_Apex-Harness
+```
+
+> [!IMPORTANT]
+> **Always run commands from the repository root.**
+> If you opened PowerShell using "Run as Administrator", your terminal starts in `C:\Windows\System32`. You must `cd` into your cloned repository directory before running `.\scripts\...`, otherwise PowerShell will report `The term '.\scripts\set-env.ps1' is not recognized`.
+
+### 2. Initialize the Environment & Verify Setup
+In your PowerShell session:
 ```powershell
 # Set execution policy for the current session
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -16,15 +30,18 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 . .\scripts\set-env.ps1
 .\scripts\harness-doctor.ps1
 ```
+*(Tip: On Windows, you can also simply run or double-click `.\doctor.cmd` from the repo root to execute the health check directly).*
 
-### 2. Launch Your AI Assistant
+When successful, the doctor checks all tools and files, ending with `Harness is ready.`
+
+### 3. Launch Your AI Assistant
 Start your preferred agent (e.g., OpenCode):
 ```powershell
 opencode
 ```
 *(Or open this repository directly in Antigravity, Claude Code, or Codex).*
 
-### 3. Build & Validate
+### 4. Build & Validate
 Use the built-in commands inside your agent chat:
 - `/speckit.specify <feature>` — Define requirements.
 - `/apex.design <feature>` — Draft domain model, business rules, and page map.

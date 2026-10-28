@@ -17,6 +17,8 @@ The Oracle APEX harness is host-agnostic. `AGENTS.md` is the canonical instructi
 
 ## OpenCode
 
+From the repository root (make sure your prompt is inside the project folder, not `C:\Windows\System32`):
+
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 . .\scripts\set-env.ps1
