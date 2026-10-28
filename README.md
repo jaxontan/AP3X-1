@@ -91,7 +91,7 @@ Every accepted business rule gets an ID, one primary implementation home, and a 
 
 ## Local database and promotion
 
-`local-dev/README.md` documents the optional `uc-local-apex-dev` sandbox pinned to APEX 26.2, the read-only `snapshot-pdb.sql`, and the 23-section `promotion-audit.sql`. The installer previews the plan by default; `-Execute` is required to clone and start the sandbox. Docker or Podman is required, and this workflow has not been executed on a machine without Docker.
+`local-dev/README.md` documents the optional `uc-local-apex-dev` sandbox pinned to APEX 26.2, the read-only `snapshot-pdb.sql`, and the 23-section `promotion-audit.sql`. It also documents image selection for a disposable 26ai Free database: use a regular or full image for APEX, and `slim`/`lite` only for database-only work. The installer previews the plan by default; `-Execute` is required to clone and start the sandbox. Docker or Podman is required, and this workflow has not been executed on a machine without Docker.
 
 SQLcl MCP is the live schema boundary. Query the catalog at task start with `oracle-sqlcl`; do not cache table or column lists in `.memory/` or skills. Local `FREEPDB1` may use full schema access for development, but commercial and shared targets are read-only by default.
 

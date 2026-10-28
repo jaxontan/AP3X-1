@@ -11,6 +11,33 @@ The sandbox is optional. It is not required for offline APEXLang validation, and
 - Read-only metadata snapshots and a promotion audit that can run against either local or commercial connections.
 - Version lock at APEX 26.1 or 26.2. The sandbox is pinned to the `26-2` branch so it matches the harness's 26.2 skills.
 
+## Disposable database images
+
+Image flavor is not a database version. Oracle AI Database 26ai Free is published as `23.26.3`; the flavor controls which components are present.
+
+| Use case | Image | Why |
+| --- | --- | --- |
+| APEX and ORDS | `container-registry.oracle.com/database/free:latest` or `gvenzl/oracle-free:23.26.3` | Full or regular flavor. APEX and ORDS are not bundled, so use the sandbox below or install APEX 26.2 and ORDS separately. |
+| Database and PL/SQL only | `gvenzl/oracle-free:23.26.3-slim` | Smallest image. Suitable for schema, SQL, and PL/SQL smoke tests. |
+| Not for APEX | `gvenzl/oracle-free:slim`, `container-registry.oracle.com/database/free:latest-lite` | Removes Oracle Text, Spatial/Locator, MLE, RMAN, `wrap`, and XML DB files. APEX requires XML DB for a full development environment; community testing of `gvenzl/oracle-free:23-slim` reports that `apexins.sql` stops at that prerequisite check. |
+
+`gvenzl/oracle-free:slim` is about 809 MB compressed, `latest` about 1.1 GB, and `full` about 2.1 GB. For reproducible environments, pin `23.26.3` or a digest instead of `latest`.
+
+A database-only smoke test:
+
+```powershell
+docker volume create oracle-free-data
+docker run --name oracle-free `
+  -p 1521:1521 `
+  --env-file .env `
+  -v oracle-free-data:/opt/oracle/oradata `
+  -d gvenzl/oracle-free:23.26.3-slim
+```
+
+Add `ORACLE_PASSWORD` to the gitignored `.env` file before starting; do not put it in this repository. Wait for `DATABASE IS READY TO USE` before connecting. Do not reuse a database volume across 26ai point releases without testing; the upstream image notes that migrations can require a fresh volume.
+
+For APEX 26.2, use the regular or full image and the supported sandbox workflow below. Do not substitute `slim` or `latest-lite`.
+
 ## Prerequisites
 
 - Docker Desktop or Podman with Compose.
