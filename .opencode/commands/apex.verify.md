@@ -21,4 +21,4 @@ Omit `-AppDirectory` for a repository-wide check.
 3. Report the full output, including warnings.
 4. Treat the result as PASS only when the command exits 0. A PASS with warnings is not a clean release gate; list every warning and decide whether it is relevant.
 5. For a release candidate, re-run with `-Strict` and require a clean PASS.
-6. This static check does not replace the APEX compiler. For an app tree, also run `/apex.validate <app-directory>`.
+6. This static check does not replace the APEX compiler. For an app tree, the APEX compiler validates automatically on generate or modify.

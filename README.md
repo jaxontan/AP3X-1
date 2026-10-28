@@ -71,9 +71,8 @@ This harness uses a **streamlined vibe coding workflow** that transforms natural
 flowchart LR
     A["1. Idea / requirements.md"] --> B["2. Architecture<br/>/apex-design"]
     B --> C["3. PL/SQL Logic<br/>/apex-plsql"]
-    C --> D["4. APEX Declarative<br/>/apex-apexlang"]
-    D --> E["5. Validation Gate<br/>/apex-validate"]
-    E --> F["6. Deploy Preview<br/>/apex-deploy"]
+    C --> D["4. APEX Declarative<br/>(Auto-Validated)"]
+    D --> E["5. Deploy Preview<br/>/apex-deploy"]
 ```
 
 ### 📋 Example: "Expense Reimbursement & Approval"
@@ -121,29 +120,10 @@ end pkg_expense_mgmt;
 
 ---
 
-#### Step 4: Generate Declarative APEXLang (`/apex-apexlang` or `/apex.apexlang`)
-The agent creates declarative `.apx` files under `applications/expense_app/`:
-```text
-applications/expense_app/
-├── .apex/
-│   └── apexlang.json                 # Version-locked to APEX 26.1 or 26.2
-├── application.apx                   # App definition, theme & navigation
-├── pages/
-│   ├── page-1.apx                    # Dashboard Cards & Reports
-│   ├── page-10.apx                   # My Expenses Interactive Grid & Modal Form
-│   └── page-20.apx                   # Approval Queue (with authorization rules)
-└── shared-components/
-    └── authorization-schemes.apx     # MUST_BE_MANAGER scheme definition
-```
+#### Step 4: Generate Declarative APEXLang (Autonomous Auto-Validation)
+The assistant creates declarative `.apx` files under `working/app/`. 
 
----
-
-#### Step 5: Deterministic Validation Gate (`/apex-validate` or `/apex.validate`)
-Before any database import, the app tree is validated offline against the SQLcl APEX compiler:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory working/app
-```
-**Output:**
+Every time an `.apx` file is generated or modified, the harness **automatically normalizes line endings and runs SQLcl `apex validate`** in the background—guaranteeing clean syntax without any manual validation commands:
 ```text
 Validating APEX application: ...\working\app
 SQLcl: ...\tools\sqlcl\bin\sql.exe
@@ -155,7 +135,7 @@ APEX validation PASSED.
 
 ---
 
-#### Step 6: Safe Deployment Preview & Import (`/apex-deploy` or `/apex.deploy`)
+#### Step 5: Safe Deployment Preview & Import (`/apex-deploy` or `/apex.deploy`)
 Deployments are strictly gated and previewed first using `-WhatIf`:
 ```powershell
 # 1. Preview the import plan safely

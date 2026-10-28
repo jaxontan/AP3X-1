@@ -17,4 +17,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apex-change.p
 (Omit `-AppDirectory` for a repository-wide check.)
 
 3. For a release candidate, re-run with `-Strict` and require a clean PASS.
-4. Note: Static check does not replace the APEX compiler. Always run `/apex-validate <app-directory>` as well.
+4. Note: Static check does not replace the APEX compiler. The APEX compiler validates automatically on generate or modify.
