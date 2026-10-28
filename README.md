@@ -49,11 +49,17 @@ claude
 *(Or open this repository directly in the Antigravity IDE, VS Code, or Codex).*
 
 ### 4. Build & Validate
-Use the built-in commands inside your agent chat:
-- `/speckit.specify <feature>` — Define requirements.
-- `/apex.design <feature>` — Draft domain model, business rules, and page map.
-- `/apex.apexlang applications/<app>` — Generate APEXLang code.
-- `/apex.validate applications/<app>` — Run deterministic APEX compile & validation gate.
+Use the built-in commands and skills inside your agent chat:
+
+| Step | OpenCode Command | Antigravity (`agy`) Skill | Description |
+| :--- | :--- | :--- | :--- |
+| **1. Specify** | `/speckit.specify <feature>` | `/speckit-specify <feature>` | Define requirements and user stories |
+| **2. Design** | `/apex.design <feature>` | `/apex-design <feature>` | Draft domain model, business rules, & page map |
+| **3. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
+| **4. APEXLang** | `/apex.apexlang applications/<app>` | `/apex-apexlang applications/<app>` | Generate clean `.apx` APEXLang declarative code |
+| **5. Validate** | `/apex.validate applications/<app>` | `/apex-validate applications/<app>` | Deterministic APEX compile & validation gate |
+
+*(Note: In Antigravity `agy`, skills use hyphens (`-`) like `/speckit-specify`, or you can simply ask in natural language like `"Specify a new customer portal feature"`).*
 
 ---
 
