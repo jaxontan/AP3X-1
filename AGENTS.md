@@ -100,7 +100,6 @@ The harness supports two lean vibe coding workflows without multi-phase specific
    - Run the validation gate.
 
 For specialized guidance during vibe coding, use the domain commands directly:
-- `/apex.design` (analyze rules & page map)
 - `/apex.plsql` (packages, business rules, tapi/xapi)
 - `/apex.apexlang` (implement declarative .apx changes)
 

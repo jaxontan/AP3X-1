@@ -62,7 +62,6 @@ $requiredFiles = @(
     '.agents\skills\oracle-apex.md',
     '.agents\rules\oracle-apex.md',
     '.opencode\agents\apex.md',
-    '.opencode\commands\apex.design.md',
     '.opencode\commands\apex.plsql.md',
     '.opencode\commands\apex.apexlang.md',
     '.claude\settings.json',

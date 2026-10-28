@@ -53,11 +53,10 @@ Use the built-in commands and skills inside your agent chat:
 
 | Step | OpenCode Command | Antigravity (`agy`) Skill | Description |
 | :--- | :--- | :--- | :--- |
-| **1. Requirements** | Prompt or `requirements.md` | Prompt or `requirements.md` | Natural language feature scope & rules |
-| **2. Design** | `/apex.design <feature>` | `/apex-design <feature>` | Draft domain model, business rules, & page map |
-| **3. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
-| **4. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
-| **5. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
+| **1. Page Design** | `working/page-design/requirement.md` | `working/page-design/requirement.md` | User-defined page map, regions & rules |
+| **2. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
+| **3. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
+| **4. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
 
 *(Note: Validation runs automatically whenever APEXLang code is generated or modified).*
 
@@ -69,43 +68,27 @@ This harness uses a **streamlined vibe coding workflow** that transforms natural
 
 ```mermaid
 flowchart LR
-    A["1. Idea / requirements.md"] --> B["2. Architecture<br/>/apex-design"]
-    B --> C["3. PL/SQL Logic<br/>/apex-plsql"]
-    C --> D["4. APEX Declarative<br/>(Auto-Validated)"]
-    D --> E["5. Deploy Preview<br/>/apex-deploy"]
+    A["1. User Page Design<br/>working/page-design/requirement.md"] --> B["2. PL/SQL Logic<br/>/apex-plsql"]
+    B --> C["3. APEX Declarative<br/>(Auto-Validated)"]
+    C --> D["4. Deploy Preview<br/>/apex-deploy"]
 ```
 
-### 📋 Example: "Expense Reimbursement & Approval"
+### 📋 Example Walkthrough
 
 Here is how a real feature travels through the harness:
 
-#### Step 1: Define Requirements (Prompt or `requirements.md`)
-Prompt your assistant inside chat or provide a `requirements.md`:
-> `Build an expense approval workflow where employees submit expense claims, managers review them, and claims over $1,000 require director approval. Rejections require a mandatory reason.`
+#### Step 1: User Defines Page Design & Rules (`working/page-design/requirement.md`)
+You specify the exact page layout, regions, and rules in `working/page-design/requirement.md`:
+- **Page 1 (Dashboard):** Summary Cards with pending count badges & charts.
+- **Page 10 (My Expenses):** Interactive Grid with a modal entry form.
+- **Page 20 (Approval Queue):** Cards region with action dialogs for managers.
+- **Rules:** Claims $\le \$1,000$ require Manager approval; claims $> \$1,000$ escalate to Director; rejections require a mandatory reason.
 
-**What the agent establishes:**
-Key business rules and workflow constraints:
-- `BR-EXP-001`: Expense claims $\le \$1,000$ require manager approval; claims $> \$1,000$ route to Director level.
-- `BR-EXP-002`: Rejection requires a mandatory, non-empty justification comment.
-- `BR-EXP-003`: Only claims in `DRAFT` or `SUBMITTED` status can be modified or withdrawn.
-
----
-
-#### Step 2: Architecture & Domain Modeling (`/apex-design` or `/apex.design`)
-The agent maps business rules into an architecture blueprint:
-- **Data Model:**
-  - Table `EXPENSES (id, employee_id, amount, description, status, approved_by, reject_reason, created_at)`
-  - Check constraints for lifecycle statuses (`DRAFT`, `SUBMITTED`, `APPROVED`, `REJECTED`).
-- **PL/SQL API Contract:**
-  - Package `pkg_expense_mgmt` with procedures `submit_claim()`, `approve_claim()`, and `reject_claim()`.
-- **APEX Page Map:**
-  - **Page 1 (Dashboard):** Summary Cards with pending count badges & expense charts.
-  - **Page 10 (My Expenses):** Interactive Grid with a modal entry form.
-  - **Page 20 (Approval Queue):** Cards region with "Approve" / "Reject" action dialogs protected by the `MUST_BE_MANAGER` authorization scheme.
+The agent strictly follows your architecture rather than inventing an arbitrary design.
 
 ---
 
-#### Step 3: PL/SQL Implementation (`/apex-plsql` or `/apex.plsql`)
+#### Step 2: PL/SQL Implementation (`/apex-plsql` or `/apex.plsql`)
 Business logic is implemented inside database packages (following the SmartDB contract):
 ```sql
 create or replace package pkg_expense_mgmt as
@@ -120,7 +103,7 @@ end pkg_expense_mgmt;
 
 ---
 
-#### Step 4: Generate Declarative APEXLang (Autonomous Auto-Validation)
+#### Step 3: Generate Declarative APEXLang (Autonomous Auto-Validation)
 The assistant creates declarative `.apx` files under `working/app/`. 
 
 Every time an `.apx` file is generated or modified, the harness **automatically normalizes line endings and runs SQLcl `apex validate`** in the background—guaranteeing clean syntax without any manual validation commands:
@@ -135,7 +118,7 @@ APEX validation PASSED.
 
 ---
 
-#### Step 5: Safe Deployment Preview & Import (`/apex-deploy` or `/apex.deploy`)
+#### Step 4: Safe Deployment Preview & Import (`/apex-deploy` or `/apex.deploy`)
 Deployments are strictly gated and previewed first using `-WhatIf`:
 ```powershell
 # 1. Preview the import plan safely
@@ -194,7 +177,6 @@ docker compose down -v
 ### 🎯 APEX & PL/SQL Domain Commands
 | Command | Purpose |
 | :--- | :--- |
-| `/apex.design <feature>` | Analyze domain rules, entity relationships, and page navigation |
 | `/apex.plsql <package>` | Write robust PL/SQL packages encapsulating business logic |
 | `/apex.apexlang <app-dir>` | Generate clean `.apx` APEXLang declarative definitions |
 
