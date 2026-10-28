@@ -73,33 +73,24 @@ flowchart LR
     C --> D["4. Deploy Preview<br/>/apex-deploy"]
 ```
 
-### 📋 Example Walkthrough
+### 📋 How It Works
 
-Here is how a real feature travels through the harness:
+Here is how a feature travels through the harness:
 
 #### Step 1: User Defines Page Design & Rules (`working/page-design/requirement.md`)
-You specify the exact page layout, regions, and rules in `working/page-design/requirement.md`:
-- **Page 1 (Dashboard):** Summary Cards with pending count badges & charts.
-- **Page 10 (My Expenses):** Interactive Grid with a modal entry form.
-- **Page 20 (Approval Queue):** Cards region with action dialogs for managers.
-- **Rules:** Claims $\le \$1,000$ require Manager approval; claims $> \$1,000$ escalate to Director; rejections require a mandatory reason.
+You define your desired page layout, regions, items, and rules in `working/page-design/requirement.md`:
+- **Pages & Components:** Page numbers, titles, reports, forms, and modal dialogs.
+- **Business Rules:** Input validation, state transitions, and authorization rules.
 
-The agent strictly follows your architecture rather than inventing an arbitrary design.
+The assistant strictly follows your architecture rather than inventing an arbitrary design.
 
 ---
 
 #### Step 2: PL/SQL Implementation (`/apex-plsql` or `/apex.plsql`)
-Business logic is implemented inside database packages (following the SmartDB contract):
-```sql
-create or replace package pkg_expense_mgmt as
-  procedure submit_claim(p_claim_id in number);
-  procedure approve_claim(p_claim_id in number, p_approver_id in number);
-  procedure reject_claim(p_claim_id in number, p_approver_id in number, p_reason in varchar2);
-end pkg_expense_mgmt;
-/
-```
-> [!NOTE]
-> Keeping business rules inside PL/SQL ensures data integrity, makes logic unit-testable via utPLSQL, and prevents complex SQL from leaking into APEX page processes.
+Business logic is implemented inside database packages under `working/database/packages/` (following the SmartDB contract):
+- Encapsulates multi-table writes, row locking, and status transitions.
+- Keeps APEX page processes thin, declarative, and unit-testable via utPLSQL.
+- Prevents raw SQL queries and complex business rules from scattering across pages.
 
 ---
 
@@ -132,24 +123,9 @@ powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirecto
 
 ## 🐳 Disposable Local Database (DB + APEX + ORDS)
 
-To test and develop locally without touching production or shared databases, you can spin up a disposable local database.
+To develop and test locally without touching production or shared databases, spin up the pre-configured all-in-one Autonomous Database Free container (DB + APEX + ORDS preinstalled):
 
-### ❓ Slim vs. Latest: What is the difference?
-
-| Image Flavor | Size | Contains XML DB? | Can it run APEX? | Best For |
-| :--- | :--- | :--- | :--- | :--- |
-| **`slim`** (`gvenzl/oracle-free:23-slim`) | ~800 MB | ❌ No | ❌ **No** | Lightweight SQL & PL/SQL smoke tests only. |
-| **`latest` / Standard** (`database/free:latest`) | ~1.1 GB | ✅ Yes | ✅ **Yes** | Smallest base DB that supports APEX. Requires ORDS & APEX installation. |
-| **`adb-free:latest`** (Autonomous DB Free) | ~3 GB | ✅ Yes | ✅ **Yes (Preinstalled)** | **Smallest all-in-one image** with DB + APEX + ORDS ready out-of-the-box. |
-
-> [!IMPORTANT]
-> **Never use `slim` or `latest-lite` for APEX development.** APEX requires Oracle XML DB (`XDB`) and Oracle Text. The APEX installer halts immediately on `slim` images due to missing prerequisites.
-
----
-
-### 🚀 Running the Smallest All-in-One Database (APEX + ORDS)
-
-A pre-configured `docker-compose.yml` is ready in `local-dev/`:
+### 🚀 Setup & Launch
 
 ```powershell
 cd local-dev
@@ -159,11 +135,11 @@ docker compose up -d
 Once started:
 - **APEX URL:** [https://localhost:8443/ords/apex](https://localhost:8443/ords/apex)
 - **Database Port:** `1521` (Service name: `FREEPDB1`)
-- **Workspace:** `INTERNAL`
+- **Workspace:** `INTERNAL` (or create a workspace for your app)
 - **Admin User:** `ADMIN`
-- **Default Password:** `Welcome123456#` (set via `ORACLE_PASSWORD` in your `.env`)
+- **Default Password:** `Welcome123456#` (or configure via `ORACLE_PASSWORD` in your `.env`)
 
-When you are done, dispose of the database with:
+When you are finished, dispose of the database with:
 ```powershell
 docker compose down -v
 ```
