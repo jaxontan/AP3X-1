@@ -70,7 +70,7 @@ Run:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory <app-directory>
 ```
 
-The script first checks that every `.apx` file uses LF line endings. SQLcl's APEXLang parser rejects CRLF with misleading `token recognition error at: '\r\n'` messages. If CRLF is found, normalize the tree and re-run:
+The script first checks that every `.apx` file uses UTF-8 without a BOM and LF line endings. SQLcl's APEXLang parser rejects CRLF with misleading `token recognition error at: '\r\n'` messages and treats a BOM as source text. If either is found, normalize the tree and re-run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/normalize-apx-tree.ps1 -AppDirectory <app-directory>
@@ -79,14 +79,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/normalize-apx-tree.p
 Pass criteria:
 
 - The command exits 0, and
-- the output contains `Validation successful`.
+- the output contains `Validation successful`, and
+- the output has no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors.
 
 If validation fails:
 
 1. Read the full output; do not truncate the error.
-2. Fix the reported file and line.
-3. Re-run validation until it passes.
-4. Do not deploy a tree that has not passed.
+2. Use `skills/harness/error-triage/SKILL.md` to parse File, Line, Column, Type, and Error.
+3. Fix the reported file and line.
+4. Re-run validation.
+5. Stop after three attempts on the same diagnostic and report the evidence instead of guessing.
+6. Do not deploy a tree that has not passed.
 
 The Oracle wrapper scripts call `apex validate -input` in SQLcl `/nolog` mode. No database connection is required for validation.
 
@@ -111,15 +114,24 @@ Deploy only when the user explicitly asks to deploy in the current request.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-directory> -WhatIf
 ```
 
-2. Confirm the target connection without printing the secret.
+2. Confirm the target connection and get explicit approval for that target without printing the secret.
 3. Run the import:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-directory>
 ```
 
+The script has `ConfirmImpact = 'High'` and prompts before importing. Do not suppress the prompt with `-Confirm:$false` unless the user approved this exact target.
+
 4. Treat any `ORA-` output as failure, even if the process exit code is 0.
 5. Report the application ID, workspace, and any import warnings.
+6. Export and compare when the target supports APEXLang export:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-directory> -CompareDirectory <app-directory>
+```
+
+Treat drift as a failure and explain the differing files.
 
 The deploy script enables automatic installation of supporting objects and then runs `apex import -input`.
 
@@ -143,7 +155,8 @@ Report `PASS`, `PARTIAL`, or `FAIL` with evidence. Do not claim a UI check that 
 | `SQLCL_BIN` missing | Run `. .\scripts\set-env.ps1`; verify `tools\sqlcl\bin\sql.exe` exists. |
 | Java not found | Set `JAVA_HOME` to the installed JDK 21; re-run `harness-doctor.ps1`. |
 | Validation reports `token recognition error at: '\r\n'` | The tree has CRLF line endings. Run `scripts/normalize-apx-tree.ps1`, then re-validate. |
-| Validation output has no success marker | Treat as failure; read the reported `.apx` errors and fix them. |
+| Validation reports a BOM error or `FILE_IGNORED` | The tree has a BOM, an unsupported encoding, or a skipped `.apx` file. Normalize the tree and treat a repeat as failure. |
+| Validation output has no success marker, or has compile diagnostics | Treat as failure; read the reported `.apx` errors and follow `skills/harness/error-triage/SKILL.md`. |
 | `ORA-` during import | Stop, capture the full error, and check the target schema, workspace, and privileges. |
 | Version mismatch | Re-route with `mmdVersion`; never patch a 26.1 app with 26.2-only syntax. |
 | App directory missing | Ask for the exact directory or permission to create a new app; do not guess. |

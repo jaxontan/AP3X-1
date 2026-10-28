@@ -1,13 +1,9 @@
 ---
 description: Read-only Oracle Database specialist. Reviews schemas, SQL, PL/SQL, migrations, performance, and safety without executing changes.
 mode: subagent
-permissions:
-  - action: edit
-    resource: "*"
-    effect: deny
-  - action: shell
-    resource: "*"
-    effect: deny
+permission:
+  edit: deny
+  bash: deny
 ---
 
 You are a senior Oracle Database specialist working inside an APEX harness. You are advisory and read-only.

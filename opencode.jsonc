@@ -31,50 +31,60 @@
     }
   },
 
-  // OpenCode v2 permission rules. The last matching rule wins, so broad
-  // rules come first and narrower exceptions follow. OpenCode v1 rejects
-  // this key; use OpenCode v2 (the opencode2 shim) for this project.
-  "permissions": [
-    { "action": "shell", "resource": "*", "effect": "allow" },
+  // This block uses the OpenCode v1 `permission` schema on purpose. Both
+  // supported hosts accept it: v1 reads it directly, and v2.2+ converts it to
+  // its ordered `permissions` rules. Do not switch back to `permissions`
+  // here; v1 rejects that key with "V2 permissions are not supported".
+  //
+  // Rules are evaluated in order and the last match wins within each tool.
+  "permission": {
+    // Routine work is allowed. Narrower rules below add the gates.
+    "*": "allow",
 
-    // SQLcl MCP tools are the live-database boundary. SQL is allowed;
-    // AGENTS.md still requires explicit approval for destructive changes.
-    { "action": "oracle-sqlcl_*", "resource": "*", "effect": "allow" },
+    // SQLcl MCP tools are the live-database boundary. Keep this at "ask"
+    // unless an unattended session is explicitly intended.
+    "oracle-sqlcl_*": "ask",
 
-    // Destructive filesystem and git operations need confirmation.
-    { "action": "shell", "resource": "*Remove-Item*", "effect": "ask" },
-    { "action": "shell", "resource": "*rm *", "effect": "ask" },
-    { "action": "shell", "resource": "rm *", "effect": "ask" },
-    { "action": "shell", "resource": "*git push*", "effect": "ask" },
-    { "action": "shell", "resource": "*git reset --hard*", "effect": "ask" },
-    { "action": "shell", "resource": "*git clean*", "effect": "ask" },
-    { "action": "shell", "resource": "*git checkout --*", "effect": "ask" },
-    { "action": "shell", "resource": "*git restore*", "effect": "ask" },
+    // Shell commands: allow routine work, then gate destructive actions.
+    "bash": {
+      "*": "allow",
 
-    // Database changes need confirmation. Read-only SQL stays allowed.
-    { "action": "shell", "resource": "*apex import*", "effect": "ask" },
-    { "action": "shell", "resource": "*drop *", "effect": "ask" },
-    { "action": "shell", "resource": "*truncate *", "effect": "ask" },
-    { "action": "shell", "resource": "*delete *", "effect": "ask" },
-    { "action": "shell", "resource": "*alter system*", "effect": "ask" },
+      "*Remove-Item*": "ask",
+      "rm *": "ask",
+      "*rm -rf *": "ask",
+      "*git push*": "ask",
+      "*git reset --hard*": "ask",
+      "*git clean*": "ask",
+      "*git checkout --*": "ask",
+      "*git restore*": "ask",
 
-    // V2 defaults to allowing paths outside the workspace. The harness keeps
-    // the stricter v1 default and asks before crossing that boundary.
-    { "action": "external_directory", "resource": "*", "effect": "ask" },
+      "*apex import*": "ask",
+      "*deploy-apex-app*": "ask",
+      "*drop *": "ask",
+      "*truncate *": "ask",
+      "*delete *": "ask",
+      "*alter system*": "ask"
+    },
 
-    // Keep credentials out of model context. In v2, "*" also matches "/",
-    // so these patterns cover root-level files and nested directories.
-    { "action": "read", "resource": "*.env", "effect": "deny" },
-    { "action": "read", "resource": "*.env.*", "effect": "deny" },
-    { "action": "read", "resource": "*.pem", "effect": "deny" },
-    { "action": "read", "resource": "*.key", "effect": "deny" },
-    { "action": "read", "resource": "*.p12", "effect": "deny" },
-    { "action": "read", "resource": "*.jks", "effect": "deny" },
-    { "action": "read", "resource": "*cwallet.sso", "effect": "deny" },
+    // V2 defaults to allowing paths outside the workspace. Keep the stricter
+    // v1 default and ask before crossing that boundary.
+    "external_directory": "ask",
 
-    // Templates are safe to read and are useful setup references.
-    { "action": "read", "resource": "*.env.example", "effect": "allow" }
-  ],
+    // Keep credentials out of model context. The allow for `.env.example`
+    // must come after the deny patterns because the last match wins.
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*.p12": "deny",
+      "*.jks": "deny",
+      "*cwallet.sso": "deny",
+      "*.env.example": "allow"
+    }
+  },
+
   "watcher": {
     "ignore": ["tools/**", "node_modules/**", ".git/**"]
   }

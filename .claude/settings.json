@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.jks)",
+      "Read(./**/cwallet.sso)"
+    ],
+    "ask": [
+      "Bash(rm:*)",
+      "Bash(Remove-Item:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git clean:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git restore:*)",
+      "Bash(apex import:*)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1:*)",
+      "Bash(pwsh -NoProfile -File scripts/deploy-apex-app.ps1:*)",
+      "Bash(./scripts/deploy-apex-app.ps1:*)",
+      "Bash(sql:*)"
+    ]
+  }
+}

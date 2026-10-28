@@ -16,16 +16,17 @@ It combines:
 
 ```powershell
 cd <path-to-this-repo>
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-opencode-v2.ps1
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 . .\scripts\set-env.ps1
 .\scripts\harness-doctor.ps1
+.\scripts\test-harness.ps1
+opencode --version
 opencode
 ```
 
 If the execution policy blocks dot-sourcing, the `Set-ExecutionPolicy -Scope Process` line applies only to the current PowerShell window. You can also run individual scripts with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
 
-OpenCode v2 is required: `opencode.jsonc` uses the v2 `permissions` ruleset, which v1 rejects. `install-opencode-v2.ps1` places a project-local v2 binary under `tools\opencode-v2\`; `set-env.ps1` puts it first on `PATH` and also provides an `opencode2` shim.
+`opencode.jsonc` uses the V1 `permission` object so the same file works in OpenCode 1.18+ and 2.x. OpenCode 2.x converts V1 rules to its ordered `permissions` model; OpenCode 1.x rejects a `permissions` key. Test both binaries with `opencode debug config` and `opencode2 debug config`. `install-opencode-v2.ps1` is optional; it places a project-local 2.x binary under `tools\opencode-v2\`, and `set-env.ps1` provides an `opencode2` shim.
 
 The default agent is `apex`. The default model is a zero-cost OpenCode model. The project constitution is already initialized at `.specify/memory/constitution.md`; start a non-trivial feature with:
 
@@ -128,6 +129,7 @@ Apex-harness/
 │   ├── validate-apex-app.ps1 # APEX validate gate (checks LF first)
 │   ├── normalize-apx-tree.ps1 # Convert CRLF .apx files to LF
 │   ├── deploy-apex-app.ps1   # APEX import gate with -WhatIf
+│   ├── test-harness.ps1      # Offline self-test for the gates (no database)
 │   ├── install-sqlcl.ps1     # Reproducible SQLcl + JDK setup
 │   ├── install-opencode-v2.ps1 # Project-local OpenCode v2 binary
 │   └── install-local-apex.ps1  # Preview-first FREEPDB1 sandbox wrapper
@@ -138,6 +140,8 @@ Apex-harness/
     ├── harnesses/            # No-key setup matrix for each host
     └── licenses/
 ```
+
+`scripts/export-apex-app.ps1` exports an application with `apex export -exptype APEXLANG -split` and can compare the result with the working tree. `skills/harness/error-triage/SKILL.md` is the playbook for APEXLang and `ORA-` failures.
 
 ## Agents
 
@@ -151,10 +155,11 @@ Apex-harness/
 
 ## Safety model
 
-- **Validation before deployment.** `apex validate` must print `Validation successful`. `.apx` files must use LF; CRLF trees are rejected before SQLcl runs. Changed files also pass `scripts/verify-apex-change.ps1`.
-- **Explicit deployment approval.** The deploy script supports `-WhatIf` and never prints the connection string.
-- **Database changes are gated.** Destructive shell patterns, `apex import`, `drop`, `truncate`, `delete`, `alter system`, and `git push` ask for confirmation through `opencode.jsonc`. Local `FREEPDB1` may use full schema access; commercial and shared targets are read-only by default.
-- **Secrets stay out of context.** `.env`, `.pem`, `.key`, `.p12`, `.jks`, and Oracle wallet files are denied; `.env.example` remains readable. `.memory/` never stores credentials or schema caches.
+- **Validation before deployment.** `apex validate` must print `Validation successful` with no compile diagnostics, `ORA-` errors, `FILE_IGNORED`, or skipped files. `.apx` files must use UTF-8 without a BOM and LF endings; CRLF and BOM trees are rejected before SQLcl runs. Changed files also pass `scripts/verify-apex-change.ps1`.
+- **Explicit deployment approval.** The deploy script supports `-WhatIf` and never prints the connection string. Import is a privileged action and requires explicit user approval for the named target.
+- **Export and drift check.** `scripts/export-apex-app.ps1` uses `apex export -exptype APEXLANG -split` and can compare the database export with the working tree. Drift is reported as a failure, not hidden.
+- **Database changes are gated.** Destructive shell patterns, `apex import`, `drop`, `truncate`, `delete`, `alter system`, and `git push` ask for confirmation through `opencode.jsonc` and `.claude/settings.json`. Local `FREEPDB1` may use full schema access; commercial and shared targets are read-only by default.
+- **Secrets stay out of context.** `.env`, `.pem`, `.key`, `.p12`, `.jks`, and Oracle wallet files are denied in OpenCode and Claude Code. `.memory/` never stores credentials or schema caches.
 - **No paid API keys.** Do not request, print, or store API keys. Use a free host tier, subscription login, or local model, and validate deterministically.
 - **Business rules are traceable.** Every accepted rule has an ID, one implementation home, and a test; page processes do not become the only enforcement point.
 - **Vendored skills are upstream content.** `skills/apex/**` and `skills/db/**` are updated from source. The only local adaptations are LF normalization for `.apx` files, the short router path-mapping notes, and the restored 26.1 generation `tools/` directory from the pinned commit.
@@ -164,7 +169,7 @@ Apex-harness/
 
 Required:
 
-- OpenCode 2.x
+- OpenCode 1.18+ or 2.x
 - Node.js 18+
 - Python 3.11+
 - `uv` and `specify-cli` (Spec Kit)
@@ -173,7 +178,7 @@ Required:
 
 Optional hosts:
 
-- Codex CLI (installed at the time of writing as `codex-cli 0.149.1`)
+- Codex CLI (optional; not bundled by this harness)
 - Claude Code CLI and, if used, a Claude subscription
 - Antigravity desktop app with a Google account
 - DSH (developer preview)

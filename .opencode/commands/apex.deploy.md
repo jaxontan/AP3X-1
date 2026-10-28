@@ -24,4 +24,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory "<app-directory>"
 ```
 
+The script prompts for confirmation because it uses `ConfirmImpact = 'High'`. Do not suppress the prompt with `-Confirm:$false` unless the user explicitly approved this exact target.
+
 8. Report the application ID, workspace, warnings, and any `ORA-` errors. Treat `ORA-` output as failure even if the exit code is 0.
+9. After import, export and compare when the target supports APEXLang export:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-directory> -CompareDirectory "<app-directory>"
+```
+
+Treat drift as a failure and explain the differing files.

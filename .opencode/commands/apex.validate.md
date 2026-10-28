@@ -16,5 +16,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps
 ```
 
 4. Report the full validation output.
-5. Treat the result as PASS only when the command exits 0 and the output contains `Validation successful`.
+5. Treat the result as PASS only when the command exits 0 and the output contains `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors. The script enforces these checks, but report any warnings.
 6. If it fails, list the failing `.apx` files and the exact errors. Do not edit files unless the user asked you to fix them.

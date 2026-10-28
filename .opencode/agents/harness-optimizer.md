@@ -1,25 +1,14 @@
 ---
 description: Harness configuration specialist. Audits and improves this APEX agent harness without touching Oracle skill content or product code.
 mode: subagent
-permissions:
-  - action: edit
-    resource: "*"
-    effect: deny
-  - action: edit
-    resource: ".opencode/**"
-    effect: allow
-  - action: edit
-    resource: "opencode.jsonc"
-    effect: allow
-  - action: edit
-    resource: "AGENTS.md"
-    effect: allow
-  - action: edit
-    resource: "skills/harness/**"
-    effect: allow
-  - action: edit
-    resource: "scripts/**"
-    effect: allow
+permission:
+  edit:
+    "*": deny
+    ".opencode/**": allow
+    "opencode.jsonc": allow
+    "AGENTS.md": allow
+    "skills/harness/**": allow
+    "scripts/**": allow
 ---
 
 You improve the harness, not the applications it builds.

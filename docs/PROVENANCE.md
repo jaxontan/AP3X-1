@@ -101,9 +101,9 @@ ECC skills are generic and occasionally mention Claude Code-specific commands. T
 | Python | 3.12.10 | system | pre-existing |
 | uv | 0.13.6 | `%USERPROFILE%\.local\bin` | Official `astral.sh/uv` installer |
 | specify-cli | 1.2.3 | `%USERPROFILE%\.local\bin` | `uv tool install specify-cli` |
-| OpenCode | 2.2.0 | `tools\opencode-v2` | Standalone Windows x64 zip via `scripts/install-opencode-v2.ps1` |
+| OpenCode | 1.18.30 and 2.2.0 | system `opencode`; `tools\opencode-v2` | Standalone Windows x64 zip via `scripts/install-opencode-v2.ps1` |
 
-OpenCode v1 rejects the project's v2 `permissions` ruleset. The project-local v2 binary is selected by `scripts/set-env.ps1`; the installer also writes an `opencode2.cmd` shim beside it.
+`opencode.jsonc` uses the V1 `permission` object because OpenCode 1.x rejects a `permissions` key. OpenCode 2.x accepts and converts the V1 rules. The project-local 2.x binary is selected by `scripts/set-env.ps1`; the installer also writes an `opencode2.cmd` shim beside it.
 
 `tools/` is gitignored because SQLcl is a 124 MB binary distribution. Recreate it with `scripts/install-sqlcl.ps1`.
 

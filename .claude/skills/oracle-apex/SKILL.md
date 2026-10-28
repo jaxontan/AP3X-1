@@ -19,8 +19,9 @@ This project is an Oracle APEX agent harness. The canonical instructions are in 
 - Business rules before pages.
 - PL/SQL packages own business logic; page processes orchestrate.
 - No invented APEX syntax. Use the matching inventory and examples.
-- `.apx` files use LF; SQLcl must print `Validation successful`.
-- No deployment without explicit approval and a `-WhatIf` preview.
+- `.apx` files use UTF-8 without a BOM and LF endings; SQLcl must print `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors.
+- Diagnose failures with `skills/harness/error-triage/SKILL.md`; stop after three fix attempts on the same diagnostic.
+- No deployment without explicit approval for the named target and a `-WhatIf` preview.
 - No credentials or API keys in files.
 
 ## No API key policy

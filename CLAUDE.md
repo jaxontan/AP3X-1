@@ -8,6 +8,7 @@ This repository is an Oracle APEX agent harness. `AGENTS.md` is the canonical in
 - Any APEX creation, change, validation, or deployment: `skills/apex-delivery/SKILL.md`.
 - APEX syntax: `skills/apex/apexlang/SKILL.md`, then the matching 26.1 or 26.2 skill.
 - Oracle Database, SQL, or PL/SQL detail: `skills/db/SKILL.md`.
+- APEXLang, import, or `ORA-` error diagnosis: `skills/harness/error-triage/SKILL.md`.
 - Security review: `skills/harness/security-review/SKILL.md`.
 
 A project skill bridge is available at `.claude/skills/oracle-apex/SKILL.md`.
@@ -17,8 +18,9 @@ A project skill bridge is available at `.claude/skills/oracle-apex/SKILL.md`.
 - Confirm the APEX version before using any component syntax.
 - Build the domain model and page map before writing pages for a new feature.
 - Keep business rules in PL/SQL packages; page processes orchestrate.
-- Run `scripts/validate-apex-app.ps1` and require `Validation successful`.
-- Deploy only with explicit approval and a `-WhatIf` preview.
+- Run `scripts/validate-apex-app.ps1` and require `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors.
+- `.apx` files must be UTF-8 without a BOM and use LF endings.
+- Deploy only with explicit approval for the named target and a `-WhatIf` preview.
 - Do not place credentials, connection strings, or wallet contents in the repository.
 
 ## No API key policy

@@ -20,7 +20,7 @@ When editing:
 - Keep page processes thin; call PL/SQL packages for business logic.
 - Use only properties that exist in the matching inventory.
 - Preserve existing page numbers, aliases, and app structure.
-- Keep `.apx` files at LF line endings.
+- Keep `.apx` files at UTF-8 without a BOM and LF line endings.
 - Do not hard-code environment values or secrets.
 
 Then run:
@@ -29,4 +29,4 @@ Then run:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory "<app-directory>"
 ```
 
-Treat the change as done only when the command exits 0 and prints `Validation successful`. Report files changed, rules covered, validation evidence, and residual risks. Do not deploy unless the user explicitly asks.
+Treat the change as done only when the command exits 0 and prints `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors. Report files changed, rules covered, validation evidence, and residual risks. Do not deploy unless the user explicitly asks. If validation fails, follow `skills/harness/error-triage/SKILL.md` and stop after three attempts on the same diagnostic.

@@ -19,6 +19,8 @@ Rules:
 - Model the business domain before designing pages.
 - Keep business rules in PL/SQL packages; page processes orchestrate.
 - Do not invent APEX syntax; use the matching inventory and examples.
-- Validate with `scripts/validate-apex-app.ps1` and require `Validation successful`.
-- Deploy only with explicit approval and a `-WhatIf` preview.
+- Validate with `scripts/validate-apex-app.ps1` and require `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors.
+- `.apx` files must be UTF-8 without a BOM and use LF endings.
+- Deploy only with explicit approval for the named target and a `-WhatIf` preview.
+- Diagnose APEXLang or database errors with `skills/harness/error-triage/SKILL.md`; stop after three fix attempts on the same diagnostic.
 - No API keys, connection strings, or wallet contents in files.

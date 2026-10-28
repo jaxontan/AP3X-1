@@ -29,6 +29,7 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 | End-to-end APEX delivery | `skills/apex-delivery/SKILL.md` |
 | Verification gate (APEX) | `skills/apex-delivery/SKILL.md` |
 | Verification checklist for supporting code | `skills/harness/verification-loop/SKILL.md` |
+| Diagnose APEXLang, import, or ORA- errors | `skills/harness/error-triage/SKILL.md` |
 | Evaluation design | `skills/harness/eval-harness/SKILL.md` |
 | Security review | `skills/harness/security-review/SKILL.md` |
 | Context pressure | `skills/harness/strategic-compact/SKILL.md` |
@@ -102,8 +103,9 @@ Then run the APEX gates:
 1. **Static verify**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apex-change.ps1 -AppDirectory <app-dir>`; use `-Strict` for a release candidate.
 2. **Validate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory <app-dir>`
 3. **Review**: use the `apex-reviewer` subagent for APEXLang, SQL, security, and performance.
-4. **Deploy** (only on explicit request): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-dir> -WhatIf` first, then run without `-WhatIf`.
+4. **Deploy** (only on explicit request and after the user approves the named target): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-dir> -WhatIf` first, then run without `-WhatIf`.
 5. **Verify**: follow `skills/apex-delivery/SKILL.md` and produce a PASS/FAIL report.
+6. **Export and drift-check** (after import, when the target supports APEXLang export): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-dir> -CompareDirectory <app-dir>`. Treat drift as a failure and explain it.
 
 ## Environment
 
@@ -119,13 +121,14 @@ Run the harness setup before APEX commands:
 - `SQLCL_CONNECTION_STRING`: set by the user for deploy; never commit it.
 - `TARGET_DB_VERSION`: confirm `19c`, `23ai`, or `26ai` before using newer SQL. The compatibility matrix is in `skills/apex-domains/references/smartdb-plsql.md`.
 - SQLcl 26.3+ is expected. `apex validate` requires no database connection; `apex import` does.
-- OpenCode v2 (2.x) is required because `opencode.jsonc` uses the v2 `permissions` ruleset. Run `scripts/install-opencode-v2.ps1` once; `set-env.ps1` puts `tools\opencode-v2` first on `PATH`. `harness-doctor.ps1` fails if the config is rejected.
+- Run `scripts\test-harness.ps1` to exercise the validation, normalization, export, and deploy gates offline with fake SQLcl output. It does not touch a database.
+- OpenCode 1.18+ and 2.x are both supported. `opencode.jsonc` uses the V1 `permission` object; 2.x converts it to `permissions`, while 1.x rejects any `permissions` key. Test with `opencode debug config` and, when installed, `tools\opencode-v2\opencode.exe debug config`. `harness-doctor.ps1` fails if an installed runtime rejects the config or an agent.
 
 ## APEXLang conventions
 
 - New apps live under `applications/<app>/` and publish only runtime artifacts: `.apex/`, `application.apx`, `deployments/`, `page-groups.apx`, `pages/`, `shared-components/`, and `supporting-objects/`.
 - Do not copy template docs or `scaffold-example/` containers into an app root.
-- `.apx` files must use LF line endings. SQLcl's APEX parser rejects CRLF with misleading token errors. If validation reports CRLF, run `scripts/normalize-apx-tree.ps1 -AppDirectory <app-dir>` and re-validate.
+- `.apx` files must use UTF-8 without a BOM and LF line endings. SQLcl's APEX parser rejects CRLF and treats a BOM as source text. The validation gate fails on CRLF, BOM, compile diagnostics, `ORA-` errors, and `FILE_IGNORED` even when SQLcl prints `Validation successful`. Run `scripts/normalize-apx-tree.ps1 -AppDirectory <app-dir>` to fix line endings and a UTF-8 BOM, then re-validate.
 - Resolve the target app directory before editing. If `applications/` is missing, ask for the exact app directory; do not silently create or relocate apps.
 - Keep raw grammar, the full component registry, and template trees out of context. Use the 26.1 generation skill's `tools/apexctl.mjs` projections (restored at the pinned upstream commit).
 - For 26.2, there is no generation skill; author with the 26.2 inventory and example applications.
@@ -150,6 +153,7 @@ Run the harness setup before APEX commands:
 
 ## Quality gates
 
+- Harness script changes must pass `scripts\test-harness.ps1` and `scripts\harness-doctor.ps1`.
 - APEX validation must print `Validation successful`.
 - SQL and PL/SQL must be reviewed against `skills/db/sql-dev` and `skills/db/plsql`.
 - Any change to authentication, authorization, or user input handling requires a security review.

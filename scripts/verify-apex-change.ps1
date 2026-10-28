@@ -176,6 +176,11 @@ foreach ($file in $files) {
         if ($bytes -contains 13) {
             Add-Failure "APEXLang file uses CRLF: $relative. Run scripts/normalize-apx-tree.ps1."
         }
+        $hasUtf8Bom = ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF)
+        $hasUtf16Bom = ($bytes.Length -ge 2 -and (($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) -or ($bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF)))
+        if ($hasUtf8Bom -or $hasUtf16Bom) {
+            Add-Failure "APEXLang file has a byte-order mark: $relative. Run scripts/normalize-apx-tree.ps1."
+        }
     }
 
     if ($textExtensions -contains $extension) {

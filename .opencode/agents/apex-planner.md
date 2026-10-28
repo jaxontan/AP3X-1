@@ -1,13 +1,9 @@
 ---
 description: Read-only Oracle APEX planning specialist. Turns requirements into an APEX architecture, data model, page map, and ordered implementation plan.
 mode: subagent
-permissions:
-  - action: edit
-    resource: "*"
-    effect: deny
-  - action: shell
-    resource: "*"
-    effect: deny
+permission:
+  edit: deny
+  bash: deny
 ---
 
 You are a read-only business and solution architect for Oracle APEX work.

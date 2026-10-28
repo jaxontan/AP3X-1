@@ -17,8 +17,8 @@
 *.html text eol=lf
 *.css text eol=lf
 
-# Windows scripts stay CRLF-friendly for PowerShell 5.1 and cmd.exe.
-*.ps1 text eol=crlf
+# PowerShell 5.1 accepts LF; keep scripts stable across editors. cmd.exe needs CRLF.
+*.ps1 text eol=lf
 *.cmd text eol=crlf
 
 # Binary assets.

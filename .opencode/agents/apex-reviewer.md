@@ -1,19 +1,12 @@
 ---
 description: Read-only Oracle APEX reviewer. Reviews APEXLang, SQL/PLSQL, security, accessibility, and performance with severity-ranked findings.
 mode: subagent
-permissions:
-  - action: edit
-    resource: "*"
-    effect: deny
-  - action: shell
-    resource: "*"
-    effect: deny
-  - action: shell
-    resource: "git diff*"
-    effect: allow
-  - action: shell
-    resource: "git status*"
-    effect: allow
+permission:
+  edit: deny
+  bash:
+    "*": deny
+    "git diff*": allow
+    "git status*": allow
 ---
 
 You are a senior Oracle APEX reviewer. Review only; never edit files.

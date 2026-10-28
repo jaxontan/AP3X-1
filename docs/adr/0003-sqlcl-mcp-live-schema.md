@@ -16,7 +16,7 @@ Static mode prompts and cached schema notes cannot prevent column, constraint, a
 ## Decision
 
 - Enable the SQLcl MCP server as `oracle-sqlcl`:
-  - OpenCode v2: `mcp.servers.oracle-sqlcl` in `opencode.jsonc`.
+  - OpenCode 1.18+ and 2.x: `mcp.servers.oracle-sqlcl` in `opencode.jsonc`.
   - Claude Code: `.mcp.json`.
   - Other hosts: follow `skills/db/sqlcl/sqlcl-mcp-server.md` and the host's MCP configuration.
 - Start SQLcl with `-R 1`. This allows SQL, PL/SQL, DDL, and most SQLcl commands while blocking host/OS escapes. `-R 0` is an explicit opt-in for a disposable local sandbox, not the default.

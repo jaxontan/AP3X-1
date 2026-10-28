@@ -5,6 +5,8 @@ param(
 
 $ErrorActionPreference = 'Continue'
 
+$opencodeBeforeEnv = (Get-Command opencode -ErrorAction SilentlyContinue).Source
+
 . (Join-Path $PSScriptRoot 'set-env.ps1') | Out-Null
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -64,8 +66,16 @@ $requiredFiles = @(
     '.opencode\commands\apex.design.md',
     '.opencode\commands\apex.plsql.md',
     '.opencode\commands\apex.apexlang.md',
+    '.claude\settings.json',
+    '.mcp.json',
     '.specify\memory\constitution.md',
+    'skills\harness\error-triage\SKILL.md',
     'scripts\normalize-apx-tree.ps1',
+    'scripts\validate-apex-app.ps1',
+    'scripts\verify-apex-change.ps1',
+    'scripts\deploy-apex-app.ps1',
+    'scripts\export-apex-app.ps1',
+    'scripts\test-harness.ps1',
     'scripts\install-opencode-v2.ps1',
     'docs\PROVENANCE.md',
     'docs\harnesses\README.md'
@@ -86,21 +96,68 @@ $skillCount = (Get-ChildItem (Join-Path $root 'skills') -Recurse -File -Filter '
 Write-Host ('SKILL.md files: {0}' -f $skillCount)
 
 Write-Host ''
-Write-Host 'OpenCode v2 config' -ForegroundColor Cyan
-if (Get-Command opencode -ErrorAction SilentlyContinue) {
-    $configResult = & opencode debug config 2>&1 | Out-String
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host 'OK       v2 permissions accepted' -ForegroundColor Green
+Write-Host 'Configuration JSON' -ForegroundColor Cyan
+foreach ($relative in @('.claude\settings.json', '.mcp.json')) {
+    $path = Join-Path $root $relative
+    if (-not (Test-Path $path)) {
+        continue
     }
-    else {
-        Write-Host 'FAIL     opencode rejected opencode.jsonc' -ForegroundColor Red
-        $detail = ($configResult -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -First 5) -join [Environment]::NewLine
-        Write-Host $detail -ForegroundColor DarkGray
-        $failures.Add('OpenCode v2 config')
+    try {
+        Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+        Write-Host ('OK       {0}' -f $relative) -ForegroundColor Green
+    }
+    catch {
+        Write-Host ('FAIL     {0}' -f $relative) -ForegroundColor Red
+        $failures.Add($relative)
     }
 }
-else {
-    Write-Host 'SKIP     opencode not on PATH' -ForegroundColor Yellow
+
+Write-Host ''
+Write-Host 'OpenCode config' -ForegroundColor Cyan
+$opencodeV1 = $opencodeBeforeEnv
+$opencodeV2 = Join-Path $root 'tools\opencode-v2\opencode.exe'
+if ($opencodeV1 -and $opencodeV2 -and (Test-Path $opencodeV2)) {
+    $v1Full = [System.IO.Path]::GetFullPath($opencodeV1)
+    $v2Full = [System.IO.Path]::GetFullPath($opencodeV2)
+    if ($v1Full.Equals($v2Full, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $opencodeV1 = $null
+    }
+}
+$opencodeRuntimes = @(
+    [pscustomobject]@{ Name = 'V1'; Path = $opencodeV1; Required = $false }
+    [pscustomobject]@{ Name = 'V2'; Path = $(if (Test-Path $opencodeV2) { $opencodeV2 } else { $null }); Required = $false }
+)
+
+foreach ($runtime in $opencodeRuntimes) {
+    if (-not $runtime.Path) {
+        $status = if ($runtime.Required) { 'MISSING' } else { 'SKIP' }
+        $color = if ($runtime.Required) { 'Red' } else { 'Yellow' }
+        Write-Host ('{0,-8} {1}' -f $runtime.Name, $status) -ForegroundColor $color
+        if ($runtime.Required) { $failures.Add('OpenCode V1') }
+        continue
+    }
+
+    $version = (& $runtime.Path --version 2>&1 | Select-Object -First 1)
+    $configResult = & $runtime.Path debug config 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0) {
+        $agentArgs = if ($runtime.Name -eq 'V1') { @('agent', 'list') } else { @('debug', 'agents') }
+        $agentResult = & $runtime.Path @agentArgs 2>&1 | Out-String
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host ('OK       {0} {1} accepts opencode.jsonc and agents' -f $runtime.Name, $version) -ForegroundColor Green
+        }
+        else {
+            Write-Host ('FAIL     {0} {1} rejected an agent definition' -f $runtime.Name, $version) -ForegroundColor Red
+            $detail = ($agentResult -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -First 5) -join [Environment]::NewLine
+            Write-Host $detail -ForegroundColor DarkGray
+            $failures.Add("OpenCode $($runtime.Name) agents")
+        }
+    }
+    else {
+        Write-Host ('FAIL     {0} {1} rejected opencode.jsonc' -f $runtime.Name, $version) -ForegroundColor Red
+        $detail = ($configResult -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -First 5) -join [Environment]::NewLine
+        Write-Host $detail -ForegroundColor DarkGray
+        $failures.Add("OpenCode $($runtime.Name) config")
+    }
 }
 
 Write-Host ''
