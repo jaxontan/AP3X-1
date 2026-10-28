@@ -17,13 +17,34 @@ Image flavor is not a database version. Oracle AI Database 26ai Free is publishe
 
 | Use case | Image | Why |
 | --- | --- | --- |
-| APEX and ORDS | `container-registry.oracle.com/database/free:latest` or `gvenzl/oracle-free:23.26.3` | Full or regular flavor. APEX and ORDS are not bundled, so use the sandbox below or install APEX 26.2 and ORDS separately. |
-| Database and PL/SQL only | `gvenzl/oracle-free:23.26.3-slim` | Smallest image. Suitable for schema, SQL, and PL/SQL smoke tests. |
+| APEX and ORDS (All-in-One) | `container-registry.oracle.com/database/adb-free:latest` | Bundles Oracle Free DB, APEX, and ORDS pre-configured in a single container. Ready via `docker compose up -d` in `local-dev/`. |
+| APEX and ORDS (Custom sandbox) | `container-registry.oracle.com/database/free:latest` or `gvenzl/oracle-free:23.26.3` | Full or regular flavor. Base DB only; use `scripts/install-local-apex.ps1` to orchestrate APEX 26.2 and ORDS. |
+| Database and PL/SQL only | `gvenzl/oracle-free:23.26.3-slim` | Smallest image (~800 MB). Suitable for schema, SQL, and PL/SQL smoke tests only. |
 | Not for APEX | `gvenzl/oracle-free:slim`, `container-registry.oracle.com/database/free:latest-lite` | Removes Oracle Text, Spatial/Locator, MLE, RMAN, `wrap`, and XML DB files. APEX requires XML DB for a full development environment; community testing of `gvenzl/oracle-free:23-slim` reports that `apexins.sql` stops at that prerequisite check. |
 
 `gvenzl/oracle-free:slim` is about 809 MB compressed, `latest` about 1.1 GB, and `full` about 2.1 GB. For reproducible environments, pin `23.26.3` or a digest instead of `latest`.
 
-A database-only smoke test:
+### Option 1: Quick Disposable Docker Compose (All-in-One DB + APEX + ORDS)
+
+To quickly spin up a single disposable container containing Oracle Database Free, APEX, and ORDS:
+
+```powershell
+cd local-dev
+docker compose up -d
+```
+
+- APEX URL: `https://localhost:8443/ords/apex`
+- Workspace: `INTERNAL` | User: `ADMIN` | Password: defined in `.env` (or default `Welcome123456#`)
+- Database port: `1521` (service name: `FREEPDB1`)
+
+To stop and clean up when done:
+```powershell
+docker compose down -v
+```
+
+### Option 2: Database-only smoke test (Smallest DB, No APEX)
+
+If you only need SQL and PL/SQL testing without APEX, use the slim image:
 
 ```powershell
 docker volume create oracle-free-data
@@ -36,7 +57,9 @@ docker run --name oracle-free `
 
 Add `ORACLE_PASSWORD` to the gitignored `.env` file before starting; do not put it in this repository. Wait for `DATABASE IS READY TO USE` before connecting. Do not reuse a database volume across 26ai point releases without testing; the upstream image notes that migrations can require a fresh volume.
 
-For APEX 26.2, use the regular or full image and the supported sandbox workflow below. Do not substitute `slim` or `latest-lite`.
+### Option 3: Dedicated APEX 26.2 Sandbox (`uc-local-apex-dev`)
+
+For a dedicated APEX 26.2 sandbox orchestrated with independent DB and ORDS containers, use the supported sandbox workflow below. Do not substitute `slim` or `latest-lite`.
 
 ## Prerequisites
 

@@ -1,0 +1,38 @@
+# ==============================================================================
+# Disposable Oracle Database with APEX and ORDS
+# ==============================================================================
+# Usage:
+#   1. Set ORACLE_PASSWORD in your .env file or environment (default: Welcome123456#)
+#   2. Run: docker compose up -d
+#   3. Access APEX at: https://localhost:8443/ords/apex
+#      Workspace: INTERNAL | User: ADMIN | Password: <your password>
+#
+# NOTE ON IMAGE FLAVORS:
+#   - DO NOT use "slim" or "latest-lite" images for APEX.
+#   - The "slim" flavor removes Oracle XML DB and Oracle Text, which APEX prerequisites require.
+#   - "adb-free" is the smallest official all-in-one container bundling Oracle 23ai/26ai Free,
+#     APEX, and ORDS together out of the box.
+# ==============================================================================
+
+services:
+  apex-disposable:
+    image: container-registry.oracle.com/database/adb-free:latest
+    container_name: apex-disposable-db
+    ports:
+      - "1521:1522"
+      - "1522:1522"
+      - "8443:8443"
+    environment:
+      - WORKLOAD_TYPE=ATP
+      - WALLET_PASSWORD=${ORACLE_PASSWORD:-Welcome123456#}
+      - ADMIN_PASSWORD=${ORACLE_PASSWORD:-Welcome123456#}
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    volumes:
+      - adb-data:/data
+    restart: unless-stopped
+
+volumes:
+  adb-data:

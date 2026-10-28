@@ -1,199 +1,156 @@
 # Oracle APEX Agent Harness
 
-A multi-harness engineering environment for Oracle APEX. It pairs with OpenCode, Codex, Claude Code / VS Code Claude, Antigravity, DSH, and other `AGENTS.md`-aware agents without requiring a paid API key.
+A developer harness for building, validating, and deploying Oracle APEX applications with AI coding agents. Works seamlessly across **OpenCode**, **Antigravity**, **Claude Code**, **Codex**, and **DSH** without requiring paid API keys.
 
-It combines:
+---
 
-- **Four-domain Oracle engineering** — business analysis and domain modeling, APEX application design, PL/SQL implementation, and APEXLang coding.
-- **Oracle domain skills** — APEX 26.1/26.2 APEXLang generation, validation, deployment, inventories, and example apps, plus the Oracle Database skill tree.
-- **Spec-driven delivery** — GitHub Spec Kit commands for specification, planning, tasks, implementation, and convergence.
-- **Harness meta-skills** — a curated set of ECC skills for verification, eval, security review, context management, and decision records.
-- **Thin host adapters** — one canonical `AGENTS.md`, with bridges for Claude Code, Antigravity, and DSH so behavior does not diverge by editor.
-- **Local-to-commercial workflow** — an optional `FREEPDB1` sandbox, SQLcl MCP for live schema discovery, and a read-only promotion audit before touching a commercial database.
-- **Project memory** — `.memory/` templates for decisions, evidence-backed instincts, and session handoffs.
+## ⚡ Quick Start (3 Steps)
 
-## Quick start (OpenCode)
-
+### 1. Initialize the Environment
+In PowerShell:
 ```powershell
-cd <path-to-this-repo>
+# Set execution policy for the current session
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# Load environment & run health check
 . .\scripts\set-env.ps1
 .\scripts\harness-doctor.ps1
-.\scripts\test-harness.ps1
-opencode --version
+```
+
+### 2. Launch Your AI Assistant
+Start your preferred agent (e.g., OpenCode):
+```powershell
 opencode
 ```
+*(Or open this repository directly in Antigravity, Claude Code, or Codex).*
 
-If the execution policy blocks dot-sourcing, the `Set-ExecutionPolicy -Scope Process` line applies only to the current PowerShell window. You can also run individual scripts with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
+### 3. Build & Validate
+Use the built-in commands inside your agent chat:
+- `/speckit.specify <feature>` — Define requirements.
+- `/apex.design <feature>` — Draft domain model, business rules, and page map.
+- `/apex.apexlang applications/<app>` — Generate APEXLang code.
+- `/apex.validate applications/<app>` — Run deterministic APEX compile & validation gate.
 
-`opencode.jsonc` uses the V1 `permission` object so the same file works in OpenCode 1.18+ and 2.x. OpenCode 2.x converts V1 rules to its ordered `permissions` model; OpenCode 1.x rejects a `permissions` key. Test both binaries with `opencode debug config` and `opencode2 debug config`. `install-opencode-v2.ps1` is optional; it places a project-local 2.x binary under `tools\opencode-v2\`, and `set-env.ps1` provides an `opencode2` shim.
+---
 
-The default agent is `apex`. The default model is a zero-cost OpenCode model. The project constitution is already initialized at `.specify/memory/constitution.md`; start a non-trivial feature with:
+## 🐳 Disposable Local Database (DB + APEX + ORDS)
 
-```text
-/speckit.specify <feature description>
-/speckit.clarify
-/speckit.plan
-/speckit.tasks
-/speckit.implement
+To test and develop locally without touching production or shared databases, you can spin up a disposable local database.
+
+### ❓ Slim vs. Latest: What is the difference?
+
+| Image Flavor | Size | Contains XML DB? | Can it run APEX? | Best For |
+| :--- | :--- | :--- | :--- | :--- |
+| **`slim`** (`gvenzl/oracle-free:23-slim`) | ~800 MB | ❌ No | ❌ **No** | Lightweight SQL & PL/SQL smoke tests only. |
+| **`latest` / Standard** (`database/free:latest`) | ~1.1 GB | ✅ Yes | ✅ **Yes** | Smallest base DB that supports APEX. Requires ORDS & APEX installation. |
+| **`adb-free:latest`** (Autonomous DB Free) | ~3 GB | ✅ Yes | ✅ **Yes (Preinstalled)** | **Smallest all-in-one image** with DB + APEX + ORDS ready out-of-the-box. |
+
+> [!IMPORTANT]
+> **Never use `slim` or `latest-lite` for APEX development.** APEX requires Oracle XML DB (`XDB`) and Oracle Text. The APEX installer halts immediately on `slim` images due to missing prerequisites.
+
+---
+
+### 🚀 Running the Smallest All-in-One Database (APEX + ORDS)
+
+A pre-configured `docker-compose.yml` is ready in `local-dev/`:
+
+```powershell
+cd local-dev
+docker compose up -d
 ```
 
-For a smaller domain task, use the targeted commands:
+Once started:
+- **APEX URL:** [https://localhost:8443/ords/apex](https://localhost:8443/ords/apex)
+- **Database Port:** `1521` (Service name: `FREEPDB1`)
+- **Workspace:** `INTERNAL`
+- **Admin User:** `ADMIN`
+- **Default Password:** `Welcome123456#` (set via `ORACLE_PASSWORD` in your `.env`)
 
-```text
-/apex.design <business feature>      # domain model, rules, page map, PL/SQL API outline
-/apex.plsql <business rules>          # package implementation or review
-/apex.apexlang <app-directory>        # APEXLang implementation for an approved design
+When you are done, dispose of the database with:
+```powershell
+docker compose down -v
 ```
 
-Then run the gates:
+*(Alternatively, run `powershell -File scripts/install-local-apex.ps1 -Execute` if you prefer the dedicated APEX 26.2 multi-container sandbox powered by `uc-local-apex-dev`).*
+
+---
+
+## 🛠️ Core Commands Reference
+
+### 📋 Feature Specification (GitHub Spec Kit)
+| Command | Purpose |
+| :--- | :--- |
+| `/speckit.specify <idea>` | Write a business specification (what & why, no tech lock-in) |
+| `/speckit.clarify` | Identify and resolve requirement gaps |
+| `/speckit.plan` | Generate domain model, data schema, PL/SQL API, and page architecture |
+| `/speckit.tasks` | Break down the plan into ordered, testable steps |
+| `/speckit.implement` | Execute tasks and build application files |
+
+### 🎯 APEX & PL/SQL Domain Commands
+| Command | Purpose |
+| :--- | :--- |
+| `/apex.design <feature>` | Analyze domain rules, entity relationships, and page navigation |
+| `/apex.plsql <package>` | Write robust PL/SQL packages encapsulating business logic |
+| `/apex.apexlang <app-dir>` | Generate clean `.apx` APEXLang declarative definitions |
+
+### 🔒 Quality & Deployment Gates
+| Command | Purpose |
+| :--- | :--- |
+| `/apex.verify <app-dir>` | Static verification of changed files against rules |
+| `/apex.validate <app-dir>` | Run SQLcl APEX compiler validation (must report `Validation successful`) |
+| `/apex.review <app-dir>` | Trigger subagent review for APEXLang, security, SQL, and accessibility |
+| `/apex.deploy <app-dir>` | Import into target DB (`-WhatIf` preview first; requires approval) |
+
+---
+
+## 🤖 Supported Coding Assistants (No-API-Key Paths)
+
+This repository works with multiple host assistants without paid API keys:
+
+| Assistant | Entry File | Free / No-Key Mode |
+| :--- | :--- | :--- |
+| **OpenCode** | `opencode.jsonc` | Free models pinned in configuration |
+| **Antigravity** | `AGENTS.md` + `.agents/` | Google account free tier |
+| **Claude Code** | `CLAUDE.md` + `.claude/` | Direct `/login` with existing subscription |
+| **Codex CLI** | `AGENTS.md` | Local Ollama models (`--oss --local-provider ollama`) |
+| **DSH** | `AGENTS.md` + `.agents/skills` | Local Ollama models |
+
+---
+
+## 🛡️ Safety & Engineering Rules
+
+1. **Evidence over claims:** Never assume an APEX build passed; verify the output of `validate-apex-app.ps1`.
+2. **Deterministic file format:** `.apx` files must use **UTF-8 (no BOM)** and **LF line endings** (CRLF causes SQLcl parser errors). Run `scripts/normalize-apx-tree.ps1` to auto-fix.
+3. **Read-only by default:** Database connections are strictly read-only for metadata inspection until you explicitly approve DML/DDL or deployment.
+4. **No secrets in files:** Never commit `.env`, passwords, or wallet credentials. Saved SQLcl connections (`conn -save <name> -savepwd`) are used for deployment.
+5. **Separation of concerns:** Business logic belongs in PL/SQL packages; APEX page processes should only orchestrate package calls.
+
+---
+
+## 📂 Repository Layout
 
 ```text
-/apex.verify <app-directory>
-/apex.validate <app-directory>
-/apex.review <app-directory>
+Oracle_Apex-Harness/
+├── applications/             # Generated APEXLang applications (.apx files)
+├── local-dev/                # Disposable database (docker-compose.yml & audit scripts)
+├── scripts/                  # Automation scripts (doctor, validate, deploy, normalize)
+├── skills/                   # Vendored Oracle APEX, APEXLang, DB, & ECC meta-skills
+├── tools/                    # Local toolchain (SQLcl 26.3, OpenCode v2)
+├── AGENTS.md                 # Master agent operating rules and skill routing
+├── CLAUDE.md                 # Claude Code adapter
+├── opencode.jsonc            # OpenCode agent & permission configuration
+└── README.md                 # This guide
 ```
 
-Deploy only after an explicit request:
+---
 
-```text
-/apex.deploy <app-directory>
+## 🧪 Self-Tests & Doctor
+
+Run harness diagnostics anytime:
+```powershell
+# Verify all CLI tools, skills, and configuration files
+powershell -ExecutionPolicy Bypass -File scripts/harness-doctor.ps1
+
+# Run offline gate self-tests (no database required)
+powershell -ExecutionPolicy Bypass -File scripts/test-harness.ps1
 ```
-
-## Harness pairing
-
-| Host | Project entry point | Zero-API-key path |
-| --- | --- | --- |
-| OpenCode | `opencode.jsonc`, `skills/` | Free model pinned in `opencode.jsonc` |
-| Codex CLI / VS Code Codex | `AGENTS.md` | `codex --oss --local-provider ollama` |
-| Claude Code / VS Code Claude | `CLAUDE.md`, `.claude/skills/oracle-apex/` | `/login` with an existing Claude subscription |
-| Antigravity | `AGENTS.md`, `.agents/rules/`, `.agents/skills/` | Google login and the free tier |
-| DSH (DeepSeek Harness) | `AGENTS.md`, `.agents/skills/` | `ollama launch dsh` or a local-provider plugin |
-| Other agent extension | `AGENTS.md` | Depends on the host and model |
-
-No API key is required by this harness. Existing paid-key environment variables are never used by the harness; `scripts/harness-doctor.ps1 -StrictNoKeys` reports them (names only, never values) and fails the check. Claude Code has no official $0 local-model mode; use a subscription login or choose Codex, Antigravity, DSH, or OpenCode for a free/local path.
-
-Full setup commands, caveats, and model-quality notes: [`docs/harnesses/README.md`](docs/harnesses/README.md).
-
-## Four-domain workflow
-
-For a new feature, do not jump to pages. Work in this order:
-
-1. **Business analysis** — actors, goals, vocabulary, rules, lifecycle, exceptions, acceptance criteria.
-2. **Domain model** — entities, relationships, invariants, reference data, audit, retention.
-3. **APEX design** — roles, authorization, page map, navigation, empty/error states, performance.
-4. **PL/SQL API** — package operations, transaction boundaries, error contract, bulk DML, tests.
-5. **APEXLang implementation** — version-locked components, thin page processes, validation.
-
-The orchestration skill is `skills/apex-domains/SKILL.md`. It includes references for each domain, templates for the business spec, domain model, page map, and rule traceability, plus a design-review checklist. PL/SQL work also reads `references/smartdb-plsql.md` for TAPI/XAPI, PL/Scope, utPLSQL, and 19c/26ai compatibility. APEX design also reads `references/universal-theme.md` for Theme 42, template, accessibility, and compiler-truth rules.
-
-Every accepted business rule gets an ID, one primary implementation home, and a test. Business logic belongs in PL/SQL packages; page processes orchestrate package calls and map errors to page messages.
-
-## Local database and promotion
-
-`local-dev/README.md` documents the optional `uc-local-apex-dev` sandbox pinned to APEX 26.2, the read-only `snapshot-pdb.sql`, and the 23-section `promotion-audit.sql`. It also documents image selection for a disposable 26ai Free database: use a regular or full image for APEX, and `slim`/`lite` only for database-only work. The installer previews the plan by default; `-Execute` is required to clone and start the sandbox. Docker or Podman is required, and this workflow has not been executed on a machine without Docker.
-
-SQLcl MCP is the live schema boundary. Query the catalog at task start with `oracle-sqlcl`; do not cache table or column lists in `.memory/` or skills. Local `FREEPDB1` may use full schema access for development, but commercial and shared targets are read-only by default.
-
-The v3 blueprint is adopted selectively. `docs/adr/0004-v3-blueprint-corrections.md` records the rejected claims: `uc-apx` has no license, `.pdk/project.json` is not the SQLcl Projects path, tree-sitter PL/SQL is not a verified gate, and the default `26-4` sandbox branch does not match this harness's 26.1/26.2 lock.
-
-## Layout
-
-```text
-Apex-harness/
-├── AGENTS.md                 # Canonical operating rules and routing
-├── CLAUDE.md                 # Claude Code / VS Code Claude adapter
-├── opencode.jsonc            # Free-model defaults, agents, skills, permissions
-├── .claude/skills/           # Claude Code project skill bridge
-├── .agents/
-│   ├── skills/               # DSH/Antigravity skill bridge
-│   └── rules/                # Antigravity rule bridge
-├── .opencode/
-│   ├── agents/               # apex, apex-planner, apex-reviewer, oracle-dba, harness-optimizer
-│   └── commands/             # speckit.* and apex.* commands
-├── .specify/                 # Spec Kit templates, scripts, memory, workflows
-├── .memory/                  # Decisions, evidence-backed instincts, session handoff
-├── skills/
-│   ├── apex/                 # Vendored Oracle APEX + APEXLang skills
-│   ├── db/                   # Vendored Oracle Database skills
-│   ├── apex-domains/         # Four-domain workflow, references, templates, checklist
-│   ├── apex-delivery/        # End-to-end APEX delivery gate
-│   └── harness/              # Curated ECC meta-skills
-├── applications/             # Generated APEXLang apps (runtime artifacts only)
-├── local-dev/                # Optional FREEPDB1 sandbox + promotion audit
-├── db/README.md              # Database artifact routing note
-├── scripts/
-│   ├── set-env.ps1           # JAVA_HOME, SQLcl + OpenCode v2 PATH, SQLCL_BIN
-│   ├── harness-doctor.ps1    # Tool, file, adapter, environment, and key checks
-│   ├── verify-apex-change.ps1 # Changed-file static verification gate
-│   ├── validate-apex-app.ps1 # APEX validate gate (checks LF first)
-│   ├── normalize-apx-tree.ps1 # Convert CRLF .apx files to LF
-│   ├── deploy-apex-app.ps1   # APEX import gate with -WhatIf
-│   ├── test-harness.ps1      # Offline self-test for the gates (no database)
-│   ├── install-sqlcl.ps1     # Reproducible SQLcl + JDK setup
-│   ├── install-opencode-v2.ps1 # Project-local OpenCode v2 binary
-│   └── install-local-apex.ps1  # Preview-first FREEPDB1 sandbox wrapper
-├── tools/sqlcl/              # Local SQLcl 26.3 (gitignored)
-└── docs/
-    ├── PROVENANCE.md         # Exact sources, commits, licenses, decisions
-    ├── references.md         # Cookbook review and external links
-    ├── harnesses/            # No-key setup matrix for each host
-    └── licenses/
-```
-
-`scripts/export-apex-app.ps1` exports an application with `apex export -exptype APEXLANG -split` and can compare the result with the working tree. `skills/harness/error-triage/SKILL.md` is the playbook for APEXLang and `ORA-` failures.
-
-## Agents
-
-| Agent | Mode | Use |
-| --- | --- | --- |
-| `apex` | primary | Build, change, validate, and deploy APEX applications; translate business rules to PL/SQL and APEXLang. |
-| `apex-planner` | subagent | Read-only business/domain analysis, solution architecture, page map, and implementation planning. |
-| `apex-reviewer` | subagent | Read-only APEXLang, SQL/PLSQL, security, accessibility, performance, and traceability review. |
-| `oracle-dba` | subagent | Read-only Oracle Database, SQL/PLSQL, migration, and performance review. |
-| `harness-optimizer` | subagent | Improve the harness without touching vendored Oracle skills. |
-
-## Safety model
-
-- **Validation before deployment.** `apex validate` must print `Validation successful` with no compile diagnostics, `ORA-` errors, `FILE_IGNORED`, or skipped files. `.apx` files must use UTF-8 without a BOM and LF endings; CRLF and BOM trees are rejected before SQLcl runs. Changed files also pass `scripts/verify-apex-change.ps1`.
-- **Explicit deployment approval.** The deploy script supports `-WhatIf` and never prints the connection string. Import is a privileged action and requires explicit user approval for the named target.
-- **Export and drift check.** `scripts/export-apex-app.ps1` uses `apex export -exptype APEXLANG -split` and can compare the database export with the working tree. Drift is reported as a failure, not hidden.
-- **Database changes are gated.** Destructive shell patterns, `apex import`, `drop`, `truncate`, `delete`, `alter system`, and `git push` ask for confirmation through `opencode.jsonc` and `.claude/settings.json`. Local `FREEPDB1` may use full schema access; commercial and shared targets are read-only by default.
-- **Secrets stay out of context.** `.env`, `.pem`, `.key`, `.p12`, `.jks`, and Oracle wallet files are denied in OpenCode and Claude Code. `.memory/` never stores credentials or schema caches.
-- **No paid API keys.** Do not request, print, or store API keys. Use a free host tier, subscription login, or local model, and validate deterministically.
-- **Business rules are traceable.** Every accepted rule has an ID, one implementation home, and a test; page processes do not become the only enforcement point.
-- **Vendored skills are upstream content.** `skills/apex/**` and `skills/db/**` are updated from source. The only local adaptations are LF normalization for `.apx` files, the short router path-mapping notes, and the restored 26.1 generation `tools/` directory from the pinned commit.
-- **Unlicensed and unverified tools stay optional.** `uc-apx` is not required because it has no license. tree-sitter PL/SQL is not a gate until a tested grammar and regression suite exist. See `docs/adr/0004-v3-blueprint-corrections.md`.
-
-## Prerequisites
-
-Required:
-
-- OpenCode 1.18+ or 2.x
-- Node.js 18+
-- Python 3.11+
-- `uv` and `specify-cli` (Spec Kit)
-- JDK 21
-- SQLcl 26.3+
-
-Optional hosts:
-
-- Codex CLI (optional; not bundled by this harness)
-- Claude Code CLI and, if used, a Claude subscription
-- Antigravity desktop app with a Google account
-- DSH (developer preview)
-- Ollama with a local coding model for Codex or DSH
-- Docker Desktop or Podman Desktop for the optional `local-dev` sandbox
-
-`scripts/install-sqlcl.ps1` installs SQLcl locally and JDK 21 via winget when Java is missing. `scripts/harness-doctor.ps1` verifies required tools, harness files, optional hosts, and paid-key environment variables. `scripts/install-local-apex.ps1` previews the sandbox setup and requires `-Execute` to make changes; it needs Docker or Podman.
-
-## Provenance
-
-See `docs/PROVENANCE.md` for commit hashes, licenses, installed paths, and the list of components deliberately not installed.
-
-- Oracle skills: UPL-1.0
-- Spec Kit: MIT
-- ECC: MIT
-- `uc-local-apex-dev`: MIT, optional sandbox pinned to `26-2`
-- `uc-apx`: reviewed, not vendored (no license)
-- Developer-Cookbook: reviewed, not vendored (no license)
