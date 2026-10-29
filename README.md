@@ -11,6 +11,8 @@ You do **not** need to install Java, SQLcl, Node.js, Python, or OpenCode one by 
 ### 1. Get the folder
 Download the repository as a ZIP and unzip it, or clone it with Git if you already have Git. Then open a terminal **in the repository root** (the folder that contains `README.md` and `bootstrap.cmd`).
 
+> **Windows tip:** some bundled APEX example files have long paths. Keep the folder near the drive root (for example `C:\dev\Oracle_Apex-Harness`), or run `git config --global core.longpaths true` before cloning, to avoid `Filename too long` errors.
+
 ### 2. Run the one-command setup
 
 **Windows** — double-click `bootstrap.cmd`, or run it from PowerShell:
