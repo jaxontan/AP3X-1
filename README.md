@@ -1,4 +1,4 @@
-# Oracle APEX Agent Harness
+# AP3X-1 — Oracle APEX Agent Harness
 
 A developer harness for building, validating, and deploying Oracle APEX applications with AI coding agents. Works seamlessly across **OpenCode**, **Antigravity**, **Claude Code**, **Codex**, and **DSH** without requiring paid API keys.
 
@@ -11,7 +11,7 @@ You do **not** need to install Java, SQLcl, Node.js, Python, or OpenCode one by 
 ### 1. Get the folder
 Download the repository as a ZIP and unzip it, or clone it with Git if you already have Git. Then open a terminal **in the repository root** (the folder that contains `README.md` and `bootstrap.cmd`).
 
-> **Windows tip:** some bundled APEX example files have long paths. Keep the folder near the drive root (for example `C:\dev\Oracle_Apex-Harness`), or run `git config --global core.longpaths true` before cloning, to avoid `Filename too long` errors.
+> **Windows tip:** some bundled APEX example files have long paths. Keep the folder near the drive root (for example `C:\dev\AP3X-1`), or run `git config --global core.longpaths true` before cloning, to avoid `Filename too long` errors.
 
 ### 2. Run the one-command setup
 
@@ -187,11 +187,11 @@ If you prefer having separate folders on your drive (e.g., `Oracle_Apex-TimeOff`
 
 1. **Rename or copy your current folder:**
    ```powershell
-   Rename-Item -Path "Oracle_Apex-Harness" -NewName "Oracle_Apex-TimeOff"
+   Rename-Item -Path "AP3X-1" -NewName "Oracle_Apex-TimeOff"
    ```
 2. **Clone a fresh copy of the harness template:**
    ```powershell
-   git clone https://github.com/jaxontan/Oracle_Apex-Harness.git Oracle_Apex-CustomerPortal
+   git clone https://github.com/jaxontan/AP3X-1.git Oracle_Apex-CustomerPortal
    ```
 3. **Skip tool downloads (Fast-track):** Copy the `tools/sqlcl` folder from your existing repo into the new clone so you don't need to re-download 100+ MB of tools.
 
@@ -305,7 +305,7 @@ This repository works with multiple host assistants without paid API keys:
 ## 📂 Repository Layout
 
 ```text
-Oracle_Apex-Harness/
+AP3X-1/
 ├── working/                  # Project deliverables (page-design/, database/, app/)
 │   ├── page-design/          # requirement.md (you), application-design.md (agent), credentials.md
 │   ├── database/             # Schemas, PL/SQL packages, and utPLSQL tests

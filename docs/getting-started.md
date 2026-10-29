@@ -1,6 +1,6 @@
 # Getting started
 
-This guide is for anyone who wants to use the Oracle APEX Agent Harness without assembling the toolchain by hand. You need a computer with internet access, about 3 GB of free disk space, and permission to install software. Administrator or `sudo` access may be requested by the operating system.
+This guide is for anyone who wants to use AP3X-1, the Oracle APEX Agent Harness without assembling the toolchain by hand. You need a computer with internet access, about 3 GB of free disk space, and permission to install software. Administrator or `sudo` access may be requested by the operating system.
 
 The bootstrap installs free developer tools only. It does **not** ask for, print, or store an API key. The harness works with a free OpenCode model, an existing subscription login, Antigravity's free tier, or a local model.
 
@@ -33,7 +33,7 @@ Useful options:
 2. Open **Terminal** and go to the repository folder:
 
 ```bash
-cd path/to/Oracle_Apex-Harness
+cd path/to/AP3X-1
 bash scripts/bootstrap.sh
 ```
 
@@ -44,7 +44,7 @@ If Homebrew is missing, the script explains this and asks before running the off
 The script supports Debian/Ubuntu (`apt`), Fedora/RHEL (`dnf`), Arch (`pacman`), and openSUSE (`zypper`).
 
 ```bash
-cd path/to/Oracle_Apex-Harness
+cd path/to/AP3X-1
 bash scripts/bootstrap.sh
 ```
 

@@ -35,7 +35,7 @@ $checks = @(
 )
 
 Write-Host ''
-Write-Host 'Oracle APEX Agent Harness - doctor' -ForegroundColor Cyan
+Write-Host 'AP3X-1 Oracle APEX Agent Harness - doctor' -ForegroundColor Cyan
 Write-Host '==================================='
 
 foreach ($check in $checks) {
