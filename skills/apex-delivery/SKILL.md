@@ -46,13 +46,20 @@ For 26.2 there is no `apexlang-generation` skill. Author with the 26.2 inventory
 
 For a new app, follow the Greenfield Vibe Coding workflow; for an existing app, follow Brownfield Vibe Coding (`AGENTS.md`, "Default delivery workflow"). If `working/page-design/requirement.md` exists, treat it as authoritative for page numbers, layout, regions, items, and component choices; do not invent an alternative architecture.
 
+The plan is written to `working/page-design/application-design.md` using `docs/templates/application-design.template.md`, with `Status: DRAFT`. Stop for user approval before generating SQL or `.apx`. Never edit `requirement.md`.
+
 The plan must include:
 
 - Actors, authorization schemes, and page access.
 - Data model and supporting objects.
 - Page map: page number, purpose, regions, items, buttons, processes, validations, branches.
 - APEXLang file map: every `.apx` file to create or change.
+- Visual design: base style, brand layer level, tokens, brand classes (`skills/apex-design-system/references/brand-layer.md`).
+- Business rule → PL/SQL enforcement mapping.
+- Requirement trace: one row per `requirement.md` bullet, `PLANNED` before build, `DONE` with `file:line` or `NOT DONE: <reason>` after.
 - Validation and acceptance checks.
+
+After the build, update the trace and set `Status: IMPLEMENTED`. Report the count of `DONE` and `NOT DONE` rows in the final summary; any row still `PLANNED` means delivery is incomplete.
 
 Use the `apex-planner` subagent when the design is unclear or spans multiple pages.
 
@@ -94,6 +101,14 @@ If validation fails:
 6. Do not deploy a tree that has not passed.
 
 The Oracle wrapper scripts call `apex validate -input` in SQLcl `/nolog` mode. No database connection is required for validation.
+
+## 5b. Delivery gate: hard gate
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-delivery.ps1 -ProjectDirectory working
+```
+
+Pass criteria: exit 0 and `DELIVERY GATE PASS`. The gate checks the whole project, not a diff: requirement trace completeness and evidence, brand colours and design keywords from `requirement.md`, inline styles and hex in `.apx`, brand class wiring, Font APEX icon names, unused view styling columns, uncalled package APIs, and test presence. Fix the build; never edit the trace to silence a finding. Report every `NOT DONE` row it lists.
 
 ## 6. Review
 
@@ -148,8 +163,18 @@ After deployment, verify in this order:
 4. Validation and error messages appear as designed.
 5. The changed pages render without JavaScript errors.
 6. Supporting objects installed as expected.
+7. For visual changes, the `apex-design-verifier` report and screenshots exist, the scorecard passes, and the implemented theme/style matches the approved direction.
 
-Report `PASS`, `PARTIAL`, or `FAIL` with evidence. Do not claim a UI check that was not performed.
+Automate checks 1, 2, 5 and 7 with the runtime gate, logging in as every seeded role and listing every page the role must not reach:
+
+```powershell
+$env:APEX_TEST_PASSWORD = '<from working/page-design/credentials.md>'
+node scripts/verify-apex-runtime.mjs --url https://localhost:8443/ords/r/<workspace>/<alias> --users EMP1,MGR1,FIN1 --pages home,<page-alias> --deny EMP1:<admin-page-alias> --brand --insecure
+```
+
+It must print `RUNTIME GATE PASS`. It writes screenshots per user, page and viewport plus `report.md` under `working/runtime-verification/`. Use `--brand` whenever the app has a brand layer.
+
+Report `PASS`, `PARTIAL`, or `FAIL` with evidence. Do not claim a UI check that was not performed. Prototype rendering does not prove the deployed APEX page renders the same way.
 
 ## Failure playbook
 

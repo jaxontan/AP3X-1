@@ -28,6 +28,11 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 | Business analysis, app design, PL/SQL, APEXLang | `skills/apex-domains/SKILL.md` |
 | Visual/UX design, theme style, templates, page map | `skills/apex-design-system/SKILL.md` |
 | Redesign an existing page or custom look | `skills/apex-ui-redesign/SKILL.md` |
+| What the harness guarantees and which gate enforces each guarantee | `docs/harness-standard.md` |
+| Custom brand look beyond stock Universal Theme (new or existing app) | `skills/apex-design-system/references/brand-layer.md` |
+| Direction-only style/palette bank | `skills/apex-design-system/references/ui-ux-pro-max.md`, `palette-bank.md` |
+| Design scorecard and measurable UI quality gate | `skills/apex-ui-redesign/references/design-scorecard.md` |
+| Render/verify a design prototype | `.opencode/agents/apex-design-verifier.md`, `scripts/verify-design-preview.mjs` |
 | End-to-end APEX delivery | `skills/apex-delivery/SKILL.md` |
 | Verification gate (APEX) | `skills/apex-delivery/SKILL.md` |
 | Verification checklist for supporting code | `skills/harness/verification-loop/SKILL.md` |
@@ -93,14 +98,19 @@ The harness supports two lean vibe coding workflows without multi-phase specific
 1. **Greenfield Vibe Coding (New Application)**:
    - Provide a natural language prompt or define the page map & requirements in `working/page-design/requirement.md`.
    - When `working/page-design/requirement.md` is provided, the agent MUST strictly follow the user's page layout, page numbers, and component specifications rather than inventing an arbitrary architecture.
+   - Design direction in `requirement.md` (colours, badges, icons, shadows, tone) is a requirement, not decoration. Stock Universal Theme is the floor, not the ceiling: implement the requested look with the brand layer (`skills/apex-design-system/references/brand-layer.md`).
+   - **Design before code.** Before writing any SQL or `.apx`, write `working/page-design/application-design.md` from `docs/templates/application-design.template.md`: data model, security, business rule → PL/SQL enforcement, visual design (brand layer), page and component map, file map, and a requirement trace with one row per `requirement.md` bullet marked `PLANNED`. Set `Status: DRAFT`, summarise it to the user, and **stop for approval**. Do not build until the user approves; then set `Status: APPROVED`.
+   - `requirement.md` is user-owned: the agent never edits it. If the design must deviate, list the deviation under "Open questions" in `application-design.md` and let the user decide.
+   - After building, update the requirement trace to `DONE` with `file:line`, or `NOT DONE: <reason>`, and set `Status: IMPLEMENTED`. Delivery is incomplete while any trace row is `PLANNED` or silently missing.
    - The agent generates the schema and seed SQL scripts under `working/database/`, and scaffolds the full APEXLang tree under `working/app/` matching the user's design.
    - Run the normalization and validation gates (`scripts/validate-apex-app.ps1 -AppDirectory working/app`).
    - Directly ask the user if they want the agent to help execute Step 1 (deploy database schema, packages, and tests) and Step 2 (import the APEX application tree into the target/local APEX workspace).
-   - Automated Workspace & User Provisioning: When deploying, the pipeline automatically ensures the target APEX workspace and all required user accounts (the workspace administrator `ADMIN` / `Welcome123456#`, plus any seeded test accounts) are created and active with zero manual credential configuration required.
+   - Automated Workspace & User Provisioning: When deploying, the pipeline automatically ensures the target APEX workspace and all required user accounts (the workspace administrator `ADMIN`, plus any seeded test accounts) are created and active with zero manual credential configuration required. The local password comes from `ORACLE_PASSWORD` (see `local-dev/README.md`); record access details in `working/page-design/credentials.md` and never repeat passwords in instruction files or chat.
 
 2. **Brownfield Vibe Coding (Improve Existing Application)**:
    - Point directly to the target page or shared component in `working/app/` (e.g., "Add an export button on Page 10" or "Require a rejection reason in review dialog").
-   - The agent edits the targeted `.apx` or `.sql` files directly.
+   - The agent edits the targeted `.apx` or `.sql` files directly. Small, single-component changes need no approval stop.
+   - If the change adds a page, a business rule, a role, or changes the look, update `working/page-design/application-design.md` first (sections touched, trace rows, change log) and confirm with the user before building.
    - Run the validation gate.
 
 For specialized guidance during vibe coding, use the domain commands directly:
@@ -111,10 +121,11 @@ Then run the APEX gates:
 
 1. **Static verify**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apex-change.ps1 -AppDirectory working/app`; use `-Strict` for a release candidate.
 2. **Validate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory working/app`
-3. **Review**: use the `apex-reviewer` subagent for APEXLang, SQL, security, and performance.
-4. **Deploy** (only on explicit request and after the user approves the named target): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app -WhatIf` first, then run without `-WhatIf`.
-5. **Verify**: follow `skills/apex-delivery/SKILL.md` and produce a PASS/FAIL report.
-6. **Export and drift-check** (after import, when the target supports APEXLang export): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-dir> -CompareDirectory working/app`. Treat drift as a failure and explain it.
+3. **Delivery gate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-delivery.ps1 -ProjectDirectory working` must print `DELIVERY GATE PASS`. It fails on an unapproved or untraced design, requirement colours or design keywords missing from the build, inline styles/hex in `.apx`, unknown icons, unused styling columns, undefined `brand-*` classes, uncalled package APIs, and missing tests. Fix the build, not the gate; never mark a trace row DONE to silence it.
+4. **Review**: use the `apex-reviewer` subagent for APEXLang, SQL, security, and performance.
+5. **Deploy** (only on explicit request and after the user approves the named target): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app -WhatIf` first, then run without `-WhatIf`.
+6. **Verify**: run the runtime gate against the imported app, logged in as every seeded role: `node scripts/verify-apex-runtime.mjs --url <app-url> --users <roles> --pages <aliases> --deny <user:alias> --brand --insecure` with the password in `APEX_TEST_PASSWORD` (never on the command line). It must print `RUNTIME GATE PASS` (page errors, JS errors, empty icon boxes, mobile overflow, serious axe violations, brand stylesheet not loaded, authorization leaks). Then follow `skills/apex-delivery/SKILL.md` and produce a PASS/FAIL report.
+7. **Export and drift-check** (after import, when the target supports APEXLang export): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-dir> -CompareDirectory working/app`. Treat drift as a failure and explain it.
 
 ## Project & Working Directory Structure (1 Project per Harness Repo)
 
@@ -126,7 +137,8 @@ To start a new project without re-cloning or re-downloading tools, run `powershe
 ```text
 working/
 ├── page-design/                  # User-defined page map and UI architecture
-│   ├── requirement.md            # Authoritative page map, regions, items & rules
+│   ├── requirement.md            # USER-owned intent: pages, rules, look (agent never edits)
+│   ├── application-design.md     # AGENT-owned design + requirement trace (user approves)
 │   └── credentials.md            # Workspace access, admin & seeded test accounts
 ├── database/                     # Oracle Database artifacts
 │   ├── schema.sql                # Tables, constraints, indexes, and seed data
@@ -198,7 +210,9 @@ pwsh -NoProfile -File scripts/harness-doctor.ps1
 ## Quality gates
 
 - Harness script changes must pass `scripts\test-harness.ps1` and `scripts\harness-doctor.ps1`.
+- Visual changes must provide before/after scorecards and a `scripts/verify-design-preview.mjs` report; prototype rendering does not prove deployed APEX rendering.
 - APEX validation must print `Validation successful`.
+- Delivery must print `DELIVERY GATE PASS` from `scripts/verify-delivery.ps1`; the self-tests in `scripts/test-harness.ps1` cover every rule it enforces.
 - SQL and PL/SQL must be reviewed against `skills/db/sql-dev` and `skills/db/plsql`.
 - Any change to authentication, authorization, or user input handling requires a security review.
 - Record durable architecture decisions in `docs/adr/` using `skills/harness/architecture-decision-records/SKILL.md`.

@@ -18,7 +18,7 @@ Collect, or state the assumption:
 - `working/page-design/requirement.md`, when it exists. It wins over aesthetic preferences for page purpose, page numbers, and required content.
 - Target APEX version (`26.1` or `26.2`).
 - Whether the app may keep Universal Theme or must use a custom theme. Do not assume "custom" means "no APEX templates"; confirm the level in section 3.
-- Whether a browser or screenshot tool is available for before/after evidence.
+- Whether a prototype can be handed to the separate `apex-design-verifier`; the designer itself has no shell access.
 
 ## 2. Audit the current UI before changing it
 
@@ -35,7 +35,11 @@ Record concrete findings, not impressions:
 - Performance: oversized images, heavy CSS/JS, unbounded regions.
 - Custom code: page-level CSS/JS, Template Components, plug-ins, and whether they are still maintained.
 
-If a browser is available, capture before screenshots at desktop and mobile widths. If not, say the visual baseline was not verified.
+For a live page, capture before screenshots at desktop and mobile widths if a browser is available. For a prototype, write `before.html` under `working/design-preview/<name>/` and hand the directory to `apex-design-verifier`. If neither path is available, say the visual baseline was not verified.
+
+### 2.1 Score the baseline
+
+Before changing anything, read `references/design-scorecard.md` and score the current UI on the seven dimensions: hierarchy, spacing, typography, colour and contrast, density and responsive fit, states, and accessibility. Record the evidence and mark any dimension `NOT VERIFIED` when no browser evidence exists. This baseline is required for a before/after comparison.
 
 ## 3. Choose the custom-UI path
 
@@ -49,6 +53,7 @@ If a browser is available, capture before screenshots at desktop and mobile widt
 Rules:
 
 - Default to **D** for a premium look with maintainable APEX behavior.
+- Implement A and D with the brand layer in `skills/apex-design-system/references/brand-layer.md` (validated `brand.css` + app-level `css.fileUrls` pattern). It maps paths to freedom levels: A = L1/L3, D = L2, B/C = L4.
 - Choose **C** only with explicit approval and a written statement of what APEX features will be lost or re-implemented.
 - Never describe a raw HTML mock-up as a custom APEX theme. A theme is templates, styles, and assets that APEX renders; a prototype is evidence.
 - Verify that every custom template, template option, or Theme Component you propose is expressible in the target version's `apexlang-inventory`.
@@ -67,6 +72,16 @@ Write a short direction before any code:
 - What is deliberately *not* used: the generic AI tells (identical rounded card grids, gradient blobs, all-caps eyebrows, one accent color applied to every surface, motion on every card).
 - How the direction behaves in dark mode, at mobile width, and with keyboard focus.
 - For a custom brand, produce the Theme Roller `@g_*` `.less` file and a reviewed CSS preview; verify it in the target instance.
+
+### 4.1 Direction-only banks
+
+You may use UI UX Pro Max or the local palette bank to widen the direction search. Read `skills/apex-design-system/references/ui-ux-pro-max.md` and `palette-bank.md` first.
+
+- Use only style mood, palette roles, type mood, density cues, and anti-patterns.
+- Never copy its HTML, CSS, Tailwind, React, font imports, animation, or component code into APEX.
+- Record the source and the borrowed direction in the design brief.
+- Map the result to a supported Universal Theme style or an approved Theme Roller style; verify contrast in the browser or target instance.
+- If the bank is unavailable, use the local palette bank. If neither is a fit, derive a direction from the product and requirement instead.
 
 ## 5. Prototype
 
@@ -93,9 +108,14 @@ Produce a change map, not just a picture:
 ## 7. Verify
 
 - Re-run the design checklist from `skills/apex-design-system/SKILL.md`.
-- If a browser is available, compare before and after at desktop and mobile widths, check contrast, keyboard focus, and empty/error states.
-- If a browser is not available, report `PARTIAL` and list exactly what was not verified.
-- Do not claim a visual result from static code inspection alone.
+- Re-score the after state with `references/design-scorecard.md` using the same content and viewports as the baseline.
+- Hand the prototype to the `apex-design-verifier` subagent. The designer agent has no shell access; it must not claim a visual result it did not observe.
+- The verifier runs the Playwright + axe gate at desktop 1440x900 and mobile 390x844:
+  - `node scripts/verify-design-preview.mjs --preview working/design-preview/<name>`
+  - Add `--strict` for a release candidate.
+  - It writes screenshots, `axe.json`, `report.json`, and `report.md` under the preview's `verification/` directory.
+- If Playwright or a browser is unavailable, report `PARTIAL`, name the missing dependency, and list exactly what was not verified.
+- Do not claim a visual result from static code inspection alone. The verifier covers rendered overflow and automated accessibility; it does not replace manual keyboard, zoom, and state review.
 
 ## 8. Output contract
 
@@ -103,15 +123,20 @@ Return:
 
 1. Audit findings, severity-ranked.
 2. Visual direction and the custom-UI path decision (A, B, C, or D).
-3. Prototype path and before/after status.
+3. Prototype path, before/after status, and the design scorecard results.
 4. `.apx` change map with inventory-verified component, template, and option names.
 5. `staticId` and custom CSS/JS plan.
 6. Accessibility, responsive, and upgrade risks.
-7. What was verified and what remains unverified.
+7. Verifier report path and what was verified, partially verified, or not verified.
 8. Open questions.
 
 ## Reference map
 
+- `references/design-scorecard.md` — measurable before/after design quality gate.
+- `skills/apex-design-system/references/ui-ux-pro-max.md` — direction-only external bank rules.
+- `skills/apex-design-system/references/palette-bank.md` — local role-based palette starting points.
+- `scripts/verify-design-preview.mjs` — Playwright screenshots, overflow check, and axe accessibility gate.
+- `.opencode/agents/apex-design-verifier.md` — separate read-only verifier that runs the script and reports evidence.
 - `skills/apex-design-system/SKILL.md` — design workflow, page map, component mapping, and prototypes.
 - `skills/apex-design-system/assets/universal-theme-42/` — token and markup reference for prototypes.
 - `skills/apex/apexlang/<version>/apexlang-inventory/SKILL.md` — component, template, and option truth.

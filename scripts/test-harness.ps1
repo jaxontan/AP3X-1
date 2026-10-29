@@ -272,6 +272,111 @@ exit 0
     $crlfDeployCommand = "`$ConfirmPreference = 'None'; & $(ConvertTo-SingleQuoted $deployScript) -AppDirectory $(ConvertTo-SingleQuoted $crlfApp) -ConnectionString 'fake'"
     $result = Invoke-HarnessCommand -Command $crlfDeployCommand -Environment @{ SQLCL_BIN = $fakeSuccess }
     Add-Result -Name 'deploy rejects CRLF before SQLcl' -Ok ($result.ExitCode -eq 2) -Detail $result.Output
+
+    # Delivery gate: a minimal project that satisfies requirement -> design -> app, then one mutation per rule.
+    $deliveryGate = Join-Path $scripts 'verify-delivery.ps1'
+    function New-DeliveryFixture {
+        param([string]$Name, [hashtable]$Override = @{})
+        $root = Join-Path $tempRoot $Name
+        $files = [ordered]@{
+            'page-design\requirement.md'                       = "# Req`n`n- **Brand colours**: primary #7C3AED`n- Pill-shaped status badges`n- Page 1 lists claims`n"
+            'page-design\application-design.md'                = "| Field | Value |`n| --- | --- |`n| Status | IMPLEMENTED |`n`n## 8. Requirement trace`n`n| # | Requirement | Status | Implemented at | Notes |`n| --- | --- | --- | --- | --- |`n| 1 | Brand colours | DONE | app/shared-components/static-files/css/brand.css:1 | |`n| 2 | Pill badges | DONE | app/pages/p00001-home.apx:3 | |`n| 3 | Page 1 | DONE | app/pages/p00001-home.apx:1 | |`n"
+            'app\application.apx'                              = "app T (`n    css {`n        fileUrls: #APP_FILES#css/brand.css?v=#APP_VERSION#`n    }`n)`n"
+            'app\shared-components\static-files.apx'           = "file `"css/brand.css`" (`n    mimeType: text/css`n)`n"
+            'app\shared-components\static-files\css\brand.css' = ":root {`n  --brand-primary: #7C3AED;`n}`n.brand-pill { border-radius: 999px; }`n"
+            'app\pages\p00001-home.apx'                        = "page 1 (`n    region r (`n        cssClasses: brand-pill t-Badge`n        icon: fa-home`n    )`n)`n"
+            'database\packages\demo_api.pks'                   = "create or replace package demo_api as`n  function is_ok return boolean;`nend demo_api;`n"
+            'database\tests\test_demo_api.sql'                 = "begin null; end;`n"
+        }
+        foreach ($key in $Override.Keys) { $files[$key] = $Override[$key] }
+        foreach ($key in $files.Keys) {
+            $path = Join-Path $root $key
+            New-Item -ItemType Directory -Path (Split-Path -Parent $path) -Force | Out-Null
+            Write-TestScript -Path $path -Body $files[$key]
+        }
+        # Wire the package function into the page so the fixture passes the PL/SQL check.
+        Add-Content -LiteralPath (Join-Path $root 'app\pages\p00001-home.apx') -Value '-- uses demo_api.is_ok' -Encoding UTF8
+        return $root
+    }
+
+    $result = Invoke-HarnessScript -Script $deliveryGate -Arguments @('-ProjectDirectory', (New-DeliveryFixture 'gate-pass'))
+    Add-Result -Name 'delivery gate passes a traced, branded project' -Ok ($result.ExitCode -eq 0 -and $result.Output -match 'DELIVERY GATE PASS') -Detail $result.Output
+
+    $gateCases = @(
+        @{ Name = 'delivery gate rejects a missing design'; Override = @{ 'page-design\application-design.md' = '' }; Expect = 'Status is' },
+        @{ Name = 'delivery gate rejects an unapproved design'; Override = @{ 'page-design\application-design.md' = "| Status | DRAFT |`n" }; Expect = "Status is 'DRAFT'" },
+        @{ Name = 'delivery gate rejects PLANNED trace rows'; Override = @{ 'page-design\application-design.md' = "| Status | IMPLEMENTED |`n`n## Requirement trace`n`n| # | Requirement | Status | Implemented at |`n| 1 | a | PLANNED | |`n| 2 | b | PLANNED | |`n| 3 | c | PLANNED | |`n" }; Expect = "status 'PLANNED'" },
+        @{ Name = 'delivery gate rejects a dropped brand colour'; Override = @{ 'app\shared-components\static-files\css\brand.css' = ":root {`n  --brand-primary: #2563EB;`n}`n.brand-pill { border-radius: 999px; }`n" }; Expect = '#7C3AED is not defined' },
+        @{ Name = 'delivery gate rejects an unknown icon'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    region r (`n        cssClasses: brand-pill t-Badge`n        icon: fa-shield-check`n    )`n)`n" }; Expect = 'Unknown Font APEX icon' },
+        @{ Name = 'delivery gate rejects inline style in .apx'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    region r (`n        cssClasses: brand-pill t-Badge`n        html: <div style=`"color:red`">x</div>`n    )`n)`n" }; Expect = 'Inline style=' },
+        @{ Name = 'delivery gate rejects an undefined brand class'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    region r (`n        cssClasses: brand-pill brand-ghost t-Badge`n    )`n)`n" }; Expect = "brand-ghost' is used" },
+        @{ Name = 'delivery gate rejects a hero with an empty icon box'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    region hero (`n        cssClasses: brand-pill t-Badge`n        appearance {`n            template: @/hero`n        }`n    )`n)`n" }; Expect = 'renders an empty icon box' },
+        @{ Name = 'delivery gate rejects an icon on a text-only button'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    region r (`n        cssClasses: brand-pill t-Badge`n    )`n    button b (`n        appearance {`n            buttonTemplate: @/text`n            icon: fa-home`n        }`n    )`n)`n" }; Expect = 'does not render icons' },
+        @{ Name = 'delivery gate rejects an uncalled package API'; Override = @{ 'database\packages\demo_api.pks' = "create or replace package demo_api as`n  function is_ok return boolean;`n  function can_edit return boolean;`nend demo_api;`n" }; Expect = 'can_edit is public but never called' }
+    )
+    $caseIndex = 0
+    foreach ($case in $gateCases) {
+        $caseIndex++
+        $result = Invoke-HarnessScript -Script $deliveryGate -Arguments @('-ProjectDirectory', (New-DeliveryFixture "gate-fail-$caseIndex" $case.Override))
+        Add-Result -Name $case.Name -Ok ($result.ExitCode -eq 1 -and $result.Output -match [regex]::Escape($case.Expect)) -Detail $result.Output
+    }
+
+    # Adapter drift: every agent entry point must carry the delivery contract, and every file it cites must exist.
+    $contractAnchors = @(
+        'working/page-design/requirement.md',
+        'working/page-design/application-design.md',
+        'docs/templates/application-design.template.md',
+        'skills/apex-design-system/references/brand-layer.md',
+        'scripts/validate-apex-app.ps1',
+        'scripts/verify-delivery.ps1'
+    )
+    $adapters = @(
+        'AGENTS.md', 'CLAUDE.md',
+        '.claude/skills/oracle-apex/SKILL.md',
+        '.agents/skills/oracle-apex.md', '.agents/rules/oracle-apex.md',
+        '.opencode/agents/apex.md', '.opencode/agents/apex-reviewer.md',
+        '.opencode/agents/apex-planner.md', '.opencode/agents/apex-designer.md'
+    )
+    $drift = @()
+    foreach ($adapter in $adapters) {
+        $adapterPath = Join-Path $Root $adapter
+        if (-not (Test-Path -LiteralPath $adapterPath)) { $drift += "$adapter is missing"; continue }
+        $adapterText = [System.IO.File]::ReadAllText($adapterPath)
+        foreach ($anchor in $contractAnchors) {
+            if ($adapterText.IndexOf($anchor) -lt 0) { $drift += "$adapter does not cite $anchor" }
+        }
+    }
+    foreach ($anchor in $contractAnchors | Where-Object { $_ -notlike 'working/*' }) {
+        if (-not (Test-Path -LiteralPath (Join-Path $Root $anchor))) { $drift += "contract cites $anchor, which does not exist" }
+    }
+    foreach ($template in 'requirement.template.md', 'application-design.template.md') {
+        if (-not (Test-Path -LiteralPath (Join-Path $Root "docs\templates\$template"))) { $drift += "docs/templates/$template is missing" }
+    }
+    Add-Result -Name 'agent adapters carry the delivery contract' -Ok ($drift.Count -eq 0) -Detail ($drift -join "`n")
+
+    $runtimeVerifier = Join-Path $scripts 'verify-apex-runtime.mjs'
+    $runtimeOutput = & node --check $runtimeVerifier 2>&1 | Out-String
+    Add-Result -Name 'runtime verifier parses' -Ok ($LASTEXITCODE -eq 0) -Detail $runtimeOutput
+    $runtimeOutput = & node $runtimeVerifier --help 2>&1 | Out-String
+    Add-Result -Name 'runtime verifier prints usage' -Ok ($LASTEXITCODE -eq 0 -and $runtimeOutput -match '--deny') -Detail $runtimeOutput
+    $savedPassword = $env:APEX_TEST_PASSWORD
+    $env:APEX_TEST_PASSWORD = $null
+    $savedErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $runtimeOutput = & node $runtimeVerifier --url https://localhost/ords/r/x/y --users U1 --pages home 2>&1 | Out-String
+    $runtimeExit = $LASTEXITCODE
+    $ErrorActionPreference = $savedErrorAction
+    $env:APEX_TEST_PASSWORD = $savedPassword
+    Add-Result -Name 'runtime verifier refuses to run without a password env var' -Ok ($runtimeExit -eq 2 -and $runtimeOutput -match 'APEX_TEST_PASSWORD') -Detail $runtimeOutput
+
+    $designVerifier = Join-Path $scripts 'verify-design-preview.mjs'
+    $designOutput = & node --check $designVerifier 2>&1 | Out-String
+    $designExit = $LASTEXITCODE
+    Add-Result -Name 'design verifier parses' -Ok ($designExit -eq 0) -Detail $designOutput
+
+    $designOutput = & node $designVerifier --help 2>&1 | Out-String
+    $designExit = $LASTEXITCODE
+    Add-Result -Name 'design verifier prints usage' -Ok ($designExit -eq 0 -and $designOutput -match '--preview') -Detail $designOutput
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) {

@@ -7,7 +7,8 @@ When vibe coding with your assistant (or building manually), all project assets 
 ```text
 working/
 ├── page-design/                  # User-defined page map and UI architecture
-│   └── requirement.md            # Authoritative page map, regions, items & rules
+│   ├── requirement.md            # YOU write this: pages, rules, look (agent never edits)
+│   └── application-design.md     # AGENT writes this: technical design + trace (you approve)
 ├── database/                     # Oracle Database artifacts
 │   ├── schema.sql                # Tables, constraints, indexes, and seed data
 │   ├── packages/                 # TAPI & XAPI business logic packages (pks / pkb)

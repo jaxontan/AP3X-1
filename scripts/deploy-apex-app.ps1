@@ -9,8 +9,14 @@ param(
 
     [string]$Workspace,
 
-    [int]$ApplicationId
+    [int]$ApplicationId,
+
+    [switch]$Force
 )
+
+if ($Force) {
+    $ConfirmPreference = 'None'
+}
 
 $ErrorActionPreference = 'Stop'
 
@@ -194,7 +200,7 @@ if (-not $PSCmdlet.ShouldProcess($resolved, 'Import the APEX application into th
 $tempDeployFile = [System.IO.Path]::GetTempFileName()
 try {
     [System.IO.File]::WriteAllText($tempDeployFile, $commands, (New-Object System.Text.UTF8Encoding($false)))
-    $output = Get-Content -LiteralPath $tempDeployFile | & $env:SQLCL_BIN $ConnectionString 2>&1
+    $output = Get-Content -LiteralPath $tempDeployFile | & $env:SQLCL_BIN $ConnectionString "@$tempDeployFile" 2>&1
 }
 finally {
     Remove-Item -LiteralPath $tempDeployFile -ErrorAction SilentlyContinue

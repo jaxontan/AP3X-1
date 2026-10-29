@@ -4,8 +4,11 @@
 
 # Dependencies
 node_modules/
+working/design-preview/**/verification/
+working/runtime-verification/
 
 # Secrets
+working/page-design/credentials.md
 .env
 .env.*
 !.env.example
@@ -32,3 +35,6 @@ __pycache__/
 *.log
 .DS_Store
 Thumbs.db
+
+# Local project backups made by scripts/reset-project.ps1 -Archive
+archive/

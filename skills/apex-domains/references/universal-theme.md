@@ -4,10 +4,11 @@ Use this reference when a page map becomes APEXLang. The version-specific `apexl
 
 ## 1. Theme baseline
 
-- Use Oracle APEX Universal Theme (Theme 42) with a supported Redwood or standard theme style.
+- Use Oracle APEX Universal Theme (Theme 42) as the structural base, with the closest supported stock style.
+- Universal Theme is the floor, not the ceiling. When the user asks for a custom or nicer look, or `requirement.md` gives design direction, implement it with the brand layer in `skills/apex-design-system/references/brand-layer.md` (`brand.css` tokens mapped onto `--ut-*` variables, `brand-*` classes, optional custom theme style). Falling back to a stock style instead of the requested look is a requirement miss.
 - Do not import Bootstrap, Tailwind, or another CSS framework. APEX already ships a supported design system, and a second framework creates conflicts and upgrade risk.
 - Do not build a custom grid when Universal Theme layout or `u-*` utility classes can express the design.
-- Keep custom CSS and JavaScript small, named, and justified in the page map.
+- Keep custom CSS in `brand.css`, token-driven and prefixed `brand-`; keep custom JavaScript small, named, and justified in the page map.
 
 ## 2. Templates and references
 
@@ -21,7 +22,7 @@ Use this reference when a page map becomes APEXLang. The version-specific `apexl
 - Use Universal Theme utility classes such as `u-flex`, `u-color-*`, `u-text-*`, `u-padding-*`, and `u-gap-*` for small adjustments.
 - Use template options for spacing, alignment, and appearance before writing CSS.
 - For a dashboard, define the row plan explicitly: one two-up row followed by one three-up row is a common deterministic layout for five cards or charts. Do not rely on an arbitrary sequence of equal-width regions.
-- Do not use inline `style="..."` attributes in generated markup. They bypass the theme, are hard to audit, and often break responsive behavior.
+- Do not use inline `style="..."` attributes in generated markup. They bypass the theme, are hard to audit, and often break responsive behavior. Put the rule in `brand.css` and attach a class through `cssClasses`.
 - Test at narrow and wide widths. A page that only works at desktop width is not complete.
 
 ## 4. Accessibility

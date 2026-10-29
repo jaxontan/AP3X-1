@@ -21,59 +21,27 @@ Remove-Item -LiteralPath (Join-Path $working 'app') -Recurse -Force -ErrorAction
 Remove-Item -LiteralPath (Join-Path $working 'database') -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $working 'page-design\credentials.md') -Force -ErrorAction SilentlyContinue
 
-# Reset requirement.md template
-$template = @"
-# Application Page Design & Requirements
+# Reset page-design files from templates:
+#   requirement.md         - user-owned intent (reset to the blank starter)
+#   application-design.md  - agent-owned technical design (removed; the agent regenerates it)
+$templates = Join-Path $repoRoot 'docs/templates'
+$pageDesign = Join-Path $working 'page-design'
+New-Item -ItemType Directory -Path $pageDesign -Force | Out-Null
 
-<!-- 
-Describe your application pages and requirements below.
-The AI assistant will strictly follow this architecture rather than inventing its own.
--->
+Remove-Item -LiteralPath (Join-Path $pageDesign 'application-design.md') -Force -ErrorAction SilentlyContinue
 
-## 1. Overview & Business Intent
-- **Application Name**: [e.g. Customer Portal / Inventory Tracker]
-- **Target Audience & Roles**: [e.g. Staff, Manager, Administrator]
-- **Core Purpose**: [What problem does this application solve?]
+$stray = Join-Path $pageDesign 'requirements.md'
+if (Test-Path -LiteralPath $stray) {
+    Write-Warning "Removing stray working/page-design/requirements.md. The only user file is requirement.md (singular)."
+    Remove-Item -LiteralPath $stray -Force
+}
 
----
-
-## 2. Page Map & Layout Design
-
-### Page 1: Home / Dashboard
-- **Page Type**: Normal Page
-- **Authorization**: Public / Authenticated
-- **Regions & Components**:
-  - Summary metrics or navigation cards
-  - Quick-start action links
-
-### Page 10: [Main Report / Queue]
-- **Page Type**: Interactive Report / Classic Report
-- **Authorization**: [e.g. Staff or Manager]
-- **Regions & Components**:
-  - Report table showing key records
-  - Filter items or search bar
-- **Buttons & Actions**:
-  - "Create New" button redirecting to Page 11
-
-### Page 11: [Entry Form / Details Dialog]
-- **Page Type**: Modal Dialog Form
-- **Authorization**: [e.g. Staff]
-- **Form Fields / Page Items**:
-  - [Field 1: Name, Type, Required/Optional]
-  - [Field 2: Amount / Category LOV]
-- **Buttons & Processes**:
-  - "Cancel" button (close dialog)
-  - "Submit" / "Save" button (triggers database package call)
-
----
-
-## 3. Business Rules & Validations
-- **Rule 1**: [e.g. Fields A and B are mandatory before submission]
-- **Rule 2**: [e.g. Approval threshold or state transition rules]
-- **Rule 3**: [e.g. Rejections require a mandatory explanation]
-"@
-
-$reqPath = Join-Path $working 'page-design\requirement.md'
+$reqTemplate = Join-Path $templates 'requirement.template.md'
+if (-not (Test-Path -LiteralPath $reqTemplate)) {
+    throw "Missing template: $reqTemplate"
+}
+$template = [System.IO.File]::ReadAllText($reqTemplate).Replace("`r`n", "`n")
+$reqPath = Join-Path $pageDesign 'requirement.md'
 [System.IO.File]::WriteAllText($reqPath, $template.TrimEnd() + "`n", (New-Object System.Text.UTF8Encoding($false)))
 
-Write-Host "Reset complete. Ready for new project design in working/page-design/requirement.md" -ForegroundColor Green
+Write-Host "Reset complete. Describe your app in working/page-design/requirement.md; the agent will write application-design.md for your approval." -ForegroundColor Green

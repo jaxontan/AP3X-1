@@ -103,6 +103,23 @@ Optional AI hosts use the same repository but their own installers:
 
 On Windows, use `npm.cmd` instead of `npm` if PowerShell blocks the `npm.ps1` shim. These hosts are optional; OpenCode is installed by the bootstrap. Do not create a metered API key just to use the harness. Use a host account login or a free/local model. The doctor warns when common paid-key environment variables are present.
 
+## Visual design verification (optional)
+
+The designer agent cannot run a browser. To render prototypes, install the local verifier dependencies once:
+
+```bash
+npm install
+npx playwright install chromium
+```
+
+Then run a prototype under `working/design-preview/<name>/`:
+
+```bash
+node scripts/verify-design-preview.mjs --preview working/design-preview/<name>
+```
+
+This writes screenshots, `axe.json`, `report.json`, and `report.md` to `working/design-preview/<name>/verification/`. The verifier requires Node.js 22.12 or newer. On Windows, use `npm.cmd` and `npx.cmd` if script execution is restricted. The browser download is about 300 MB. This is a visual and automated accessibility check, not APEX runtime verification.
+
 ## Database connection
 
 Validation does not need a database. Deployment does. Use a SQLcl saved connection or the `SQLCL_CONNECTION_STRING` environment variable supplied by your database administrator. Never commit a password, wallet, token, or connection string to this repository.

@@ -46,10 +46,13 @@ Use the built-in commands and skills inside your agent chat:
 
 | Step | OpenCode Command | Antigravity (`agy`) Skill | Description |
 | :--- | :--- | :--- | :--- |
-| **1. Page Design** | `/apex.design` or `working/page-design/requirement.md` | `working/page-design/requirement.md` | User-defined page map, regions & rules |
+| **1. Requirement** | `working/page-design/requirement.md` | `working/page-design/requirement.md` | You write: pages, rules, and the look you want |
+| **1b. Application Design** | `/apex.design` | *(agent writes it)* | Agent writes `application-design.md`; you approve before any code |
 | **2. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
 | **3. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
 | **4. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
+| **5. Delivery gate** | `scripts/verify-delivery.ps1 -ProjectDirectory working` | same | Blocks delivery if anything in your requirement or design was dropped |
+| **6. Runtime gate** | `node scripts/verify-apex-runtime.mjs ...` | same | After import: logs in as each role and checks the live app (errors, icons, mobile, accessibility, access control) |
 
 *(Note: Validation runs automatically whenever APEXLang code is generated or modified).*
 
@@ -78,6 +81,15 @@ Always run commands from the repository root. The doctor ends with `Harness is r
 
 ---
 
+## ✅ What the Harness Guarantees
+
+Every rule that matters is enforced by a script, and every script has self-tests proving it catches the defect. The full list of guarantees, the gate behind each one, and the known limits are in [`docs/harness-standard.md`](docs/harness-standard.md).
+
+- **Your requirement wins.** You write `working/page-design/requirement.md`; the agent writes `application-design.md` and waits for your approval before building.
+- **Your look, not a stock theme.** Brand colours, badges, shadows and tone are implemented through the brand layer and checked mechanically.
+- **Nothing silently dropped.** Every requirement line is traced to `file:line` or marked `NOT DONE` with a reason.
+- **Checked live.** After import, the runtime gate logs in as each role and verifies the running app.
+
 ## 🔄 End-to-End Pipeline Walkthrough: Idea ➔ APEX App
 
 This harness uses a **streamlined vibe coding workflow** that transforms natural language business requirements directly into validated, production-grade Oracle APEX applications without unnecessary ceremony:
@@ -97,6 +109,9 @@ Here is how a feature travels through the harness:
 You define your desired page layout, regions, items, and rules in `working/page-design/requirement.md`:
 - **Pages & Components:** Page numbers, titles, reports, forms, and modal dialogs.
 - **Business Rules:** Input validation, state transitions, and authorization rules.
+- **Look & Feel (optional):** Brand colours, tone, shadows, badge style, icons. You are not limited to the stock Universal Theme look.
+
+The agent then writes `working/page-design/application-design.md`: the data model, how each rule is enforced in PL/SQL, the visual design, the page/component map, and a **requirement trace** with one row per line of your requirement. It stops for your approval before writing any code, and after building it marks every row `DONE` (with file:line) or `NOT DONE: <reason>`. The agent never edits your `requirement.md`.
 
 The assistant strictly follows your architecture rather than inventing an arbitrary design.
 
@@ -192,7 +207,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-project.ps1 -A
 - **What happens:**
   - Automatically archives your existing app deliverables into `archive/project-<timestamp>/` (when `-Archive` is passed).
   - Cleans `working/app/`, `working/database/`, and `working/page-design/credentials.md`.
-  - Resets `working/page-design/requirement.md` back to the clean starter template.
+  - Resets `working/page-design/requirement.md` from `docs/templates/requirement.template.md`, removes the agent's `application-design.md`, and removes any stray `requirements.md`.
   - Keeps SQLcl, JDK, rules, and test gates 100% intact and ready for instant generation.
 
 ---
@@ -232,6 +247,7 @@ docker compose down -v
 | `/apex.design <scope>` | Design page map, layout, theme, templates, and staticIds before implementation |
 | `/apex.prototype <page>` | Build a standalone Universal Theme visual prototype and translation plan |
 | `/apex.ui-redesign <page>` | Audit and redesign an existing page, including a custom non-default look |
+| `/apex.verify-design <preview-dir>` | Render a local prototype with Playwright and run axe accessibility checks |
 | `/apex.plsql <package>` | Write robust PL/SQL packages encapsulating business logic |
 | `/apex.apexlang <app-dir>` | Generate clean `.apx` APEXLang declarative definitions |
 
@@ -243,6 +259,20 @@ docker compose down -v
 | `/apex.review <app-dir>` | Trigger subagent review for APEXLang, security, SQL, and accessibility |
 | `/apex.deploy <app-dir>` | Import into target DB (`-WhatIf` preview first; requires approval) |
 | `scripts/reset-project.ps1` | Clean or archive `working/` directory to start a new project |
+
+### Visual Design Verification (optional)
+
+The designer agent cannot run a browser. A separate verifier renders `working/design-preview/<name>/before.html` and `after.html` at 1440x900 and 390x844, captures screenshots, checks horizontal overflow, and runs axe WCAG 2.2 AA checks.
+
+```bash
+npm install
+npx playwright install chromium
+node scripts/verify-design-preview.mjs --preview working/design-preview/<name>
+```
+
+The verifier requires Node.js 22.12 or newer. On Windows PowerShell, use `npm.cmd` and `npx.cmd` if script execution is restricted. The first browser download is about 300 MB. Reports and screenshots are written to `working/design-preview/<name>/verification/`. A baseline that fails does not fail the gate when a passing `after.html` is present; `--strict` adds moderate and minor axe findings.
+
+Design scoring remains in `skills/apex-ui-redesign/references/design-scorecard.md`. The verifier does not prove keyboard behavior, 200% zoom, states, or real APEX runtime rendering.
 
 ---
 
@@ -275,7 +305,7 @@ This repository works with multiple host assistants without paid API keys:
 ```text
 Oracle_Apex-Harness/
 ├── working/                  # Project deliverables (page-design/, database/, app/)
-│   ├── page-design/          # User-defined page architecture (requirement.md, credentials.md)
+│   ├── page-design/          # requirement.md (you), application-design.md (agent), credentials.md
 │   ├── database/             # Schemas, PL/SQL packages, and utPLSQL tests
 │   └── app/                  # Declarative APEXLang application tree (.apx)
 ├── local-dev/                # Disposable database (docker-compose.yml & audit scripts)

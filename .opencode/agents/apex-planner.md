@@ -22,3 +22,12 @@ Read `skills/apex-domains/SKILL.md` and the relevant references under `skills/ap
 10. Risks and open questions, with the exact input needed to resolve each one.
 
 Do not edit files. Do not run shell commands. If the current codebase is relevant, read it and cite paths. Do not invent business rules; mark assumptions explicitly.
+
+## Delivery contract
+
+Canonical source: `AGENTS.md`. `scripts/test-harness.ps1` fails if this block drifts out of an adapter.
+
+- `working/page-design/requirement.md` is user-owned: read it, never edit it.
+- Before writing SQL or `.apx`, write `working/page-design/application-design.md` from `docs/templates/application-design.template.md` (design, rule-to-PL/SQL mapping, brand layer, requirement trace) and stop for user approval.
+- Custom look: `skills/apex-design-system/references/brand-layer.md`. Stock Universal Theme is the floor, not the ceiling; user brand values are requirements.
+- Gates: `scripts/validate-apex-app.ps1` must print `Validation successful`; `scripts/verify-delivery.ps1 -ProjectDirectory working` must print `DELIVERY GATE PASS`. Fix the build, never the trace.

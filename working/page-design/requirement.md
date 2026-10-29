@@ -1,14 +1,23 @@
 # Application Page Design & Requirements
 
-<!-- 
-Describe your application pages and requirements below.
-The AI assistant will strictly follow this architecture rather than inventing its own.
+<!--
+Owned by YOU. Describe what you want: purpose, roles, pages, fields, rules, and the look.
+The agent never edits this file. It reads it, writes its technical plan to
+working/page-design/application-design.md, and waits for your approval before building.
 -->
 
 ## 1. Overview & Business Intent
 - **Application Name**: [e.g. Customer Portal / Inventory Tracker]
 - **Target Audience & Roles**: [e.g. Staff, Manager, Administrator]
 - **Core Purpose**: [What problem does this application solve?]
+- **Design & Theme Direction** (optional; you are not limited to the stock Universal Theme look):
+  - **Brand colours**: [e.g. primary `#7C3AED`, accent `#A855F7`, or "use stock theme"]
+  - **Visual tone**: [e.g. modern and playful / calm enterprise / premium editorial]
+  - **Shape & depth**: [e.g. 12px rounded corners, soft card shadows, pill-shaped status badges]
+  - **Typography**: [e.g. Inter for UI, tabular numbers in reports]
+  - **Icons & imagery**: [e.g. Font APEX icons per category: plane, receipt, wallet]
+  - **Signature element**: [one thing that should make this app feel distinctive]
+  - **Dark mode**: [required / not required]
 
 ---
 
