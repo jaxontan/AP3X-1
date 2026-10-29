@@ -121,6 +121,66 @@ powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirecto
 
 ---
 
+## 🆕 Starting a New Project (Keep vs. Reset)
+
+Each harness workspace is dedicated to **one project at a time** inside the `working/` folder. When you are ready to build a second application, **you do not need to delete the repo or re-download tools**.
+
+Choose the path that fits your workflow:
+
+### Option A: Keep Project with Git Branches (Single Repo, Multiple Apps)
+If you want to keep your completed project (e.g., Time-Off Portal) safely tracked while keeping your existing tools and environment ready:
+
+1. **Commit your current project:**
+   ```powershell
+   git add .
+   git commit -m "Complete Time-Off Portal project"
+   ```
+2. **Create and switch to a new branch:**
+   ```powershell
+   git checkout -b project/customer-portal
+   ```
+3. **Reset the working directory:**
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-project.ps1
+   ```
+4. Define your new page map in `working/page-design/requirement.md` and start vibe coding!
+> [!TIP]
+> You can switch back to your previous project anytime with `git checkout main`.
+
+---
+
+### Option B: Keep Project as a Separate Folder (Side-by-Side Repos)
+If you prefer having separate folders on your drive (e.g., `Oracle_Apex-TimeOff` and `Oracle_Apex-CustomerPortal`):
+
+1. **Rename or copy your current folder:**
+   ```powershell
+   Rename-Item -Path "Oracle_Apex-Harness" -NewName "Oracle_Apex-TimeOff"
+   ```
+2. **Clone a fresh copy of the harness template:**
+   ```powershell
+   git clone https://github.com/jaxontan/Oracle_Apex-Harness.git Oracle_Apex-CustomerPortal
+   ```
+3. **Skip tool downloads (Fast-track):** Copy the `tools/sqlcl` folder from your existing repo into the new clone so you don't need to re-download 100+ MB of tools.
+
+---
+
+### Option C: Reset and Archive (Disposable Workspace)
+If you want to quickly start fresh in this folder without switching branches:
+
+Run the automated reset script:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-project.ps1 -Archive
+```
+*(Or simply prompt your AI agent: **"Reset the working directory for a new project"**)*
+
+- **What happens:**
+  - Automatically archives your existing app deliverables into `archive/project-<timestamp>/` (when `-Archive` is passed).
+  - Cleans `working/app/`, `working/database/`, and `working/page-design/credentials.md`.
+  - Resets `working/page-design/requirement.md` back to the clean starter template.
+  - Keeps SQLcl, JDK, rules, and test gates 100% intact and ready for instant generation.
+
+---
+
 ## 🐳 Disposable Local Database (DB + APEX + ORDS)
 
 To develop and test locally without touching production or shared databases, spin up the pre-configured all-in-one Autonomous Database Free container (DB + APEX + ORDS preinstalled):
@@ -163,6 +223,7 @@ docker compose down -v
 | *(Auto-Validation)* | Automatically executes on every `.apx` save/generation |
 | `/apex.review <app-dir>` | Trigger subagent review for APEXLang, security, SQL, and accessibility |
 | `/apex.deploy <app-dir>` | Import into target DB (`-WhatIf` preview first; requires approval) |
+| `scripts/reset-project.ps1` | Clean or archive `working/` directory to start a new project |
 
 ---
 
@@ -195,11 +256,11 @@ This repository works with multiple host assistants without paid API keys:
 ```text
 Oracle_Apex-Harness/
 ├── working/                  # Project deliverables (page-design/, database/, app/)
-│   ├── page-design/          # User-defined page architecture (requirement.md)
+│   ├── page-design/          # User-defined page architecture (requirement.md, credentials.md)
 │   ├── database/             # Schemas, PL/SQL packages, and utPLSQL tests
 │   └── app/                  # Declarative APEXLang application tree (.apx)
 ├── local-dev/                # Disposable database (docker-compose.yml & audit scripts)
-├── scripts/                  # Automation scripts (doctor, validate, deploy, normalize, watch)
+├── scripts/                  # Automation scripts (doctor, validate, deploy, normalize, reset, watch)
 ├── skills/                   # Vendored Oracle APEX, APEXLang, DB, & ECC meta-skills
 ├── tools/                    # Local toolchain (SQLcl 26.3, OpenCode v2)
 ├── AGENTS.md                 # Master agent operating rules and skill routing

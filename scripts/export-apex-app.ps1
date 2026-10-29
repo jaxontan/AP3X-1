@@ -117,7 +117,15 @@ if ($exported.Count -eq 0) {
     exit 1
 }
 
-& (Join-Path $PSScriptRoot 'normalize-apx-tree.ps1') -AppDirectory $outputPath
+$exportRoot = $outputPath
+if (-not (Test-Path -LiteralPath (Join-Path $outputPath 'application.apx'))) {
+    $subApp = Get-ChildItem -LiteralPath $outputPath -Directory | Where-Object { Test-Path (Join-Path $_.FullName 'application.apx') } | Select-Object -First 1
+    if ($subApp) {
+        $exportRoot = $subApp.FullName
+    }
+}
+
+& (Join-Path $PSScriptRoot 'normalize-apx-tree.ps1') -AppDirectory $exportRoot
 if ($LASTEXITCODE -ne 0) {
     Write-Error 'Failed to normalize the exported APEXLang tree.'
     exit 1
@@ -129,8 +137,8 @@ if (-not $CompareDirectory) {
 }
 
 $exportMap = @{}
-foreach ($file in Get-ChildItem -LiteralPath $outputPath -Recurse -File) {
-    $relative = $file.FullName.Substring($outputPath.Length).TrimStart('\', '/')
+foreach ($file in Get-ChildItem -LiteralPath $exportRoot -Recurse -File) {
+    $relative = $file.FullName.Substring($exportRoot.Length).TrimStart('\', '/')
     $exportMap[$relative] = $file.FullName
 }
 

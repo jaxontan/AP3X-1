@@ -5,7 +5,7 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 ## Operating rules
 
 1. **Evidence over claims.** Never report success without the command, file, or validation output that proves it. If a check was not run, say so.
-2. **Auto-validate on generate or modify.** Whenever an APEXLang file (`.apx`) under `working/app/` is created, regenerated, or modified, the agent MUST immediately execute `scripts/normalize-apx-tree.ps1 -AppDirectory working/app` and `scripts/validate-apex-app.ps1 -AppDirectory working/app` in the same turn before presenting the response. Never ask the user to run validation manually. The tree must report `Validation successful` with 0 compile diagnostics. Deploy only when the user explicitly asks to deploy.
+2. **Auto-validate on generate or modify.** Whenever an APEXLang file (`.apx`) under `working/app/` is created, regenerated, or modified, the agent MUST immediately execute `scripts/normalize-apx-tree.ps1 -AppDirectory working/app` and `scripts/validate-apex-app.ps1 -AppDirectory working/app` in the same turn before presenting the response. Never ask the user to run validation manually. The tree must report `Validation successful` with 0 compile diagnostics. Once validation passes, proactively ask the user directly if they want the agent to execute Step 1 (database schema & package deployment) and Step 2 (APEX app import into the target/local workspace). When executing Step 1 & Step 2, the agent must automatically provision the workspace and user accounts (`ADMIN` + seeded test accounts). Deploy only when the user explicitly asks to deploy.
 3. **Version lock.** Never mix APEXLang skills, inventories, or example applications from different APEX versions.
 4. **Read-only by default on databases.** Use `SELECT` and metadata queries unless the user explicitly authorizes a change. Follow `skills/db/agent/destructive-op-guards.md` and `skills/db/agent/safe-dml-patterns.md`.
 5. **No secrets in files.** Never write passwords, connection strings, tokens, or wallet contents into the repository. Use `SQLCL_CONNECTION_STRING` or a SQLcl saved connection.
@@ -93,6 +93,8 @@ The harness supports two lean vibe coding workflows without multi-phase specific
    - When `working/page-design/requirement.md` is provided, the agent MUST strictly follow the user's page layout, page numbers, and component specifications rather than inventing an arbitrary architecture.
    - The agent generates the schema and seed SQL scripts under `working/database/`, and scaffolds the full APEXLang tree under `working/app/` matching the user's design.
    - Run the normalization and validation gates (`scripts/validate-apex-app.ps1 -AppDirectory working/app`).
+   - Directly ask the user if they want the agent to help execute Step 1 (deploy database schema, packages, and tests) and Step 2 (import the APEX application tree into the target/local APEX workspace).
+   - Automated Workspace & User Provisioning: When deploying, the pipeline automatically ensures the target APEX workspace and all required user accounts (the workspace administrator `ADMIN` / `Welcome123456#`, plus any seeded test accounts) are created and active with zero manual credential configuration required.
 
 2. **Brownfield Vibe Coding (Improve Existing Application)**:
    - Point directly to the target page or shared component in `working/app/` (e.g., "Add an export button on Page 10" or "Require a rejection reason in review dialog").
@@ -114,12 +116,16 @@ Then run the APEX gates:
 
 ## Project & Working Directory Structure (1 Project per Harness Repo)
 
-This harness repo is disposable and dedicated to **one project**. All deliverables are organized cleanly inside the `working/` directory:
+This harness repo is disposable and dedicated to **one project**. All deliverables are organized cleanly inside the `working/` directory.
+
+To start a new project without re-cloning or re-downloading tools, run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-project.ps1` (or add `-Archive` to back up the current project to `archive/`).
+
 
 ```text
 working/
 ├── page-design/                  # User-defined page map and UI architecture
-│   └── requirement.md            # Authoritative page map, regions, items & rules
+│   ├── requirement.md            # Authoritative page map, regions, items & rules
+│   └── credentials.md            # Workspace access, admin & seeded test accounts
 ├── database/                     # Oracle Database artifacts
 │   ├── schema.sql                # Tables, constraints, indexes, and seed data
 │   ├── packages/                 # TAPI & XAPI business logic packages (pks / pkb)
@@ -190,5 +196,6 @@ Run the harness setup before APEX commands (from the repository root):
 ## Communication
 
 - Lead with the outcome. Then show evidence, commands, and file paths.
+- **Maintain application credentials in file, not chat output**: Record and maintain all workspace access details, local URLs, administrator credentials, and seeded test accounts inside `working/page-design/credentials.md`. Do not dump the credentials card in every chat response; simply link to `working/page-design/credentials.md` when deployment or setup occurs, or when the user asks for credentials.
 - Use APEX component names and `.apx` paths precisely.
 - When blocked, state the exact missing input (app directory, workspace name, connection, APEX version) instead of guessing.

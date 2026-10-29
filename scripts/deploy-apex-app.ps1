@@ -7,7 +7,9 @@ param(
 
     [switch]$Local,
 
-    [string]$Workspace
+    [string]$Workspace,
+
+    [int]$ApplicationId
 )
 
 $ErrorActionPreference = 'Stop'
@@ -86,13 +88,85 @@ if ($Local) {
 
 $workspaceClause = if ($Workspace) { "-workspace `"$Workspace`"" } else { "" }
 
+$provisionSql = ""
+if ($Workspace) {
+    $adminPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
+    $provisionSql = @"
+declare
+  l_ws varchar2(255) := upper('$Workspace');
+  l_ws_id number;
+  l_count number;
+begin
+  -- Check if workspace exists
+  select count(*) into l_count from all_views where view_name = 'APEX_WORKSPACES';
+  if l_count > 0 then
+    begin
+      select workspace_id into l_ws_id from apex_workspaces where workspace = l_ws;
+    exception
+      when no_data_found then
+        begin
+          apex_instance_admin.add_workspace(
+            p_workspace_id       => null,
+            p_workspace          => l_ws,
+            p_primary_schema     => l_ws,
+            p_additional_schemas => null
+          );
+          l_ws_id := apex_util.find_security_group_id(p_workspace => l_ws);
+        exception
+          when others then
+            dbms_output.put_line('Workspace provisioning notice: ' || sqlerrm);
+        end;
+    end;
+
+    if l_ws_id is not null then
+      apex_util.set_security_group_id(l_ws_id);
+
+      -- Ensure ADMIN user exists
+      select count(*) into l_count
+        from apex_workspace_apex_users
+       where workspace_name = l_ws
+         and user_name = 'ADMIN';
+
+      if l_count = 0 then
+        begin
+          apex_util.create_user(
+            p_user_name                    => 'ADMIN',
+            p_web_password                 => '$adminPwd',
+            p_email_address                => 'admin@example.com',
+            p_default_schema               => l_ws,
+            p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:SQL',
+            p_change_password_on_first_use => 'N'
+          );
+          commit;
+          dbms_output.put_line('Auto-provisioned ADMIN user for workspace ' || l_ws);
+        exception
+          when others then
+            dbms_output.put_line('ADMIN user creation notice: ' || sqlerrm);
+        end;
+      end if;
+    end if;
+  end if;
+exception
+  when others then
+    dbms_output.put_line('Workspace auto-provision notice: ' || sqlerrm);
+end;
+/
+"@
+}
+
+$appIdSql = if ($ApplicationId -gt 0) {
+    "apex_application_install.set_application_id($ApplicationId);`n  apex_application_install.generate_offset;"
+} else { "" }
+
 $commands = @"
 begin
   apex_application_install.set_auto_install_sup_obj(
     p_auto_install_sup_obj => true
   );
+  $appIdSql
 end;
 /
+$provisionSql
 apex import -input "$resolved" $workspaceClause
 exit
 "@

@@ -185,14 +185,16 @@ foreach ($file in $files) {
 
     if ($textExtensions -contains $extension) {
         $text = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8
-        foreach ($rule in $hardSecretPatterns) {
-            if ([regex]::IsMatch($text, $rule.Pattern)) {
-                Add-Failure "Potential $($rule.Name) in $relative"
+        if ($null -ne $text) {
+            foreach ($rule in $hardSecretPatterns) {
+                if ([regex]::IsMatch($text, $rule.Pattern)) {
+                    Add-Failure "Potential $($rule.Name) in $relative"
+                }
             }
-        }
-        foreach ($rule in $softSecretPatterns) {
-            if ([regex]::IsMatch($text, $rule.Pattern)) {
-                Add-Warning "$($rule.Message) ($relative)"
+            foreach ($rule in $softSecretPatterns) {
+                if ([regex]::IsMatch($text, $rule.Pattern)) {
+                    Add-Warning "$($rule.Message) ($relative)"
+                }
             }
         }
     }
