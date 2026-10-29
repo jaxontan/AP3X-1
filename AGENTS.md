@@ -26,6 +26,8 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 | Oracle Database guidance | `skills/db/SKILL.md` |
 | Safe DB changes | `skills/db/agent/` (`schema-discovery.md`, `destructive-op-guards.md`, `safe-dml-patterns.md`) |
 | Business analysis, app design, PL/SQL, APEXLang | `skills/apex-domains/SKILL.md` |
+| Visual/UX design, theme style, templates, page map | `skills/apex-design-system/SKILL.md` |
+| Redesign an existing page or custom look | `skills/apex-ui-redesign/SKILL.md` |
 | End-to-end APEX delivery | `skills/apex-delivery/SKILL.md` |
 | Verification gate (APEX) | `skills/apex-delivery/SKILL.md` |
 | Verification checklist for supporting code | `skills/harness/verification-loop/SKILL.md` |
@@ -142,20 +144,29 @@ working/
 
 ## Environment
 
-Run the harness setup before APEX commands (from the repository root):
+First run on Windows: `.\bootstrap.cmd`. First run on macOS/Linux: `bash scripts/bootstrap.sh`. The bootstrap installs prerequisites, verifies the harness, and is documented in `docs/getting-started.md`.
 
+After setup, run the harness commands before APEX work (from the repository root):
+
+**Windows**
 ```powershell
 . .\scripts\set-env.ps1
 .\scripts\harness-doctor.ps1
 ```
 
-- `JAVA_HOME`: JDK 21 (installed at `C:\Program Files\Microsoft\jdk-*`).
-- `SQLCL_BIN`: defaults to `tools\sqlcl\bin\sql.exe`.
+**macOS / Linux (PowerShell 7)**
+```bash
+. ./scripts/set-env.ps1
+pwsh -NoProfile -File scripts/harness-doctor.ps1
+```
+
+- `JAVA_HOME`: JDK 21. `set-env.ps1` discovers `C:\Program Files\Microsoft\jdk-*`, Temurin, and common `/usr/lib/jvm/*21*` locations.
+- `SQLCL_BIN`: defaults to `tools/sqlcl/bin/sql.exe` on Windows and `tools/sqlcl/bin/sql` on macOS/Linux.
 - `SQLCL_CONNECTION_STRING`: set by the user for deploy; never commit it.
 - `TARGET_DB_VERSION`: confirm `19c`, `23ai`, or `26ai` before using newer SQL. The compatibility matrix is in `skills/apex-domains/references/smartdb-plsql.md`.
 - SQLcl 26.3+ is expected. `apex validate` requires no database connection; `apex import` does.
-- Run `scripts\test-harness.ps1` to exercise the validation, normalization, export, and deploy gates offline with fake SQLcl output. It does not touch a database.
-- OpenCode 1.18+ and 2.x are both supported. `opencode.jsonc` uses the V1 `permission` object; 2.x converts it to `permissions`, while 1.x rejects any `permissions` key. Test with `opencode debug config` and, when installed, `tools\opencode-v2\opencode.exe debug config`. `harness-doctor.ps1` fails if an installed runtime rejects the config or an agent.
+- Run `scripts/test-harness.ps1` to exercise the validation, normalization, export, and deploy gates offline with fake SQLcl output. It does not touch a database.
+- OpenCode 1.18+ and 2.x are both supported. `opencode.jsonc` uses the V1 `permission` object; 2.x converts it to `permissions`, while 1.x rejects any `permissions` key. Test with `opencode debug config` and, when installed, `tools/opencode-v2/opencode.exe` (Windows) or `tools/opencode-v2/opencode` (macOS/Linux) `debug config`. `harness-doctor.ps1` fails if an installed runtime rejects the config or an agent.
 
 ## APEXLang conventions
 

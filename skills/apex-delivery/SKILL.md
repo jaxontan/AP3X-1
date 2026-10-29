@@ -44,7 +44,9 @@ For 26.2 there is no `apexlang-generation` skill. Author with the 26.2 inventory
 
 ## 3. Plan before building
 
-For non-trivial work, use the Spec Kit flow in `AGENTS.md`. The plan must include:
+For a new app, follow the Greenfield Vibe Coding workflow; for an existing app, follow Brownfield Vibe Coding (`AGENTS.md`, "Default delivery workflow"). If `working/page-design/requirement.md` exists, treat it as authoritative for page numbers, layout, regions, items, and component choices; do not invent an alternative architecture.
+
+The plan must include:
 
 - Actors, authorization schemes, and page access.
 - Data model and supporting objects.
@@ -121,11 +123,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory <app-directory>
 ```
 
-The script has `ConfirmImpact = 'High'` and prompts before importing. Do not suppress the prompt with `-Confirm:$false` unless the user approved this exact target.
+The script provisions the target workspace and its `ADMIN` user when they do not exist, enables supporting-object installation, has `ConfirmImpact = 'High'`, and prompts before importing. Do not suppress the prompt with `-Confirm:$false` unless the user approved this exact target.
 
 4. Treat any `ORA-` output as failure, even if the process exit code is 0.
 5. Report the application ID, workspace, and any import warnings.
-6. Export and compare when the target supports APEXLang export:
+6. Ensure any project-defined seeded test accounts exist and are active; the import provisions only the workspace and `ADMIN`. Record the workspace URL, `ADMIN`, and test accounts in `working/page-design/credentials.md`, and link that file instead of pasting credentials into chat.
+7. Export and compare when the target supports APEXLang export:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-apex-app.ps1 -ApplicationId <id> -OutputDirectory <export-directory> -CompareDirectory <app-directory>

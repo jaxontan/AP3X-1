@@ -1,52 +1,110 @@
 # Dot-source this file to configure the APEX harness environment:
-#   . .\scripts\set-env.ps1
+#   Windows:  . .\scripts\set-env.ps1
+#   macOS/Linux (PowerShell 7): . ./scripts/set-env.ps1
 #
-# It locates the installed JDK, uv/Spec Kit, and the project-local SQLcl,
-# prepends them to PATH, and sets SQLCL_BIN when it is not already set. It does
-# not set or print SQLCL_CONNECTION_STRING.
+# It locates a JDK, uv/Spec Kit, the project-local SQLcl, and a local OpenCode
+# binary, prepends them to PATH, and sets SQLCL_BIN when it is not already set.
+# It does not set or print SQLCL_CONNECTION_STRING.
 
 $HarnessRoot = Split-Path -Parent $PSScriptRoot
-$SqlclHome = Join-Path $HarnessRoot 'tools\sqlcl'
+$IsWindowsHost = $env:OS -eq 'Windows_NT'
+$PathSeparator = [string][System.IO.Path]::PathSeparator
+$SqlclHome = Join-Path $HarnessRoot 'tools/sqlcl'
 
-if (-not $env:JAVA_HOME -or -not (Test-Path (Join-Path $env:JAVA_HOME 'bin\java.exe'))) {
-    $jdk = Get-ChildItem 'C:\Program Files\Microsoft\jdk-*' -Directory -ErrorAction SilentlyContinue |
-        Sort-Object Name -Descending |
+function Add-HarnessPath {
+    param([string]$Directory)
+
+    if (-not $Directory -or -not (Test-Path -LiteralPath $Directory)) {
+        return
+    }
+
+    $entries = @($env:Path -split [regex]::Escape($PathSeparator))
+    if ($entries -notcontains $Directory) {
+        $env:Path = "$Directory$PathSeparator$env:Path"
+    }
+}
+
+$javaExe = if ($IsWindowsHost) { 'java.exe' } else { 'java' }
+$javaHomeExe = Join-Path 'bin' $javaExe
+
+function Test-JavaHome {
+    param([string]$HomePath)
+
+    if (-not $HomePath) { return $false }
+    return (Test-Path -LiteralPath (Join-Path $HomePath $javaHomeExe))
+}
+
+if (-not (Test-JavaHome $env:JAVA_HOME)) {
+    $candidates = New-Object System.Collections.Generic.List[string]
+
+    if ($IsWindowsHost) {
+        foreach ($pattern in @(
+            'C:\Program Files\Microsoft\jdk-*',
+            'C:\Program Files\Java\jdk-21*',
+            'C:\Program Files\Eclipse Adoptium\jdk-21*'
+        )) {
+            Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object { $candidates.Add($_.FullName) }
+        }
+    }
+    else {
+        foreach ($pattern in @(
+            '/Library/Java/JavaVirtualMachines/*/Contents/Home',
+            '/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home',
+            '/usr/local/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home',
+            '/usr/lib/jvm/*21*',
+            '/usr/lib/jvm/*-21-*'
+        )) {
+            Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue |
+                ForEach-Object { $candidates.Add($_.FullName) }
+        }
+    }
+
+    $jdk = $candidates |
+        Sort-Object -Descending |
+        Where-Object { Test-JavaHome $_ } |
         Select-Object -First 1
+
     if ($jdk) {
-        $env:JAVA_HOME = $jdk.FullName
+        $env:JAVA_HOME = $jdk
     }
 }
 
-if ($env:JAVA_HOME) {
-    $javaBin = Join-Path $env:JAVA_HOME 'bin'
-    if ($env:Path -notlike "*$javaBin*") {
-        $env:Path = "$javaBin;$env:Path"
-    }
+if (Test-JavaHome $env:JAVA_HOME) {
+    Add-HarnessPath (Join-Path $env:JAVA_HOME 'bin')
 }
 
-$uvBin = Join-Path $env:USERPROFILE '.local\bin'
-if (Test-Path (Join-Path $uvBin 'uv.exe')) {
-    if ($env:Path -notlike "*$uvBin*") {
-        $env:Path = "$uvBin;$env:Path"
-    }
+$uvBin = if ($IsWindowsHost) {
+    Join-Path $env:USERPROFILE '.local/bin'
+} else {
+    Join-Path $HOME '.local/bin'
 }
+Add-HarnessPath $uvBin
 
-$sqlclExe = Join-Path $SqlclHome 'bin\sql.exe'
-if (Test-Path $sqlclExe) {
-    $sqlclBin = Join-Path $SqlclHome 'bin'
-    if ($env:Path -notlike "*$sqlclBin*") {
-        $env:Path = "$sqlclBin;$env:Path"
-    }
+$sqlclExe = if ($IsWindowsHost) {
+    Join-Path (Join-Path $SqlclHome 'bin') 'sql.exe'
+} else {
+    Join-Path (Join-Path $SqlclHome 'bin') 'sql'
+}
+if (Test-Path -LiteralPath $sqlclExe) {
+    Add-HarnessPath (Split-Path -Parent $sqlclExe)
     if (-not $env:SQLCL_BIN) {
         $env:SQLCL_BIN = $sqlclExe
     }
 }
 
-$openCodeHome = Join-Path $HarnessRoot 'tools\opencode-v2'
-$openCodeExe = Join-Path $openCodeHome 'opencode.exe'
-if (Test-Path $openCodeExe) {
-    if ($env:Path -notlike "*$openCodeHome*") {
-        $env:Path = "$openCodeHome;$env:Path"
+$openCodeCandidates = @(
+    (Join-Path $HarnessRoot 'tools/opencode-v2'),
+    (Join-Path $HOME '.opencode/bin')
+)
+foreach ($openCodeHome in $openCodeCandidates) {
+    $openCodeExe = if ($IsWindowsHost) {
+        Join-Path $openCodeHome 'opencode.exe'
+    } else {
+        Join-Path $openCodeHome 'opencode'
+    }
+    if (Test-Path -LiteralPath $openCodeExe) {
+        Add-HarnessPath $openCodeHome
     }
 }
 

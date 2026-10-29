@@ -1,0 +1,53 @@
+/*
+  Oracle APEX Universal Theme 42 — "Vita Slate" Theme Style
+  DELTA file — load AFTER vita-light.css.
+  Source: .../theme/Vita-Slate.less
+    @g_Nav_Style:    dark;
+    @g_Accent-BG:    #505f6d;
+    @g_Accent-OG:    #ececec;
+    @g_Body-Title-BG:#dee1e4;
+    @g_Link-Base:    #337ac0;
+    @g_Body-BG:      #f5f5f5;
+*/
+
+:root {
+  --ut-palette-primary: #505f6d;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-link-text-color: #337ac0;
+  --ut-focus-outline-color: #505f6d;
+
+  --ut-header-background-color: #505f6d;
+  --ut-header-text-color: #FFFFFF;
+
+  --ut-body-background-color: #f5f5f5;
+  --ut-body-text-color: #1a1a1a;
+
+  --ut-body-title-background-color: #dee1e4;
+  --ut-body-title-text-color: #1a1a1a;
+
+  --ut-region-background-color: #FFFFFF;
+  --ut-region-header-background-color: #F7F7F7;
+
+  /* Dark nav, desaturated/darkened from the slate accent */
+  --ut-body-nav-background-color: #2c3339;
+  --ut-body-nav-text-color: #d7dade;
+  --ut-navtabs-background-color: #2c3339;
+  --ut-navtabs-text-color: #d7dade;
+  --ut-navtabs-item-active-background-color: #232830;
+  --ut-navtabs-item-hover-background-color: #232830;
+  --ut-header-menubar-background-color: #2c3339;
+  --ut-header-menubar-item-text-color: #d7dade;
+  --ut-header-menubar-item-current-background-color: #232830;
+  --ut-header-menubar-item-current-text-color: #d7dade;
+
+  --a-treeview-node-selected-background-color: #232830;
+  --a-treeview-node-selected-text-color: #FFFFFF;
+  --a-treeview-node-focused-background-color: #232830;
+  --a-treeview-node-focused-text-color: #FFFFFF;
+
+  --a-field-input-focus-border-color: #505f6d;
+  --ut-field-input-focus-icon-color: #505f6d;
+  --a-checkbox-checked-background-color: #505f6d;
+  --a-button-focus-border-color: #505f6d;
+  --a-button-count-background-color: #505f6d;
+}

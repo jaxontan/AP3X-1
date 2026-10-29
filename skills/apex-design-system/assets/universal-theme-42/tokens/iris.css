@@ -1,0 +1,83 @@
+/*
+  Oracle APEX Universal Theme 42 — "Iris" Theme Style
+  DELTA file — load AFTER vita-light.css.
+  Iris is Oracle's Redwood-family "pillar" style — default pillar "Sky" (#00688C),
+  a dark neutral header/nav, white region surfaces, and slightly larger radii/header.
+  Source: .../theme/Iris.less (pillar: sky, header style: dark)
+*/
+
+:root {
+  --ut-palette-primary: #00688C;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-palette-primary-shade: #E4F1F7;
+  --ut-link-text-color: #0e7295;
+  --ut-focus-outline-color: #00688C;
+
+  --ut-header-height: 3.5rem;
+  --ut-header-background-color: #302D2A;
+  --ut-header-text-color: #FFFFFF;
+
+  --ut-body-background-color: #FBF9F8;
+  --ut-body-text-color: #161513;
+
+  --ut-body-title-background-color: #F1EFED;
+  --ut-body-title-text-color: #161513;
+  --ut-breadcrumb-item-text-color: rgba(22,21,19,.7);
+
+  --ut-body-nav-background-color: #302D2A;
+  --ut-body-nav-text-color: #FFFFFF;
+  --ut-navtabs-background-color: #302D2A;
+  --ut-navtabs-text-color: #FFFFFF;
+  --ut-navtabs-item-active-background-color: rgba(255,255,255,.08);
+  --ut-navtabs-item-hover-background-color: rgba(255,255,255,.08);
+  --ut-header-menubar-background-color: #302D2A;
+  --ut-header-menubar-item-text-color: #FFFFFF;
+  --ut-header-menubar-item-current-background-color: rgba(255,255,255,.08);
+  --ut-header-menubar-item-current-text-color: #FFFFFF;
+
+  --a-treeview-node-selected-background-color: #00688C;
+  --a-treeview-node-selected-text-color: #FFFFFF;
+  --a-treeview-node-focused-background-color: #00688C;
+  --a-treeview-node-focused-text-color: #FFFFFF;
+
+  --ut-region-background-color: #FFFFFF;
+  --ut-region-header-background-color: #FFFFFF;
+  --ut-region-header-text-color: #161513;
+  --ut-region-text-color: #161513;
+  --ut-component-background-color: #FFFFFF;
+
+  --ut-component-border-radius: .25rem;
+  --ut-region-border-radius: .25rem;
+  --a-button-border-radius: .25rem;
+  --a-field-input-border-radius: .25rem;
+
+  --a-button-background-color: rgba(22,21,19,.08);
+  --a-button-text-color: #161513;
+  --a-button-hover-background-color: rgba(22,21,19,.12);
+  --a-button-active-background-color: rgba(22,21,19,.16);
+
+  --a-field-input-background-color: #FFFFFF;
+  --a-field-input-text-color: #161513;
+  --a-field-input-border-color: rgba(22,21,19,.5);
+  --a-field-input-focus-border-color: #00688C;
+  --ut-field-input-focus-icon-color: #00688C;
+  --a-checkbox-checked-background-color: #00688C;
+
+  --ut-palette-primary-alt: #227E9E;
+  --ut-palette-primary-alt-contrast: #FFFFFF;
+  --ut-palette-success: #436B1D;
+  --ut-palette-success-contrast: #FFFFFF;
+  --ut-palette-success-shade: #E4F5D3;
+  --ut-palette-info: #227E9E;
+  --ut-palette-info-contrast: #FFFFFF;
+  --ut-palette-info-shade: #E4F1F7;
+  --ut-palette-warning: #8F520A;
+  --ut-palette-warning-contrast: #FFFFFF;
+  --ut-palette-warning-shade: #FCEDDC;
+  --ut-palette-danger: #B3311F;
+  --ut-palette-danger-contrast: #FFFFFF;
+  --ut-palette-danger-shade: #FFEBE8;
+
+  --a-button-count-background-color: #00688C;
+  --a-button-count-text-color: #FFFFFF;
+}

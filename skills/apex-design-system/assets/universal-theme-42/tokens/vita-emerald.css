@@ -1,0 +1,66 @@
+/*
+  "Vita Emerald" — new custom Oracle APEX Universal Theme 42 Theme Style.
+  Built to the same standard as Oracle's own Vita-Red / Vita-Dark / Vita-Slate:
+  a minimal override of accent + radius, everything else cascades from
+  vita-light.css. Load order:
+
+    <link rel="stylesheet" href="tokens/vita-light.css">
+    <link rel="stylesheet" href="tokens/vita-emerald.css">   <!-- this file -->
+
+  Source of the override logic: tokens/vita-emerald.less (Theme-Roller-ready).
+  Hex values below are hand-resolved approximations of Oracle's LESS color
+  functions (contrast/mix/desaturate/darken) — verify exact values via
+  Theme Roller before shipping to production APEX pages.
+*/
+
+:root {
+  /* ---- Brand accent: emerald green ---- */
+  --ut-palette-primary: #0E9F6E;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-palette-primary-shade: #e5f6ef;
+  --ut-link-text-color: #0E9F6E;
+  --ut-focus-outline-color: #0E9F6E;
+
+  --ut-header-background-color: #0E9F6E;
+  --ut-header-text-color: #FFFFFF;
+
+  /* ---- Left nav: auto-derived dark, desaturated emerald-charcoal ---- */
+  --ut-body-nav-background-color: #232b28;
+  --ut-body-nav-text-color: #d9ddda;
+  --ut-navtabs-background-color: #232b28;
+  --ut-navtabs-text-color: #d9ddda;
+  --ut-navtabs-item-active-background-color: #1a201d;
+  --ut-navtabs-item-hover-background-color: #1a201d;
+  --ut-header-menubar-background-color: #232b28;
+  --ut-header-menubar-item-text-color: #d9ddda;
+  --ut-header-menubar-item-current-background-color: #1a201d;
+  --ut-header-menubar-item-current-text-color: #d9ddda;
+
+  --a-treeview-node-selected-background-color: #1a201d;
+  --a-treeview-node-selected-text-color: #FFFFFF;
+  --a-treeview-node-focused-background-color: #1a201d;
+  --a-treeview-node-focused-text-color: #FFFFFF;
+
+  /* ---- Softer corner radii (6px vs stock 2–4px) ---- */
+  --ut-component-border-radius: .375rem;
+  --ut-region-border-radius: .375rem;
+  --a-button-border-radius: .375rem;
+  --a-field-input-border-radius: .375rem;
+  --a-checkbox-border-radius: .375rem;
+  --a-cv-border-radius: .375rem;
+  --jui-dialog-border-radius: .375rem;
+
+  /* ---- Focus / primary-derived states ---- */
+  --a-field-input-focus-border-color: #0E9F6E;
+  --ut-field-input-focus-icon-color: #0E9F6E;
+  --a-checkbox-checked-background-color: #0E9F6E;
+  --a-checkbox-checked-text-color: #FFFFFF;
+  --a-button-focus-border-color: #0E9F6E;
+  --a-button-count-background-color: #0E9F6E;
+  --a-button-count-text-color: #FFFFFF;
+  --a-combo-select-item-selected-background-color: #e5f6ef;
+
+  /* ---- Primary (alt) state used by .t-Button--primary ---- */
+  --ut-palette-primary-alt: #0C7F5A;
+  --ut-palette-primary-alt-contrast: #FFFFFF;
+}

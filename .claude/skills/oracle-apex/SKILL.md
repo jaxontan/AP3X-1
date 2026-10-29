@@ -10,9 +10,11 @@ This project is an Oracle APEX agent harness. The canonical instructions are in 
 ## Load in this order
 
 1. `skills/apex-domains/SKILL.md` — the four-domain workflow: business analysis, application design, PL/SQL, APEXLang.
-2. `skills/apex-delivery/SKILL.md` — version routing, validation, review, and deployment gates.
-3. `skills/apex/apexlang/SKILL.md` — choose APEX 26.1 or 26.2; never mix versions.
-4. `skills/db/SKILL.md` — Oracle Database, SQL, and PL/SQL references.
+2. `skills/apex-design-system/SKILL.md` — visual/UX design: page map, theme style, templates, component mapping, staticId plan, APEXLang handoff.
+3. `skills/apex-ui-redesign/SKILL.md` — audit and redesign an existing page, including custom non-default looks.
+4. `skills/apex-delivery/SKILL.md` — version routing, validation, review, and deployment gates.
+5. `skills/apex/apexlang/SKILL.md` — choose APEX 26.1 or 26.2; never mix versions.
+6. `skills/db/SKILL.md` — Oracle Database, SQL, and PL/SQL references.
 
 ## Non-negotiables
 

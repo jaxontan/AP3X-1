@@ -5,6 +5,7 @@ This repository is an Oracle APEX agent harness. `AGENTS.md` is the canonical in
 ## Required reading by task
 
 - Business analysis, domain model, application design, PL/SQL, or APEXLang: `skills/apex-domains/SKILL.md`.
+- Visual/UX design, page mapping, custom look, or redesign: `skills/apex-design-system/SKILL.md` and `skills/apex-ui-redesign/SKILL.md`.
 - Any APEX creation, change, validation, or deployment: `skills/apex-delivery/SKILL.md`.
 - APEX syntax: `skills/apex/apexlang/SKILL.md`, then the matching 26.1 or 26.2 skill.
 - Oracle Database, SQL, or PL/SQL detail: `skills/db/SKILL.md`.

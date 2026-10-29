@@ -5,11 +5,10 @@ param(
 
 $ErrorActionPreference = 'Continue'
 
-$opencodeBeforeEnv = (Get-Command opencode -ErrorAction SilentlyContinue).Source
-
 . (Join-Path $PSScriptRoot 'set-env.ps1') | Out-Null
 
 $root = Split-Path -Parent $PSScriptRoot
+$isWindowsHost = $env:OS -eq 'Windows_NT'
 $failures = New-Object System.Collections.Generic.List[string]
 
 function Get-ToolPath {
@@ -22,12 +21,13 @@ function Get-ToolPath {
 }
 
 $sqlclPath = if ($env:SQLCL_BIN -and (Test-Path $env:SQLCL_BIN)) { $env:SQLCL_BIN } else { $null }
-$specifyPath = Get-ToolPath 'specify' (Join-Path $env:USERPROFILE '.local\bin\specify.exe')
-$uvPath = Get-ToolPath 'uv' (Join-Path $env:USERPROFILE '.local\bin\uv.exe')
+$uvPath = Get-ToolPath 'uv'
+$pythonPath = Get-ToolPath 'python'
+if (-not $pythonPath) { $pythonPath = Get-ToolPath 'python3' }
 
 $checks = @(
     [pscustomobject]@{ Name = 'Node.js';    Path = (Get-ToolPath 'node');                     Required = $true;  Version = $(if (Get-Command node -ErrorAction SilentlyContinue) { node --version } else { '' }) }
-    [pscustomobject]@{ Name = 'Python';     Path = (Get-ToolPath 'python');                   Required = $true;  Version = $(if (Get-Command python -ErrorAction SilentlyContinue) { python --version 2>&1 } else { '' }) }
+    [pscustomobject]@{ Name = 'Python';     Path = $pythonPath;                               Required = $true;  Version = $(if ($pythonPath) { (& $pythonPath --version 2>&1) } else { '' }) }
     [pscustomobject]@{ Name = 'uv';         Path = $uvPath;                                 Required = $true;  Version = $(if ($uvPath) { (& $uvPath --version) 2>&1 } else { '' }) }
     [pscustomobject]@{ Name = 'OpenCode';   Path = (Get-ToolPath 'opencode');                 Required = $true;  Version = $(if (Get-Command opencode -ErrorAction SilentlyContinue) { opencode --version } else { '' }) }
     [pscustomobject]@{ Name = 'Java';       Path = (Get-ToolPath 'java');                     Required = $true;  Version = $(if (Get-Command java -ErrorAction SilentlyContinue) { (java -version 2>&1 | Select-Object -First 1) } else { '' }) }
@@ -53,29 +53,42 @@ $requiredFiles = @(
     'opencode.jsonc',
     'AGENTS.md',
     '.gitattributes',
-    'skills\apex\SKILL.md',
-    'skills\db\SKILL.md',
-    'skills\apex-delivery\SKILL.md',
-    'skills\apex-domains\SKILL.md',
+    'bootstrap.cmd',
+    'skills/apex/SKILL.md',
+    'skills/db/SKILL.md',
+    'skills/apex-delivery/SKILL.md',
+    'skills/apex-domains/SKILL.md',
+    'skills/apex-design-system/SKILL.md',
+    'skills/apex-ui-redesign/SKILL.md',
     'CLAUDE.md',
-    '.claude\skills\oracle-apex\SKILL.md',
-    '.agents\skills\oracle-apex.md',
-    '.agents\rules\oracle-apex.md',
-    '.opencode\agents\apex.md',
-    '.opencode\commands\apex.plsql.md',
-    '.opencode\commands\apex.apexlang.md',
-    '.claude\settings.json',
+    '.claude/skills/oracle-apex/SKILL.md',
+    '.agents/skills/oracle-apex.md',
+    '.agents/rules/oracle-apex.md',
+    '.agents/skills.json',
+    '.agents/mcp_config.json',
+    '.opencode/agents/apex.md',
+    '.opencode/agents/apex-designer.md',
+    '.opencode/commands/apex.plsql.md',
+    '.opencode/commands/apex.apexlang.md',
+    '.opencode/commands/apex.design.md',
+    '.opencode/commands/apex.prototype.md',
+    '.opencode/commands/apex.ui-redesign.md',
+    '.claude/settings.json',
     '.mcp.json',
-    'skills\harness\error-triage\SKILL.md',
-    'scripts\normalize-apx-tree.ps1',
-    'scripts\validate-apex-app.ps1',
-    'scripts\verify-apex-change.ps1',
-    'scripts\deploy-apex-app.ps1',
-    'scripts\export-apex-app.ps1',
-    'scripts\test-harness.ps1',
-    'scripts\install-opencode-v2.ps1',
-    'docs\PROVENANCE.md',
-    'docs\harnesses\README.md'
+    'skills/harness/error-triage/SKILL.md',
+    'scripts/bootstrap.ps1',
+    'scripts/bootstrap.sh',
+    'scripts/sqlcl-mcp.mjs',
+    'scripts/normalize-apx-tree.ps1',
+    'scripts/validate-apex-app.ps1',
+    'scripts/verify-apex-change.ps1',
+    'scripts/deploy-apex-app.ps1',
+    'scripts/export-apex-app.ps1',
+    'scripts/test-harness.ps1',
+    'scripts/install-opencode-v2.ps1',
+    'docs/PROVENANCE.md',
+    'docs/getting-started.md',
+    'docs/harnesses/README.md'
 )
 
 foreach ($relative in $requiredFiles) {
@@ -94,7 +107,7 @@ Write-Host ('SKILL.md files: {0}' -f $skillCount)
 
 Write-Host ''
 Write-Host 'Configuration JSON' -ForegroundColor Cyan
-foreach ($relative in @('.claude\settings.json', '.mcp.json')) {
+foreach ($relative in @('.claude/settings.json', '.mcp.json', '.agents/skills.json', '.agents/mcp_config.json')) {
     $path = Join-Path $root $relative
     if (-not (Test-Path $path)) {
         continue
@@ -110,19 +123,61 @@ foreach ($relative in @('.claude\settings.json', '.mcp.json')) {
 }
 
 Write-Host ''
+Write-Host 'Harness adapters' -ForegroundColor Cyan
+$adapterChecks = @(
+    [pscustomobject]@{ Host = 'Codex CLI';    File = 'AGENTS.md';                          Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
+    [pscustomobject]@{ Host = 'Claude Code';  File = 'CLAUDE.md';                          Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
+    [pscustomobject]@{ Host = 'Claude skill'; File = '.claude/skills/oracle-apex/SKILL.md'; Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
+    [pscustomobject]@{ Host = 'DSH rules';    File = '.agents/rules/oracle-apex.md';         Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
+    [pscustomobject]@{ Host = 'DSH skill';    File = '.agents/skills/oracle-apex.md';        Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
+)
+
+foreach ($check in $adapterChecks) {
+    $path = Join-Path $root $check.File
+    $missing = @()
+    if (Test-Path -LiteralPath $path) {
+        $missing = @($check.Patterns | Where-Object { -not (Select-String -LiteralPath $path -Pattern $_ -SimpleMatch -Quiet) })
+    }
+    else {
+        $missing = $check.Patterns
+    }
+
+    if ($missing.Count -eq 0) {
+        Write-Host ('OK       {0} ({1})' -f $check.Host, $check.File) -ForegroundColor Green
+    }
+    else {
+        Write-Host ('FAIL     {0} ({1}) missing: {2}' -f $check.Host, $check.File, ($missing -join ', ')) -ForegroundColor Red
+        $failures.Add("$($check.Host) adapter")
+    }
+}
+
+$antigravityMcp = Join-Path $root '.agents/mcp_config.json'
+if ((Test-Path -LiteralPath $antigravityMcp) -and (Select-String -LiteralPath $antigravityMcp -Pattern 'oracle-sqlcl' -SimpleMatch -Quiet)) {
+    Write-Host 'OK       Antigravity (.agents/mcp_config.json)' -ForegroundColor Green
+}
+else {
+    Write-Host 'FAIL     Antigravity (.agents/mcp_config.json)' -ForegroundColor Red
+    $failures.Add('Antigravity adapter')
+}
+
+Write-Host ''
 Write-Host 'OpenCode config' -ForegroundColor Cyan
-$opencodeV1 = $opencodeBeforeEnv
-$opencodeV2 = Join-Path $root 'tools\opencode-v2\opencode.exe'
-if ($opencodeV1 -and $opencodeV2 -and (Test-Path $opencodeV2)) {
-    $v1Full = [System.IO.Path]::GetFullPath($opencodeV1)
+$opencodeCurrent = Get-ToolPath 'opencode'
+$opencodeV2 = if ($isWindowsHost) {
+    Join-Path $root 'tools/opencode-v2/opencode.exe'
+} else {
+    Join-Path $root 'tools/opencode-v2/opencode'
+}
+if ($opencodeCurrent -and (Test-Path -LiteralPath $opencodeV2)) {
+    $currentFull = [System.IO.Path]::GetFullPath($opencodeCurrent)
     $v2Full = [System.IO.Path]::GetFullPath($opencodeV2)
-    if ($v1Full.Equals($v2Full, [System.StringComparison]::OrdinalIgnoreCase)) {
-        $opencodeV1 = $null
+    if ($currentFull.Equals($v2Full, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $opencodeCurrent = $null
     }
 }
 $opencodeRuntimes = @(
-    [pscustomobject]@{ Name = 'V1'; Path = $opencodeV1; Required = $false }
-    [pscustomobject]@{ Name = 'V2'; Path = $(if (Test-Path $opencodeV2) { $opencodeV2 } else { $null }); Required = $false }
+    [pscustomobject]@{ Name = 'PATH'; Path = $opencodeCurrent; Required = $false }
+    [pscustomobject]@{ Name = 'V2'; Path = $(if (Test-Path -LiteralPath $opencodeV2) { $opencodeV2 } else { $null }); Required = $false }
 )
 
 foreach ($runtime in $opencodeRuntimes) {
@@ -130,14 +185,14 @@ foreach ($runtime in $opencodeRuntimes) {
         $status = if ($runtime.Required) { 'MISSING' } else { 'SKIP' }
         $color = if ($runtime.Required) { 'Red' } else { 'Yellow' }
         Write-Host ('{0,-8} {1}' -f $runtime.Name, $status) -ForegroundColor $color
-        if ($runtime.Required) { $failures.Add('OpenCode V1') }
+        if ($runtime.Required) { $failures.Add("OpenCode $($runtime.Name)") }
         continue
     }
 
     $version = (& $runtime.Path --version 2>&1 | Select-Object -First 1)
     $configResult = & $runtime.Path debug config 2>&1 | Out-String
     if ($LASTEXITCODE -eq 0) {
-        $agentArgs = if ($runtime.Name -eq 'V1') { @('agent', 'list') } else { @('debug', 'agents') }
+        $agentArgs = if ($version -match '(^|[ v])2\.') { @('debug', 'agents') } else { @('agent', 'list') }
         $agentResult = & $runtime.Path @agentArgs 2>&1 | Out-String
         if ($LASTEXITCODE -eq 0) {
             Write-Host ('OK       {0} {1} accepts opencode.jsonc and agents' -f $runtime.Name, $version) -ForegroundColor Green
@@ -173,7 +228,12 @@ $optionalHarnesses = @(
         Version = $(if (Get-Command claude -ErrorAction SilentlyContinue) { claude --version } else { '' })
         Adapter = 'CLAUDE.md + .claude/skills'
     }
-    $agyPath = Get-ToolPath 'agy' (Join-Path $env:LOCALAPPDATA 'agy\bin\agy.exe')
+    $agyFallback = if ($isWindowsHost) {
+        Join-Path $env:LOCALAPPDATA 'agy/bin/agy.exe'
+    } else {
+        Join-Path $HOME '.local/bin/agy'
+    }
+    $agyPath = Get-ToolPath 'agy' $agyFallback
     $antigravityPath = if ($agyPath) { $agyPath } else { Get-ToolPath 'antigravity' }
     $antigravityVersion = if ($antigravityPath) {
         $raw = (& $antigravityPath --version 2>&1 | Select-Object -First 1)

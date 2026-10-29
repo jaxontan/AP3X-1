@@ -1,0 +1,44 @@
+/*!
+ Custom Theme Style built on Oracle APEX Universal Theme 42, "Vita" family.
+ Author pattern follows Oracle's own official variant files exactly
+ (compare to Vita-Red.less / Vita-Dark.less / Vita-Slate.less):
+ override a small set of @g_* "Theme Roller" variables, then import the
+ base Vita.less — every other token (buttons, forms, IRs, shadows, states,
+ nav, badges, focus rings, hot/primary/danger/success buttons, chart colors)
+ is re-derived automatically by Oracle's LESS color functions.
+ ========================================================================== */
+/* ==========================================================================
+   Universal Theme: Vita Emerald Theme Style (custom)
+   ========================================================================== */
+
+// ---- Apply Overrides ----------------------------------------------------
+
+// Primary brand accent — drives header, links (via @g_Link-Base below),
+// focus ring, hot/primary buttons, nav accent, badges, primary state.
+@g_Accent-BG: #0E9F6E;
+
+// Hyperlink color — left equal to accent for a clean single-accent brand.
+@g_Link-Base: @g_Accent-BG;
+
+// Focus ring color — left equal to accent.
+@g_Focus: @g_Accent-BG;
+
+// Keep Oracle's default dark left-nav (auto-derives a desaturated,
+// darkened version of the accent — no need to hand-pick nav colors).
+@g_Nav_Style: dark;
+
+// Softer, more modern corner radii than stock Vita (2–4px) across
+// regions, buttons and form fields.
+@g_Container-BorderRadius: .375rem;
+@g_Button-BorderRadius:    .375rem;
+@g_Form-BorderRadius:      .375rem;
+
+// LESS_IGNORE_END
+
+// ---- Import Default Vita Style ------------------------------------------
+// In a real Theme Roller / build pipeline this is an actual @import of the
+// base Vita.less file (Oracle CDN link below). Paste this whole file into
+// Theme Roller's custom LESS editor for a Theme Style, or reference both
+// files from your build tool in this order.
+//
+// @import "https://static.oracle.com/cdn/apex/26.1.2/themes/theme_42/26.1/less/theme/Vita.less";

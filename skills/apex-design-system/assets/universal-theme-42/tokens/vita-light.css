@@ -1,0 +1,356 @@
+/*
+  Oracle APEX Universal Theme 42 — "Vita" (light, default) Theme Style
+  Resolved CSS custom properties, hand-derived from the official LESS source:
+  https://static.oracle.com/cdn/apex/26.1.2/themes/theme_42/26.1/less/theme/Vita.less
+
+  This is a practical, browser-ready distillation (no LESS build step required).
+  For pixel-perfect production values, compile the .less through APEX Theme Roller.
+*/
+
+:root {
+  color-scheme: light;
+
+  /* ===== Base scale (derived from #000 on #fff) ===== */
+  --base-shade-0: #ffffff;
+  --base-shade-1: #f8f8f8;
+  --base-shade-2: #f2f2f2;
+  --base-shade-3: #e5e5e5;
+  --base-shade-4: #d9d9d9;
+  --base-shade-5: #cccccc;
+  --base-alpha-1: rgba(0,0,0,.025);
+  --base-alpha-2: rgba(0,0,0,.05);
+  --base-alpha-3: rgba(0,0,0,.075);
+  --base-alpha-4: rgba(0,0,0,.10);
+  --base-alpha-5: rgba(0,0,0,.15);
+  --base-alpha-6: rgba(0,0,0,.20);
+  --base-alpha-10: rgba(0,0,0,.65);
+  --base-alpha-11: rgba(0,0,0,.85);
+  --base-shadow-4: rgba(0,0,0,.10);
+  --base-shadow-5: rgba(0,0,0,.15);
+  --base-shadow-7: rgba(0,0,0,.30);
+
+  /* ===== Brand / Global Colors (Theme Roller "Global Colors" group) ===== */
+  --ut-palette-primary: #056AC8;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-palette-primary-shade: #e8f1fb;
+  --ut-palette-primary-text: var(--ut-palette-primary);
+  --ut-link-text-color: #056AC8;
+  --ut-focus-outline-color: #056AC8;
+
+  /* ===== Header ===== */
+  --ut-header-background-color: #056AC8;
+  --ut-header-text-color: #FFFFFF;
+  --ut-header-border-color: var(--base-alpha-4);
+  --ut-header-box-shadow: var(--ut-shadow-sm);
+  --ut-header-height: 3rem;
+  --ut-header-item-spacing: .75rem;
+  --ut-header-padding: .75rem;
+  --ut-header-logo-height: 2rem;
+
+  /* ===== Body ===== */
+  --ut-body-background-color: #FDFDFD;
+  --ut-body-text-color: #1a1a1a;
+  --ut-body-content-max-width: 100%;
+
+  /* ===== Body Navigation (left tree) — dark style (Oracle default) ===== */
+  --ut-body-nav-background-color: #2b333c;
+  --ut-body-nav-text-color: #d7dade;
+  --ut-nav-width: 15rem;
+  --ut-body-nav-border-color: var(--ut-component-border-color);
+  --ut-navtabs-background-color: #2b333c;
+  --ut-navtabs-text-color: #d7dade;
+  --ut-navtabs-item-active-background-color: #21272e;
+  --ut-navtabs-item-hover-background-color: #21272e;
+  --ut-header-menubar-background-color: #2b333c;
+  --ut-header-menubar-item-text-color: #d7dade;
+  --ut-header-menubar-item-current-background-color: #21272e;
+  --ut-header-menubar-item-current-text-color: #d7dade;
+
+  /* ===== Body Title / breadcrumb bar ===== */
+  --ut-body-title-background-color: #FFFFFF;
+  --ut-body-title-text-color: #262626;
+  --ut-body-title-border-width: 0px;
+  --ut-body-title-box-shadow: 0 1px 0 0 var(--base-alpha-4);
+  --ut-body-title-backdrop-filter: saturate(180%) blur(8px);
+  --ut-breadcrumb-item-text-color: rgba(38,38,38,.65);
+  --ut-breadcrumb-item-active-text-color: var(--ut-body-title-text-color);
+  --ut-breadcrumb-region-spacing: .5rem;
+  --ut-hero-region-title-text-color: var(--ut-body-title-text-color);
+
+  /* ===== Body Side / Actions column ===== */
+  --ut-body-sidebar-background-color: #FDFDFD;
+  --ut-body-sidebar-text-color: #1a1a1a;
+  --ut-body-sidebar-width: 15rem;
+  --ut-body-actions-background-color: #FCFCFC;
+  --ut-body-actions-text-color: #1a1a1a;
+  --ut-body-actions-width: 12.5rem;
+
+  /* ===== Standard Region / Card surface ===== */
+  --ut-region-background-color: #FFFFFF;
+  --ut-region-text-color: #1a1a1a;
+  --ut-region-header-background-color: #F6FAFF;
+  --ut-region-header-text-color: #1a1a1a;
+  --ut-region-header-border-color: var(--base-alpha-3);
+  --ut-region-border-width: 1px;
+  --ut-region-border-color: var(--base-alpha-4);
+  --ut-region-border-radius: .25rem;
+  --ut-region-box-shadow: var(--ut-shadow-sm);
+  --ut-region-margin: 1rem;
+  --ut-region-font-size: .875rem;
+  --ut-region-line-height: 1.25rem;
+  --ut-region-body-padding-y: 1rem;
+  --ut-region-body-padding-x: 1rem;
+  --ut-region-buttons-padding-y: .5rem;
+  --ut-region-buttons-padding-x: .75rem;
+  --ut-button-region-box-shadow: var(--ut-shadow-sm);
+
+  /* ===== Generic component surface (buttons/inputs live on this) ===== */
+  --ut-component-background-color: #FFFFFF;
+  --ut-component-border-color: var(--base-alpha-4);
+  --ut-component-border-width: 1px;
+  --ut-component-border-radius: .25rem;
+  --ut-component-box-shadow: var(--ut-shadow-lg);
+  --ut-component-highlight-background-color: var(--base-alpha-1);
+  --ut-component-toolbar-background-color: var(--base-alpha-1);
+  --ut-component-inner-border-width: 1px;
+  --ut-component-inner-border-color: var(--base-alpha-2);
+  --ut-component-text-default-color: #1a1a1a;
+  --ut-component-text-title-color: #1a1a1a;
+  --ut-component-text-subtitle-color: rgba(26,26,26,.85);
+  --ut-component-text-muted-color: rgba(26,26,26,.65);
+  --ut-component-icon-background-color: var(--ut-palette-primary);
+  --ut-component-icon-color: var(--ut-palette-primary-contrast);
+  --ut-component-badge-background-color: var(--base-alpha-2);
+  --ut-component-badge-text-color: var(--ut-component-text-default-color);
+  --ut-component-badge-border-radius: .25rem;
+  --ut-component-pre-background-color: var(--base-alpha-2);
+
+  /* ===== Shadows & radii scale ===== */
+  --ut-shadow-sm: 0 .125rem .25rem -.125rem rgba(0,0,0,.10);
+  --ut-shadow-md: 0 .75rem 1.5rem -.75rem rgba(0,0,0,.30);
+  --ut-shadow-lg: 0 1.5rem 3rem -1.5rem rgba(0,0,0,.30);
+  --ut-border-radius-sm: .125rem;
+  --ut-border-radius-md: .25rem;
+  --ut-border-radius-lg: .5rem;
+  --ut-border-radius: var(--ut-border-radius-md);
+
+  /* ===== Status palette ===== */
+  --ut-palette-success: #278701;
+  --ut-palette-success-contrast: #FFFFFF;
+  --ut-palette-success-shade: #eaf5e2;
+  --ut-palette-info: #056AC8;
+  --ut-palette-info-contrast: #FFFFFF;
+  --ut-palette-info-shade: #e8f1fb;
+  --ut-palette-warning: #FFC628;
+  --ut-palette-warning-contrast: #000000;
+  --ut-palette-warning-shade: #fff6e0;
+  --ut-palette-danger: #CB1100;
+  --ut-palette-danger-contrast: #FFFFFF;
+  --ut-palette-danger-shade: #fbe9e7;
+  --ut-palette-primary-alt: #4A6A82;   /* g_Primary-BG derived from accent contrast */
+  --ut-palette-primary-alt-contrast: #FFFFFF;
+  --ut-palette-generic: var(--base-shade-2);
+  --ut-palette-generic-contrast: #000000;
+  --ut-palette-generic-shade: var(--base-shade-1);
+
+  /* ===== Chart / categorical palette (u-color-1 .. 15) ===== */
+  --u-color-1: #309FDB;  --u-color-2: #13B6CF;  --u-color-3: #2EBFBC;
+  --u-color-4: #3CAF85;  --u-color-5: #81BB5F;  --u-color-6: #DDDE53;
+  --u-color-7: #FBCE4A;  --u-color-8: #ED813E;  --u-color-9: #E95B54;
+  --u-color-10: #E85D88; --u-color-11: #CA589D; --u-color-12: #854E9B;
+  --u-color-13: #5A68AD; --u-color-14: #AFBAC5; --u-color-15: #6E8598;
+
+  /* ===== Footer / Tabs / Links / Login ===== */
+  --ut-footer-background-color: var(--base-shade-2);
+  --ut-footer-border-color: var(--base-alpha-2);
+  --ut-footer-item-spacing: .75rem;
+  --ut-tabs-item-text-color: var(--ut-component-text-default-color);
+  --ut-tabs-item-active-text-color: var(--ut-link-text-color);
+  --ut-tabs-item-active-font-weight: 700;
+  --ut-login-page-background-color: var(--base-shade-3);
+  --ut-login-region-background-color: rgba(255,255,255,.65);
+  --ut-login-region-filter: blur(4px);
+  --ut-login-region-box-shadow: var(--ut-shadow-lg);
+
+  /* ============================================================
+     --a-*  Application UI component tokens (mostly style-agnostic)
+     ============================================================ */
+
+  /* Buttons */
+  --a-button-background-color: #F0F0F0;
+  --a-button-text-color: #333333;
+  --a-button-border-color: var(--base-alpha-3);
+  --a-button-border-radius: .125rem;
+  --a-button-border-width: 1px;
+  --a-button-shadow: 0 2px 4px -3px rgba(0,0,0,.10);
+  --a-button-padding-y: .5rem;
+  --a-button-padding-x: .75rem;
+  --a-button-font-size: .75rem;
+  --a-button-line-height: 1rem;
+  --a-button-gap-x: .25rem;
+  --a-button-icon-spacing: .375rem;
+  --a-button-icon-size: 1rem;
+  --a-button-hover-background-color: #FAFAFA;
+  --a-button-hover-border-color: var(--base-alpha-3);
+  --a-button-active-background-color: var(--base-shade-3);
+  --a-button-focus-border-color: var(--ut-palette-primary);
+  --a-button-count-background-color: var(--ut-palette-primary);
+  --a-button-count-text-color: var(--ut-palette-primary-contrast);
+
+  /* Cards (a-CardView) */
+  --a-cv-grid-gap: 1rem;
+  --a-cv-item-width: 20rem;
+  --a-cv-border-radius: .25rem;
+  --a-cv-shadow: var(--ut-shadow-sm);
+  --a-cv-header-padding-y: 1rem;
+  --a-cv-header-padding-x: 1rem;
+  --a-cv-header-item-spacing-x: .75rem;
+  --a-cv-icon-size: 1rem;
+  --a-cv-icon-container-size: 2rem;
+  --a-cv-title-font-size: 1rem;
+  --a-cv-title-line-height: 1.25rem;
+  --a-cv-subtitle-font-size: .75rem;
+  --a-cv-subtitle-line-height: 1rem;
+  --a-cv-badge-font-size: .75rem;
+  --a-cv-badge-background-color: var(--base-alpha-4);
+  --a-cv-body-padding-x: 1rem;
+  --a-cv-body-padding-y: 1rem;
+  --a-cv-maincontent-font-size: .875rem;
+  --a-cv-maincontent-line-height: 1.25rem;
+  --a-cv-actions-padding-y: 1rem;
+  --a-cv-actions-padding-x: 1rem;
+
+  /* Checkboxes & Radios */
+  --a-checkbox-size: 1rem;
+  --a-checkbox-label-font-size: .75rem;
+  --a-checkbox-border-radius: .125rem;
+  --a-checkbox-background-color: #F5F5F5;
+  --a-checkbox-border-color: var(--base-alpha-5);
+  --a-checkbox-checked-background-color: var(--ut-palette-primary);
+  --a-checkbox-checked-text-color: #FFFFFF;
+  --a-checkbox-hover-background-color: var(--base-alpha-2);
+  --a-checkbox-icon-size: .75rem;
+  --a-checkbox-label-spacing-y: .125rem;
+  --a-checkbox-label-spacing-x: .375rem;
+
+  /* Form / Field inputs */
+  --a-field-input-background-color: #F5F5F5;
+  --a-field-input-text-color: #1a1a1a;
+  --a-field-input-border-color: var(--base-alpha-4);
+  --a-field-input-border-radius: .125rem;
+  --a-field-input-border-style: solid;
+  --a-field-input-border-width: 1px;
+  --a-field-input-hover-background-color: #FAFAFA;
+  --a-field-input-focus-background-color: #FFFFFF;
+  --a-field-input-focus-border-color: var(--ut-palette-primary);
+  --ut-field-label-text-color: #1a1a1a;
+  --ut-field-input-focus-icon-color: var(--ut-palette-primary);
+  --a-field-select-background-size: 2rem 1rem;
+  --a-field-select-arrow-padding: 2rem;
+  --ut-checkbox-item-spacing: 1rem;
+
+  /* Grid View / Interactive Report */
+  --a-gv-font-size: .75rem;
+  --a-gv-line-height: 1rem;
+  --a-gv-border-color: var(--ut-component-border-color);
+  --a-gv-background-color: #FFFFFF;
+  --a-gv-cell-padding-y: .25rem;
+  --a-gv-cell-padding-x: .5rem;
+  --a-gv-cell-height: 2rem;
+  --a-gv-row-hover-background-color: var(--base-shade-1);
+  --a-gv-header-cell-padding-y: .25rem;
+  --a-gv-header-cell-padding-x: .5rem;
+  --a-gv-header-cell-height: 2.5rem;
+  --a-gv-header-background-color: var(--ut-region-header-background-color);
+  --ut-report-cell-alt-background-color: var(--base-alpha-2);
+  --ut-report-header-background-color: var(--base-alpha-1);
+  --ut-report-cell-border-color: var(--base-alpha-4);
+  --ut-report-cell-hover-background-color: var(--base-alpha-1);
+
+  /* Menu / Menubar */
+  --a-menu-padding-y: .5rem;
+  --a-menu-padding-x: 0rem;
+  --a-menu-font-size: .75rem;
+  --a-menu-line-height: 1rem;
+  --a-menu-text-color: #1a1a1a;
+  --a-menu-background-color: #FFFFFF;
+  --a-menu-border-radius: .25rem;
+  --a-menu-border-color: var(--base-alpha-4);
+  --a-menu-focused-background-color: var(--ut-palette-primary);
+  --a-menu-focused-text-color: var(--ut-palette-primary-contrast);
+  --a-menu-sep-border-color: var(--ut-component-border-color);
+  --a-menu-icon-size: 1rem;
+  --a-menubar-item-padding-y: .5rem;
+  --a-menubar-item-padding-x: .5rem;
+
+  /* Toolbar */
+  --a-toolbar-background-color: var(--ut-region-header-background-color);
+  --a-toolbar-border-color: var(--ut-component-border-color);
+  --a-toolbar-item-spacing: .5rem;
+  --a-toolbar-sep-border-color: var(--ut-component-inner-border-color);
+  --a-toolbar-small-button-padding-y: .25rem;
+  --a-toolbar-small-button-padding-x: .5rem;
+
+  /* Tree View */
+  --a-treeview-toggle-size: 1rem;
+  --a-treeview-node-icon-size: 1rem;
+  --a-treeview-node-font-size: .75rem;
+  --a-treeview-node-line-height: 1rem;
+  --a-treeview-node-padding-y: .25rem;
+  --a-treeview-node-padding-x: .25rem;
+  --a-treeview-node-selected-background-color: #21272e;
+  --a-treeview-node-selected-text-color: #FFFFFF;
+  --a-treeview-node-focused-background-color: #21272e;
+  --a-treeview-node-focused-text-color: #FFFFFF;
+
+  /* Chips / Smart Filters */
+  --a-chip-padding-y: .125rem;
+  --a-chip-padding-x: .25rem;
+  --a-chip-font-size: .75rem;
+  --a-chip-line-height: 1rem;
+  --a-chip-border-radius: .125rem;
+  --a-chip-border-color: var(--a-field-input-border-color);
+  --a-chip-hover-background-color: var(--base-alpha-1);
+  --a-chip-active-background-color: var(--base-alpha-2);
+  --a-chip-applied-background-color: var(--base-alpha-3);
+  --a-combo-select-item-selected-background-color: var(--ut-palette-primary-shade);
+
+  /* Switch */
+  --a-switch-width: 2.75rem;
+  --a-switch-padding-y: .125rem;
+  --a-switch-padding-x: .125rem;
+  --a-switch-toggle-width: 1.25rem;
+  --a-switch-toggle-height: 1.25rem;
+
+  /* Badges (used by a-CardView, filedrop counts, etc.) */
+  --a-filedrop-count-badge-font-size: .625rem;
+  --a-filedrop-heading-font-size: 1.25rem;
+
+  /* Dialogs (jQuery UI) */
+  --jui-dialog-background-color: var(--ut-region-background-color);
+  --jui-dialog-text-color: var(--ut-region-text-color);
+  --jui-dialog-border-color: var(--ut-region-border-color);
+  --jui-dialog-border-radius: var(--ut-region-border-radius);
+  --jui-dialog-shadow: var(--ut-shadow-lg), 0 0 0 1px var(--ut-region-border-color);
+  --jui-dialog-titlebar-padding-y: .75rem;
+  --jui-dialog-titlebar-padding-x: 1rem;
+  --jui-dialog-titlebar-text-color: var(--ut-component-text-title-color);
+  --jui-dialog-titlebar-border-color: var(--ut-region-border-color);
+  --jui-dialog-title-font-size: 1rem;
+  --jui-dialog-title-line-height: 1.5rem;
+  --jui-dialog-content-padding-y: 0rem;
+  --jui-dialog-content-padding-x: 0rem;
+  --jui-dialog-buttonpane-content-padding-y: .75rem;
+  --jui-dialog-buttonpane-content-padding-x: 1rem;
+
+  /* Tooltip */
+  --a-tooltip-font-size: .6875rem;
+
+  /* Alerts */
+  --ut-alert-title-font-weight: 600;
+  --ut-alert-box-shadow: var(--ut-shadow-sm);
+
+  /* Card list / Link list */
+  --ut-cardlist-box-shadow: var(--ut-shadow-sm);
+  --ut-linkslist-arrow-color: var(--base-alpha-6);
+}

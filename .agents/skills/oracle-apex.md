@@ -10,9 +10,11 @@ The canonical instructions are `AGENTS.md` at the project root.
 For any Oracle APEX, business-design, PL/SQL, or APEXLang task, read:
 
 1. `skills/apex-domains/SKILL.md`
-2. `skills/apex-delivery/SKILL.md`
-3. `skills/apex/apexlang/SKILL.md` (then 26.1 or 26.2)
-4. `skills/db/SKILL.md` when database detail is needed
+2. `skills/apex-design-system/SKILL.md`
+3. `skills/apex-ui-redesign/SKILL.md` when changing an existing look
+4. `skills/apex-delivery/SKILL.md`
+5. `skills/apex/apexlang/SKILL.md` (then 26.1 or 26.2)
+6. `skills/db/SKILL.md` when database detail is needed
 
 Rules:
 

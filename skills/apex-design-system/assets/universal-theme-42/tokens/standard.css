@@ -1,0 +1,69 @@
+/*
+  Oracle APEX "Theme Standard" (legacy, pre-Universal-Theme) — approximation
+  DELTA file — load AFTER vita-light.css.
+
+  IMPORTANT: Theme Standard (app_ui/css/Theme-Standard.css + Core.css) predates
+  Theme 42's CSS-custom-property system entirely — it uses fixed class-based CSS,
+  not design tokens, and its layout (fixed tabs, breadcrumb-less title bar, classic
+  region templates) doesn't map 1:1 onto Universal Theme markup. This file is a
+  best-effort visual approximation using Theme 42's token names, for quick
+  side-by-side comparison / nostalgia only — it is NOT a faithful reproduction.
+  For the real thing, reference app_ui/css/Core.css + Theme-Standard.css directly.
+*/
+
+:root {
+  --ut-palette-primary: #2178B4;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-link-text-color: #2178B4;
+  --ut-focus-outline-color: #2178B4;
+
+  --ut-header-background-color: #2E3D4E;
+  --ut-header-text-color: #FFFFFF;
+  --ut-header-height: 2.75rem;
+
+  --ut-body-background-color: #E3E6E9;
+  --ut-body-text-color: #1a1a1a;
+
+  --ut-body-title-background-color: #F2F3F4;
+  --ut-body-title-text-color: #333333;
+
+  --ut-body-nav-background-color: #3B4B5C;
+  --ut-body-nav-text-color: #D6DBE0;
+  --ut-navtabs-background-color: #3B4B5C;
+  --ut-navtabs-text-color: #D6DBE0;
+  --ut-navtabs-item-active-background-color: #2E3D4E;
+  --ut-navtabs-item-hover-background-color: #2E3D4E;
+
+  --ut-region-background-color: #FFFFFF;
+  --ut-region-header-background-color: #EDEFF1;
+  --ut-region-header-text-color: #333333;
+  --ut-region-border-radius: 0rem;
+  --ut-component-border-radius: 0rem;
+  --ut-shadow-sm: 0 1px 2px rgba(0,0,0,.15);
+  --ut-shadow-md: 0 2px 4px rgba(0,0,0,.20);
+  --ut-shadow-lg: 0 4px 8px rgba(0,0,0,.25);
+
+  --a-button-border-radius: .1875rem;
+  --a-button-background-color: #F4F4F4;
+  --a-button-text-color: #333333;
+  --a-button-border-color: #B7BEC4;
+  --a-button-hover-background-color: #E9EBEC;
+
+  --a-field-input-border-radius: 0rem;
+  --a-field-input-background-color: #FFFFFF;
+  --a-field-input-text-color: #1a1a1a;
+  --a-field-input-border-color: #B7BEC4;
+  --a-field-input-focus-border-color: #2178B4;
+
+  --ut-palette-success: #4C8B3A;
+  --ut-palette-success-contrast: #FFFFFF;
+  --ut-palette-info: #2178B4;
+  --ut-palette-info-contrast: #FFFFFF;
+  --ut-palette-warning: #D6A428;
+  --ut-palette-warning-contrast: #000000;
+  --ut-palette-danger: #C0392B;
+  --ut-palette-danger-contrast: #FFFFFF;
+
+  --a-button-count-background-color: #2178B4;
+  --a-button-count-text-color: #FFFFFF;
+}

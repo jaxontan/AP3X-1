@@ -2,6 +2,7 @@
 
 - Read `AGENTS.md` at the project root at the start of every task.
 - For APEX, business-design, PL/SQL, or APEXLang work, read `skills/apex-domains/SKILL.md` and `skills/apex-delivery/SKILL.md`.
+- For visual/UX design, page mapping, custom look, or redesign, read `skills/apex-design-system/SKILL.md` and `skills/apex-ui-redesign/SKILL.md` before changing layout, theme, templates, or custom CSS.
 - Confirm APEX 26.1 or 26.2 before using component syntax. Never mix versions.
 - Respect user's page design: When `working/page-design/requirement.md` is present, strictly adhere to the user's page numbers, names, layout, and component flow. Do not invent an arbitrary page architecture.
 - Keep business logic in PL/SQL packages; page processes orchestrate.

@@ -17,8 +17,9 @@ The Oracle APEX harness is host-agnostic. `AGENTS.md` is the canonical instructi
 
 ## OpenCode
 
-From the repository root (make sure your prompt is inside the project folder, not `C:\Windows\System32`):
+The bootstrap installs OpenCode and the rest of the toolchain. To run the setup manually, start from the repository root (make sure your prompt is inside the project folder, not `C:\Windows\System32`):
 
+**Windows**
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 . .\scripts\set-env.ps1
@@ -26,17 +27,22 @@ opencode --version
 opencode
 ```
 
-To install the optional project-local 2.x binary:
+**macOS / Linux (PowerShell 7)**
+```bash
+pwsh -NoProfile -Command ". ./scripts/set-env.ps1; opencode --version; opencode"
+```
+
+To install the optional project-local 2.x binary on Windows:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-opencode-v2.ps1
 ```
 
-If the machine policy blocks dot-sourcing, the process-scoped line is required; it does not change the machine policy. You can also run scripts individually with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
+On macOS/Linux, OpenCode's official installer is used instead; `scripts/bootstrap.sh` runs it. If the Windows machine policy blocks dot-sourcing, use the process-scoped line; it does not change the machine policy. You can also run scripts individually with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
 
 `opencode.jsonc` pins a free model by default. Change it only to another zero-cost model.
 
-The project also configures the SQLcl MCP server as `oracle-sqlcl`. Check it with `opencode mcp list` (or `opencode2 mcp list` when the optional 2.x binary is installed); it should report `connected`. The wrapper is `scripts/sqlcl-mcp.cmd` and requires the local JDK/SQLcl paths from `set-env.ps1`. Keep the permission for `oracle-sqlcl_*` at `ask` unless you intentionally want unattended database calls.
+The project also configures the SQLcl MCP server as `oracle-sqlcl`. Check it with `opencode mcp list` (or `opencode2 mcp list` when the optional 2.x binary is installed); it should report `connected`. The cross-platform wrapper is `scripts/sqlcl-mcp.mjs`; it is launched by Node and locates Java plus `tools/sqlcl` (or `SQLCL_BIN`). The older `scripts/sqlcl-mcp.cmd` remains only as a Windows fallback. Keep the permission for `oracle-sqlcl_*` at `ask` unless you intentionally want unattended database calls.
 
 `opencode.jsonc` uses the OpenCode V1 `permission` object, which both supported runtimes accept. OpenCode 2.x converts those rules to its ordered `permissions` model. A `permissions` key is rejected by OpenCode 1.x with `V2 permissions are not supported by OpenCode V1`, so do not add one. The harness allows routine shell work, asks before destructive filesystem/git operations and database DDL/DML, asks before paths outside the workspace, and denies reads of `.env`, `.pem`, `.key`, `.p12`, `.jks`, and wallet files. Use `opencode debug config` and `opencode2 debug config` to verify the resolved rules; `harness-doctor.ps1` fails if either installed runtime rejects the config or an agent.
 
@@ -94,7 +100,9 @@ Antigravity automatically reads:
 - `AGENTS.md` (root instructions and rules)
 - `.agents/rules/*.md` (project guidelines)
 - `.agents/skills/` (skill bridges)
-- `.mcp.json` (SQLcl MCP server integration)
+- `.agents/mcp_config.json` (workspace SQLcl MCP server integration)
+
+Antigravity does not read the Claude Code `.mcp.json` file. Keep the SQLcl server entry in `.agents/mcp_config.json`; verify it inside an `agy` session with `/mcp list`.
 
 The free tier has quotas. For heavy work, use it for design/review and run the deterministic APEX validation locally with SQLcl.
 

@@ -1,0 +1,62 @@
+/*
+  Oracle APEX Universal Theme 42 — "Vita Dark" Theme Style
+  DELTA file — load AFTER vita-light.css. Overrides only what changes for dark mode.
+  Derived from: .../theme/Vita-Dark.less
+*/
+
+:root {
+  color-scheme: dark;
+
+  --base-shade-0: #1a1a1a;
+  --base-alpha-2: rgba(255,255,255,.10);
+  --base-alpha-4: rgba(255,255,255,.15);
+
+  --ut-palette-primary: #056AC8;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-link-text-color: #6fb3f2; /* lighten(accent, 19%) for dark contrast */
+  --ut-focus-outline-color: #056AC8;
+
+  --ut-header-background-color: #056AC8;
+  --ut-header-text-color: #FFFFFF;
+
+  /* Body: dark, desaturated, slightly blue-tinted charcoal derived from accent */
+  --ut-body-background-color: #14181c;
+  --ut-body-text-color: #e6e6e6;
+
+  --ut-body-title-background-color: #171c21;
+  --ut-body-title-text-color: #e6e6e6;
+
+  --ut-region-background-color: #101418;
+  --ut-region-text-color: #e6e6e6;
+  --ut-region-header-background-color: #0c1013;
+  --ut-region-header-text-color: #e6e6e6;
+
+  --ut-component-background-color: #101418;
+  --ut-component-text-default-color: #e6e6e6;
+  --ut-component-text-title-color: #ffffff;
+  --ut-component-text-muted-color: rgba(255,255,255,.65);
+  --ut-component-border-color: rgba(255,255,255,.15);
+
+  --a-button-background-color: #262b30;
+  --a-button-text-color: #e6e6e6;
+  --a-button-hover-background-color: #2e343a;
+  --a-button-active-background-color: #1c1f23;
+
+  --a-field-input-background-color: #1b1f24;
+  --a-field-input-text-color: #e6e6e6;
+  --a-field-input-border-color: rgba(255,255,255,.20);
+  --a-field-input-hover-background-color: #21262b;
+  --a-field-input-focus-background-color: #262b31;
+
+  --a-gv-background-color: #101418;
+  --a-gv-row-hover-background-color: #181d22;
+
+  --ut-palette-success: #388729;
+  --ut-palette-info: #006BD8;
+  --ut-palette-warning: #FBCE4A;
+  --ut-palette-danger: #EE0701;
+
+  --ut-footer-background-color: #14181c;
+  --ut-login-page-background-color: #0a0d10;
+  --ut-login-region-background-color: rgba(0,0,0,.65);
+}

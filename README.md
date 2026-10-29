@@ -4,35 +4,28 @@ A developer harness for building, validating, and deploying Oracle APEX applicat
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Quick Start (non-technical)
 
-### 1. Clone & Open the Repository Root
-In PowerShell, make sure your working directory is the repository root:
+You do **not** need to install Java, SQLcl, Node.js, Python, or OpenCode one by one. The bootstrap installs the free prerequisites, verifies them, and prints a clear result. It never asks for an API key.
+
+### 1. Get the folder
+Download the repository as a ZIP and unzip it, or clone it with Git if you already have Git. Then open a terminal **in the repository root** (the folder that contains `README.md` and `bootstrap.cmd`).
+
+### 2. Run the one-command setup
+
+**Windows** — double-click `bootstrap.cmd`, or run it from PowerShell:
 ```powershell
-# Clone the repository (if not already cloned)
-git clone https://github.com/jaxontan/Oracle_Apex-Harness.git
-
-# Navigate into the project root folder
-cd Oracle_Apex-Harness
+.\bootstrap.cmd
 ```
 
-> [!IMPORTANT]
-> **Always run commands from the repository root.**
-> If you opened PowerShell using "Run as Administrator", your terminal starts in `C:\Windows\System32`. You must `cd` into your cloned repository directory before running `.\scripts\...`, otherwise PowerShell will report `The term '.\scripts\set-env.ps1' is not recognized`.
-
-### 2. Initialize the Environment & Verify Setup
-In your PowerShell session:
-```powershell
-# Set execution policy for the current session
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-
-# Load environment & run health check
-. .\scripts\set-env.ps1
-.\scripts\harness-doctor.ps1
+**macOS / Linux** — open Terminal, `cd` into the repository root, then run:
+```bash
+bash scripts/bootstrap.sh
 ```
-*(Tip: On Windows, you can also simply run or double-click `.\doctor.cmd` from the repo root to execute the health check directly).*
 
-When successful, the doctor checks all tools and files, ending with `Harness is ready.`
+The script asks for confirmation before installing anything. Add `--yes` (`-Yes` on Windows) to skip prompts. Add `--with-docker` (`-WithDocker` on Windows) only if you want the optional local Oracle Database sandbox. On macOS/Linux the script may ask for your password because system packages and Homebrew require it.
+
+It installs only free developer tools: Git, Node.js LTS, Python 3, uv, JDK 21, SQLcl, PowerShell 7 (macOS/Linux), and OpenCode. Docker is optional. When it finishes successfully it prints `Harness is ready.` Full details and troubleshooting: [`docs/getting-started.md`](docs/getting-started.md).
 
 ### 3. Launch Your AI Assistant
 Start your preferred agent:
@@ -53,12 +46,35 @@ Use the built-in commands and skills inside your agent chat:
 
 | Step | OpenCode Command | Antigravity (`agy`) Skill | Description |
 | :--- | :--- | :--- | :--- |
-| **1. Page Design** | `working/page-design/requirement.md` | `working/page-design/requirement.md` | User-defined page map, regions & rules |
+| **1. Page Design** | `/apex.design` or `working/page-design/requirement.md` | `working/page-design/requirement.md` | User-defined page map, regions & rules |
 | **2. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
 | **3. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
 | **4. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
 
 *(Note: Validation runs automatically whenever APEXLang code is generated or modified).*
+
+<details>
+<summary><strong>Manual setup (advanced users)</strong></summary>
+
+If you prefer to install tools yourself, install Git, Node.js 20+, Python 3, uv, JDK 21, and PowerShell 7, then place SQLcl under `tools/sqlcl` (the launcher is `bin/sql` on macOS/Linux and `bin/sql.exe` on Windows).
+
+**Windows:**
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\bootstrap.cmd -DryRun     # preview what the bootstrap would install
+. .\scripts\set-env.ps1
+.\scripts\harness-doctor.ps1
+```
+
+**macOS / Linux:**
+```bash
+bash scripts/bootstrap.sh --dry-run
+pwsh -NoProfile -File scripts/harness-doctor.ps1
+```
+
+Always run commands from the repository root. The doctor ends with `Harness is ready.` when every required tool and file is present.
+
+</details>
 
 ---
 
@@ -213,6 +229,9 @@ docker compose down -v
 ### 🎯 APEX & PL/SQL Domain Commands
 | Command | Purpose |
 | :--- | :--- |
+| `/apex.design <scope>` | Design page map, layout, theme, templates, and staticIds before implementation |
+| `/apex.prototype <page>` | Build a standalone Universal Theme visual prototype and translation plan |
+| `/apex.ui-redesign <page>` | Audit and redesign an existing page, including a custom non-default look |
 | `/apex.plsql <package>` | Write robust PL/SQL packages encapsulating business logic |
 | `/apex.apexlang <app-dir>` | Generate clean `.apx` APEXLang declarative definitions |
 
@@ -260,11 +279,13 @@ Oracle_Apex-Harness/
 │   ├── database/             # Schemas, PL/SQL packages, and utPLSQL tests
 │   └── app/                  # Declarative APEXLang application tree (.apx)
 ├── local-dev/                # Disposable database (docker-compose.yml & audit scripts)
-├── scripts/                  # Automation scripts (doctor, validate, deploy, normalize, reset, watch)
+├── scripts/                  # Bootstrap, doctor, validate, deploy, normalize, reset, watch
 ├── skills/                   # Vendored Oracle APEX, APEXLang, DB, & ECC meta-skills
 ├── tools/                    # Local toolchain (SQLcl 26.3, OpenCode v2)
+├── docs/                     # Getting started, harness matrix, provenance, ADRs
 ├── AGENTS.md                 # Master agent operating rules and skill routing
 ├── CLAUDE.md                 # Claude Code adapter
+├── bootstrap.cmd             # One-command Windows setup
 ├── opencode.jsonc            # OpenCode agent & permission configuration
 └── README.md                 # This guide
 ```
@@ -273,11 +294,19 @@ Oracle_Apex-Harness/
 
 ## 🧪 Self-Tests & Doctor
 
-Run harness diagnostics anytime:
+Run harness diagnostics anytime.
+
+**Windows**
 ```powershell
 # Verify all CLI tools, skills, and configuration files
-powershell -ExecutionPolicy Bypass -File scripts/harness-doctor.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/harness-doctor.ps1
 
 # Run offline gate self-tests (no database required)
-powershell -ExecutionPolicy Bypass -File scripts/test-harness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-harness.ps1
+```
+
+**macOS / Linux**
+```bash
+pwsh -NoProfile -File scripts/harness-doctor.ps1
+pwsh -NoProfile -File scripts/test-harness.ps1
 ```

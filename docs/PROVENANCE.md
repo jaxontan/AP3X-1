@@ -184,3 +184,16 @@ These files are authored for this harness, not copied from an upstream catalog:
 - `docs/adr/0004-v3-blueprint-corrections.md` — v3 blueprint adoption and rejected claims.
 
 The harness does not require an API key. Host login state and local models are environment concerns; no credentials are stored in the repository.
+
+## 8. Universal Theme 42 visual reference (vendored)
+
+- Repository: https://github.com/raju-bd/Oracle-apex-ut-UI.skill
+- Commit: `e8a26ee885fc384a080c9504e4b3e543ee1419e9`
+- License: MIT (`skills/apex-design-system/assets/universal-theme-42/LICENSE`)
+- Installed paths:
+  - `skills/apex-design-system/assets/universal-theme-42/upstream-skill.md`
+  - `skills/apex-design-system/assets/universal-theme-42/components-reference.md`
+  - `skills/apex-design-system/assets/universal-theme-42/tokens/`
+- Method: shallow clone, then copied only the license, token files, component reference, and upstream `SKILL.md`. The upstream `SKILL.md` is renamed to `upstream-skill.md` so OpenCode does not discover it as a second harness skill. The demo HTML, bundled JavaScript, build script, and CNAME file were not copied.
+- Use: visual prototypes and custom Theme Roller style references only. Token values are independently hand-derived, not Oracle's compiled LESS output; verify colors and contrast in Theme Roller or the target instance. Prototype HTML is never deployable APEX markup.
+- Update: re-clone the pinned commit, diff the token and component files, then copy only the files above. Do not edit the vendored files in place.

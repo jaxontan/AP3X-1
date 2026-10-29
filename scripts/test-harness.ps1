@@ -181,6 +181,9 @@ Write-Output 'Export successful'
 exit 0
 '@
 
+    $result = Invoke-HarnessScript -Script (Join-Path $scripts 'bootstrap.ps1') -Arguments @('-DryRun')
+    Add-Result -Name 'bootstrap dry-run makes no changes' -Ok ($result.ExitCode -eq 0 -and $result.Output -match 'Dry run complete') -Detail $result.Output
+
     $app = Join-Path $tempRoot 'app'
     New-TestApp -Path $app
 

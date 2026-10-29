@@ -14,7 +14,7 @@
   // Live database access through the SQLcl MCP server. Connections are
   // pre-saved with `conn -save ... -savepwd`; no credentials live here.
   // -R 1 allows SQL and most SQLcl commands but blocks host/OS escapes.
-  // Run `scripts/set-env.ps1` before starting OpenCode so `sql` is on PATH.
+  // The Node wrapper locates Java and SQLcl on Windows, macOS, and Linux.
   "mcp": {
     "timeout": {
       "startup": 60000
@@ -22,7 +22,7 @@
     "servers": {
       "oracle-sqlcl": {
         "type": "local",
-        "command": ["cmd", "/c", "scripts\\sqlcl-mcp.cmd"],
+        "command": ["node", "scripts/sqlcl-mcp.mjs"],
         "environment": {
           "JAVA_TOOL_OPTIONS": "-Djava.awt.headless=true -Dfile.encoding=UTF-8"
         },

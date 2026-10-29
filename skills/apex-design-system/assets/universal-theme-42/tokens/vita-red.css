@@ -1,0 +1,51 @@
+/*
+  Oracle APEX Universal Theme 42 — "Vita Red" Theme Style
+  DELTA file — load AFTER vita-light.css.
+  This is the *official* Oracle minimal-override pattern (see Vita-Red.less):
+  only accent, link, focus, and nav colors are overridden — everything else
+  cascades from the base Vita tokens automatically.
+
+  Source: .../theme/Vita-Red.less
+    @g_Accent-BG:   #da1b1b;
+    @g_Link-Base:   #2370c2;
+    @g_Focus:       #2370c2;
+    @g_Nav-BG:      #f0f0f0;
+    @g_Nav-Active-BG: #dadada;
+    @g_Body-Title-BG: #ffffff;
+    @g_Nav-FG:      #606060;
+*/
+
+:root {
+  --ut-palette-primary: #da1b1b;
+  --ut-palette-primary-contrast: #FFFFFF;
+  --ut-link-text-color: #2370c2;
+  --ut-focus-outline-color: #2370c2;
+
+  --ut-header-background-color: #da1b1b;
+  --ut-header-text-color: #FFFFFF;
+
+  --ut-body-title-background-color: #FFFFFF;
+
+  /* Vita Red uses a LIGHT nav style, not the dark default */
+  --ut-body-nav-background-color: #f0f0f0;
+  --ut-body-nav-text-color: #606060;
+  --ut-navtabs-background-color: #f0f0f0;
+  --ut-navtabs-text-color: #606060;
+  --ut-navtabs-item-active-background-color: #dadada;
+  --ut-navtabs-item-hover-background-color: #dadada;
+  --ut-header-menubar-background-color: #f0f0f0;
+  --ut-header-menubar-item-text-color: #606060;
+  --ut-header-menubar-item-current-background-color: #dadada;
+  --ut-header-menubar-item-current-text-color: #606060;
+
+  --a-treeview-node-selected-background-color: #dadada;
+  --a-treeview-node-selected-text-color: #606060;
+  --a-treeview-node-focused-background-color: #dadada;
+  --a-treeview-node-focused-text-color: #606060;
+
+  --a-field-input-focus-border-color: #2370c2;
+  --ut-field-input-focus-icon-color: #2370c2;
+  --a-checkbox-checked-background-color: #2370c2;
+  --a-button-focus-border-color: #da1b1b;
+  --a-button-count-background-color: #da1b1b;
+}
