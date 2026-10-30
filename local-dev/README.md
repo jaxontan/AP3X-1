@@ -48,6 +48,7 @@ This starts two containers on a private network:
 
 - `db`: Oracle AI Database 26ai Free, PDB `FREEPDB1`, port `1521`.
 - `ords`: ORDS 26.3, installs APEX 26.2 on first start, port `8181`.
+- `apex-prepare` and `lab-init`: one-shot helpers. `apex-prepare` downloads APEX before ORDS starts; `lab-init` waits for the APEX install, then creates the database user `ADMIN` and the `DATA` tablespace that `scripts/deploy-project.ps1` uses. Both exit when done.
 
 Everything binds to `127.0.0.1` only. It is a laptop sandbox, not a server.
 
@@ -263,6 +264,6 @@ The harness does not ship an automatic sync or destructive merge script. The v3 
 
 ## What is not verified here
 
-Option 1 was run end to end on 2026-10-30 (Windows 11, Docker Desktop) from an empty `local-dev/apex/` folder: `apex-prepare` downloaded APEX 26.2, ORDS 26.3.0 and APEX 26.2.0 installed, `/ords/apex_admin` and `/ords/apex` served their sign-in pages, and every login in [`access.md`](../access.md) worked with `Oracle123!`. Only the x86-64 images were exercised; the Apple Silicon path was not tested.
+Option 1 was run end to end on 2026-10-30 (Windows 11, Docker Desktop) from an empty `local-dev/apex/` folder: `apex-prepare` downloaded APEX 26.2, ORDS 26.3.0 and APEX 26.2.0 installed, `/ords/apex_admin` and `/ords/apex` served their sign-in pages, every login in [`access.md`](../access.md) worked with `Oracle123!`, and `scripts/deploy-project.ps1` deployed the `example-0` APEXlang app into a new `DEMO` workspace with its defaults. Only the x86-64 images were exercised; the Apple Silicon path was not tested.
 
 The SQL scripts are read-only and use Oracle dictionary views documented in `skills/db/`; run them against a disposable local database before relying on the output. SQLcl's command-line console failed to initialize under the non-interactive automation shell on this machine (`java.io.IOException: Incorrect function`), so the scripts were reviewed statically rather than executed here. The SQLcl MCP path is separate and connected successfully. The upstream `uc-local-apex-dev` project, not this harness, owns the container lifecycle for Option 3.

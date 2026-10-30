@@ -124,6 +124,51 @@ services:
     networks:
       - apexnet
 
+  # Waits for the ORDS container to finish installing APEX, then adds what the
+  # deploy scripts expect from an Autonomous-style sandbox: a DATA tablespace
+  # and a database user ADMIN (DBA + APEX_ADMINISTRATOR_ROLE) with
+  # ORACLE_PASSWORD. Safe to re-run; exits when done.
+  lab-init:
+    image: container-registry.oracle.com/database/ords:26.3.0
+    depends_on:
+      ords:
+        condition: service_started
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -u
+        conn="sys/\"$${ORACLE_PWD}\"@db:1521/FREEPDB1 as sysdba"
+        echo "Waiting for the APEX install to finish..."
+        until echo "select 'APEX_READY' from dba_registry where comp_id = 'APEX' and status = 'VALID';"             | sql -s -L "$$conn" 2>/dev/null | grep -q APEX_READY; do
+          sleep 30
+        done
+        sql -s -L "$$conn" <<SQL
+        whenever sqlerror exit failure
+        declare
+          l_count number;
+        begin
+          select count(*) into l_count from dba_tablespaces where tablespace_name = 'DATA';
+          if l_count = 0 then
+            execute immediate q'[create bigfile tablespace DATA datafile '/opt/oracle/oradata/FREE/FREEPDB1/data01.dbf' size 100m autoextend on next 100m]';
+          end if;
+          select count(*) into l_count from dba_users where username = 'ADMIN';
+          if l_count = 0 then
+            execute immediate 'create user ADMIN identified by "$${ORACLE_PWD}" default tablespace DATA quota unlimited on DATA';
+          else
+            execute immediate 'alter user ADMIN identified by "$${ORACLE_PWD}" account unlock';
+          end if;
+          execute immediate 'grant dba, apex_administrator_role to ADMIN';
+        end;
+        /
+        exit
+        SQL
+        echo "Lab ready: database user ADMIN and tablespace DATA exist."
+    environment:
+      ORACLE_PWD: ${ORACLE_PASSWORD:-Oracle123!}
+    restart: on-failure:3
+    networks:
+      - apexnet
+
 volumes:
   db-data:
   ords-config:

@@ -34,6 +34,7 @@ Host `localhost`, port `1521`, service name `FREEPDB1`.
 
 | User | Use | Password |
 | :--- | :--- | :--- |
+| `ADMIN` | DBA + APEX administrator, used by `scripts/deploy-project.ps1` | `Oracle123!` |
 | `SYS` | DBA (connect `as sysdba`) | `Oracle123!` |
 | `SYSTEM` | DBA | `Oracle123!` |
 | `PDBADMIN` | PDB administrator | `Oracle123!` |
@@ -45,6 +46,19 @@ SQLcl / SQL*Plus   sql system/Oracle123!@localhost:1521/FREEPDB1
 JDBC               jdbc:oracle:thin:@//localhost:1521/FREEPDB1
 SQL Developer      host localhost, port 1521, service name FREEPDB1
 ```
+
+## Deploying an app
+
+`scripts/deploy-project.ps1` targets this sandbox by default (database user
+`ADMIN`, service `FREEPDB1`). It creates the workspace, its schema, and the
+workspace users, all with `Oracle123!`:
+
+```powershell
+powershell -File scripts\deploy-project.ps1 -Workspace DEMO -TestUsers EMP1
+```
+
+Then sign in at http://localhost:8181/ords/apex with workspace `DEMO`, user
+`ADMIN` or `EMP1`, password `Oracle123!`.
 
 ## Changing the password later
 

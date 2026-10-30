@@ -56,7 +56,7 @@ foreach ($user in $TestUsers) {
 $testUserCalls = ($TestUsers | ForEach-Object { "    create_ws_user('$_', '$($_.ToLowerInvariant())@example.com', 'USER');" }) -join "`n"
 
 $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Oracle123!' }
-$localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'myatp' }
+$localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'FREEPDB1' }
 $adminConn = "ADMIN/`"$localPwd`"@localhost:1521/$localService"
 $schemaConn = "$Workspace/`"$localPwd`"@localhost:1521/$localService"
 
@@ -140,9 +140,10 @@ exit
 $tmpFile = [System.IO.Path]::GetTempFileName()
 try {
     [System.IO.File]::WriteAllText($tmpFile, $provisionScript, (New-Object System.Text.UTF8Encoding($false)))
-    & $env:SQLCL_BIN /nolog "@$tmpFile" | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Workspace provisioning failed with exit code $LASTEXITCODE"
+    $provisionText = & $env:SQLCL_BIN /nolog "@$tmpFile" 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0 -or $provisionText -match 'ORA-\d{3,5}' -or $provisionText -match 'Connection failed') {
+        Write-Host $provisionText
+        Write-Error "Workspace provisioning failed."
         exit 1
     }
 }
@@ -236,7 +237,7 @@ if ($deployExit -ne 0) {
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host " Unified Deployment Completed Successfully!" -ForegroundColor Green
-Write-Host " APEX URL:   https://localhost:8443/ords/apex" -ForegroundColor Green
+Write-Host " APEX URL:   http://localhost:8181/ords/apex" -ForegroundColor Green
 Write-Host " Workspace:  $Workspace" -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
 exit 0

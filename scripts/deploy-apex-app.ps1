@@ -84,7 +84,7 @@ if ($bomFiles.Count -gt 0) {
 if ($Local) {
     if (-not $ConnectionString) {
         $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Oracle123!' }
-        $localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'myatp' }
+        $localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'FREEPDB1' }
         $ConnectionString = "ADMIN/`"$localPwd`"@localhost:1521/$localService"
     }
     if (-not $Workspace) {
