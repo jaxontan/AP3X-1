@@ -55,7 +55,13 @@ See `skills/apex-design-system/references/brand-layer.md`.
 - **Freedom level**: L1 tokens / L2 brand components / L3 custom style / L4 custom templates, and why
 - **Tone and signature element**:
 
-Token table:
+Signature elements: one row for every visual or interactive element the requirement names (live clock, chart, ring, confirmation dialog, spinner, legend, week strip, KPI tile). Each needs a concrete mechanism. "CSS class" alone is not a mechanism for anything that moves or holds data.
+
+| Element (requirement wording) | Page | Mechanism (APEX component, Dynamic Action, page JS, `brand-*` class) | Data source |
+| --- | --- | --- | --- |
+| | | | |
+
+Token table (name tokens by role, e.g. `--brand-primary`, not by colour, e.g. `--brand-teal`):
 
 | Token | Value | Source (user / derived / UT default) | Contrast check |
 | --- | --- | --- | --- |
@@ -97,6 +103,8 @@ Repeat per page, in `requirement.md` order. Page numbers must match `requirement
 ## 8. Requirement trace
 
 **Every bullet in `requirement.md`**: overview, design direction, each page element, each rule. One row each. Filled with `PLANNED` before approval, then updated to file:line after implementation. Nothing may be silently dropped.
+
+The cited line must be the line that implements the requirement: the region, column, process, rule, or CSS declaration, not a brace, a code fence, or a `layout {` line. `verify-delivery.ps1` fails a row when the cited line is structural, or when nothing within 15 lines mentions the requirement's identifiers or key words. A row that is only partly built is `NOT DONE: <what is missing>`, not `DONE`.
 
 | # | Requirement (quoted or paraphrased) | Status | Implemented at (file:line) | Notes |
 | --- | --- | --- | --- | --- |

@@ -18,6 +18,8 @@ When editing:
 
 - Prefer the smallest correct change.
 - Keep page processes thin; call PL/SQL packages for business logic.
+- Open the package `.pks` before writing any call to it. A `FUNCTION` must be assigned or used (`l_id := pkg.f(...)`); a `PROCEDURE` is a statement (`pkg.p(...);`). Use the spec's exact parameter names and pass every parameter that has no `DEFAULT`. `apex validate` does not compile embedded PL/SQL, so a mismatch otherwise appears only at runtime as `PLS-00221`, `PLS-00222`, or `PLS-00306`.
+- Build every element the requirement names (chart, live clock, confirmation dialog, spinner, legend, badge). If you cannot, mark its trace row `NOT DONE: <reason>`; never fill a tile with a hard-coded number.
 - Use only properties that exist in the matching inventory.
 - Preserve existing page numbers, aliases, and app structure.
 - Keep `.apx` files at UTF-8 without a BOM and LF line endings.

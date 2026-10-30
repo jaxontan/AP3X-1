@@ -5,13 +5,17 @@
 .DESCRIPTION
   Fails delivery when the build silently drifts from the user's requirement. Checks:
     Trace    application-design.md exists, is IMPLEMENTED, and every requirement bullet has a
-             trace row marked DONE (with a valid file:line) or NOT DONE: <reason>.
+             trace row marked DONE (with a valid file:line) or NOT DONE: <reason>. A cited line
+             must not be structural, and code near it must mention the requirement.
     Design   requirement hex colours live in brand.css and brand.css is loaded app-wide;
-             requirement design keywords (pill, shadow, badge, ...) have evidence in the build;
+             requirement design keywords (pill, shadow, badge, chart, live clock, confirm, ...)
+             have evidence in the build; statistic items are not hard-coded;
              no inline style/handlers/javascript: or hex in .apx; hex in brand.css only on
              --brand-* token lines; brand-* classes are defined and used; every Font APEX icon
              exists; every styling column a view exposes is used by a page.
-    PL/SQL   every public package subprogram is called somewhere; tests exist.
+    PL/SQL   every public package subprogram is called somewhere; every pkg.member(...) call
+             matches the spec (function vs procedure, parameter names, required arguments);
+             tests exist.
 
   Exit codes: 0 pass, 1 blocking findings, 2 usage error.
 
@@ -66,6 +70,69 @@ function Format-Hits {
     $shown = ($Hits | Select-Object -First $Max) -join ', '
     if ($Hits.Count -gt $Max) { $shown += " (+$($Hits.Count - $Max) more)" }
     return $shown
+}
+
+# Masks single-line string literals as '___' and blanks comments, keeping offsets and line numbers intact.
+function Remove-PlsqlNoise {
+    param([string]$Text)
+    return [regex]::Replace($Text, "'[^'\n]*'|--[^\n]*|/\*[\s\S]*?\*/", {
+            param($m)
+            if ($m.Value[0] -eq "'") { return "'" + ('_' * ($m.Value.Length - 2)) + "'" }
+            return [regex]::Replace($m.Value, '[^\n]', ' ')
+        })
+}
+
+function Get-ClosingParen {
+    param([string]$Text, [int]$Open)
+    $depth = 0
+    for ($i = $Open; $i -lt $Text.Length; $i++) {
+        if ($Text[$i] -eq '(') { $depth++ }
+        elseif ($Text[$i] -eq ')') { $depth--; if ($depth -eq 0) { return $i } }
+    }
+    return -1
+}
+
+# Splits an argument or parameter list on top-level commas.
+function Split-TopLevel {
+    param([string]$Text)
+    if (-not $Text.Trim()) { return @() }
+    $parts = @(); $depth = 0; $start = 0
+    for ($i = 0; $i -lt $Text.Length; $i++) {
+        if ($Text[$i] -eq '(') { $depth++ }
+        elseif ($Text[$i] -eq ')') { $depth-- }
+        elseif ($Text[$i] -eq ',' -and $depth -eq 0) { $parts += $Text.Substring($start, $i - $start); $start = $i + 1 }
+    }
+    $parts += $Text.Substring($start)
+    # Keep blank parts: a blanked string literal is still an argument.
+    return @($parts | ForEach-Object { $_.Trim() })
+}
+
+# Returns @{ member = @( @{ Kind; Params = @( @{ Name; Mode; Optional } ) } ) } for a package spec.
+function Get-PackageContract {
+    param([string]$SpecText)
+    $clean = Remove-PlsqlNoise $SpecText
+    $subs = @{}
+    foreach ($m in [regex]::Matches($clean, '(?i)\b(FUNCTION|PROCEDURE)\s+(\w+)')) {
+        $params = @()
+        $pos = $m.Index + $m.Length
+        while ($pos -lt $clean.Length -and [char]::IsWhiteSpace($clean[$pos])) { $pos++ }
+        if ($pos -lt $clean.Length -and $clean[$pos] -eq '(') {
+            $close = Get-ClosingParen $clean $pos
+            if ($close -gt $pos) {
+                foreach ($decl in (Split-TopLevel $clean.Substring($pos + 1, $close - $pos - 1))) {
+                    $p = [regex]::Match($decl, '(?is)^(\w+)\s+(IN\s+OUT\b|OUT\b|IN\b)?')
+                    if (-not $p.Success) { continue }
+                    $mode = ($p.Groups[2].Value -replace '\s+', ' ').ToUpperInvariant()
+                    if (-not $mode) { $mode = 'IN' }
+                    $params += [pscustomobject]@{ Name = $p.Groups[1].Value.ToLowerInvariant(); Mode = $mode; Optional = ($decl -match '(?i)\bDEFAULT\b|:=') }
+                }
+            }
+        }
+        $name = $m.Groups[2].Value.ToLowerInvariant()
+        if (-not $subs.ContainsKey($name)) { $subs[$name] = @() }
+        $subs[$name] += , ([pscustomobject]@{ Kind = $m.Groups[1].Value.ToUpperInvariant(); Params = $params })
+    }
+    return @{ Subs = $subs; Clean = $clean }
 }
 
 # --- Resolve paths -----------------------------------------------------------
@@ -181,9 +248,30 @@ if (-not $requirementIsTemplate) {
                             Add-Failure 'trace' "$label cites $refPath, which does not exist."
                             continue
                         }
-                        $count = (Read-Text $resolved).Split("`n").Length
+                        $refLines = (Read-Text $resolved).Split("`n")
+                        $count = $refLines.Length
                         if ($refLine -lt 1 -or $refLine -gt $count) {
                             Add-Failure 'trace' "$label cites line $refLine of $refPath, which has $count lines."
+                            continue
+                        }
+                        # The cited line must be the implementation, not a brace, fence, or layout key.
+                        $cited = $refLines[$refLine - 1].Trim()
+                        if ($cited -match '^([{}()\[\],;]*|```\w*|[\w-]+\s*[{(]|slot:\s*\S+|sequence:\s*\d+|(end|begin)\s*;?)$') {
+                            Add-Failure 'trace' "$label cites ${refPath}:$refLine, which is '$cited', a structural line. Cite the line that implements the requirement."
+                            continue
+                        }
+                        # Something near the cited line must mention what the requirement asks for.
+                        $window = ($refLines[([Math]::Max(0, $refLine - 4))..([Math]::Min($count - 1, $refLine + 14))] -join "`n").ToLowerInvariant()
+                        $strong = @([regex]::Matches($row[1], '`([^`]+)`|#[0-9A-Fa-f]{6}\b|\bP\d+_\w+|\bfa-[a-z0-9-]+|\b\w+_api\.\w+') |
+                                ForEach-Object { if ($_.Groups[1].Success) { $_.Groups[1].Value } else { $_.Value } } |
+                                ForEach-Object { $_.ToLowerInvariant(); ($_ -split '\.')[-1].ToLowerInvariant() } | Sort-Object -Unique)
+                        $words = @([regex]::Matches($row[1].ToLowerInvariant(), '[a-z]{4,}') | ForEach-Object { $_.Value } |
+                                Where-Object { $_ -notmatch '^(page|pages|type|normal|with|from|that|this|only|have|when|each|into|which|their|they|them|show|shows|plus|will|must|item|items|region|regions|button|buttons|action|actions|default|optional|required|done|than|also|does|uses|used)$' } |
+                                ForEach-Object { if ($_.Length -gt 5) { $_.Substring(0, 5) } else { $_ } } | Sort-Object -Unique)
+                        $relevant = if ($strong.Count -eq 0 -and $words.Count -eq 0) { $true } elseif ($strong.Count -gt 0) { @($strong | Where-Object { $window.Contains($_) }).Count -gt 0 } else { @($words | Where-Object { $window.Contains($_) }).Count -gt 0 }
+                        if (-not $relevant) {
+                            $expected = if ($strong.Count -gt 0) { $strong -join ', ' } else { $words -join ', ' }
+                            Add-Failure 'trace' "$label cites ${refPath}:$refLine, but nothing within 15 lines mentions it (looked for: $expected). Cite the code that implements it, or mark it NOT DONE."
                         }
                     }
                 }
@@ -228,15 +316,25 @@ else {
             @{ Word = 'badge'; Evidence = 'badge'; Hint = 'Badge template component, badge column, or t-Badge' },
             @{ Word = 'gradient'; Evidence = 'gradient'; Hint = 'a gradient in brand.css' },
             @{ Word = 'rounded|radius'; Evidence = 'radius'; Hint = 'a border-radius token' },
-            @{ Word = 'dark mode|dark-mode'; Evidence = 'prefers-color-scheme|vita-dark|data-theme'; Hint = 'dark-mode token overrides' }
+            @{ Word = 'dark mode|dark-mode'; Evidence = 'prefers-color-scheme|vita-dark|data-theme'; Hint = 'dark-mode token overrides' },
+            @{ Word = 'chart'; Evidence = 'type:\s*chart\b'; Hint = 'a chart region (type: chart)' },
+            @{ Word = 'live\b[^.\n]{0,40}clock|ticking clock|clock that ticks'; Label = 'live clock'; Evidence = 'setInterval|setTimeout|requestAnimationFrame'; Hint = 'page JavaScript that updates the clock on a timer' },
+            @{ Word = 'confirm'; Evidence = 'requiresConfirmation:\s*true|confirmation\s*\{|apex\.(message\.)?confirm'; Hint = 'requiresConfirmation: true with a confirmation { message } block' },
+            @{ Word = 'spinner'; Evidence = 'spinner|showSpinner|is-processing|aria-busy'; Hint = 'a loading state (apex.util.showSpinner or a brand spinner class)' },
+            @{ Word = 'legend'; Evidence = 'legend'; Hint = 'a visible legend region or list' }
         )
-        $evidenceText = $apxText + "`n" + $brandCss
+        $jsText = ''
+        if (Test-Path -LiteralPath $appDir) {
+            $jsText = ((Get-ChildItem -LiteralPath $appDir -Recurse -File -Filter '*.js' | ForEach-Object { Read-Text $_.FullName }) -join "`n")
+        }
+        $evidenceText = $apxText + "`n" + $brandCss + "`n" + $jsText
         foreach ($keyword in $keywords) {
             $asked = @($requirement.Split("`n") | Where-Object {
                     $_ -match "(?i)\b($($keyword.Word))" -and $_ -notmatch '(?i)not (required|needed|wanted)|\bnone\b|:\s*no\b'
                 })
             if ($asked.Count -gt 0 -and -not [regex]::IsMatch($evidenceText, "(?i)$($keyword.Evidence)")) {
-                Add-Failure 'design' "requirement.md asks for '$($keyword.Word)' but the build has no evidence of it (expected $($keyword.Hint))."
+                $label = if ($keyword.Label) { $keyword.Label } else { $keyword.Word }
+                Add-Failure 'design' "requirement.md asks for '$label' but the build has no evidence of it (expected $($keyword.Hint))."
             }
         }
     }
@@ -276,6 +374,8 @@ else {
     if ($jsUrls.Count) { Add-Failure 'design' "javascript: URL in .apx: $(Format-Hits $jsUrls)" }
     $apxHex = @(Find-Lines $apxFiles '#[0-9A-Fa-f]{6}\b')
     if ($apxHex.Count) { Add-Failure 'design' "Hex colour in .apx; brand colours belong in the brand.css token block: $(Format-Hits $apxHex)" }
+    $fakeStats = @(Find-Lines $apxFiles "(?i):P\d+_\w*(STAT|AVG|TOTAL|RATE|COUNT|KPI|SUM|PCT|MINS)\w*\s*:=\s*'?\d*[1-9][\d\s:.,%]*'?\s*;")
+    if ($fakeStats.Count) { Add-Failure 'design' "Statistic item assigned a hard-coded value; compute it from data or remove the tile: $(Format-Hits $fakeStats)" }
 
     # 2b2. A hero region renders a large empty icon box unless it has an image or hides the icon.
     foreach ($file in $apxFiles) {
@@ -382,11 +482,13 @@ if ($specs.Count -gt 0) {
 
     $sources = @{}
     foreach ($file in @($apxFiles) + @($dbFiles)) { $sources[$file.FullName] = Read-Text $file.FullName }
+    $contracts = @{}
 
     foreach ($spec in $specs) {
         $specText = $sources[$spec.FullName]
         $packageMatch = [regex]::Match($specText, '(?i)PACKAGE\s+(\w+)')
         $package = if ($packageMatch.Success) { $packageMatch.Groups[1].Value } else { $spec.BaseName }
+        $contracts[$package.ToLowerInvariant()] = Get-PackageContract $specText
         $names = @([regex]::Matches($specText, '(?im)^\s*(FUNCTION|PROCEDURE)\s+(\w+)') | ForEach-Object { $_.Groups[2].Value.ToLowerInvariant() } | Sort-Object -Unique)
         foreach ($name in $names) {
             $appRefs = 0; $testRefs = 0
@@ -404,6 +506,77 @@ if ($specs.Count -gt 0) {
             }
             elseif ($appRefs -eq 0) {
                 Add-Warning 'plsql' "$package.$name is only called by tests; confirm the app enforces what it checks."
+            }
+        }
+    }
+
+    # 3b. Call contract. apex validate does not compile embedded PL/SQL, so a call that does not
+    #     match the spec (PLS-00221/00222/00302/00306/00363) otherwise surfaces only at runtime.
+    $statementTail = '(?i)(;|```plsql|plsqlCode:|\b(begin|then|else|loop|exec|execute|call))$'
+    foreach ($path in $sources.Keys) {
+        if ($specs | Where-Object { $_.FullName -eq $path }) { continue }
+        $clean = Remove-PlsqlNoise $sources[$path]
+        foreach ($package in $contracts.Keys) {
+            $contract = $contracts[$package]
+            foreach ($m in [regex]::Matches($clean, '(?i)(?<![\w$#])' + $package + '\.(\w+)')) {
+                $member = $m.Groups[1].Value.ToLowerInvariant()
+                $where = '{0}:{1}' -f (Get-RelativePath $path), $clean.Substring(0, $m.Index).Split("`n").Length
+                if (-not $contract.Subs.ContainsKey($member)) {
+                    if (-not [regex]::IsMatch($contract.Clean, "(?i)\b$member\b")) {
+                        Add-Failure 'plsql' "$where references $package.$member, which the $package spec does not declare (PLS-00302)."
+                    }
+                    continue
+                }
+
+                $pos = $m.Index + $m.Length
+                while ($pos -lt $clean.Length -and [char]::IsWhiteSpace($clean[$pos])) { $pos++ }
+                $callArgs = @()
+                if ($pos -lt $clean.Length -and $clean[$pos] -eq '(') {
+                    $close = Get-ClosingParen $clean $pos
+                    if ($close -lt 0) { continue }
+                    $callArgs = @(Split-TopLevel $clean.Substring($pos + 1, $close - $pos - 1))
+                    $pos = $close + 1
+                    while ($pos -lt $clean.Length -and [char]::IsWhiteSpace($clean[$pos])) { $pos++ }
+                }
+                elseif ($pos -ge $clean.Length -or $clean[$pos] -ne ';') { continue } # a name reference such as authFunctionName:, not a call
+
+                $before = ($clean.Substring(0, $m.Index).TrimEnd() -replace '\w+\.$', '').TrimEnd()
+                $tail = $before.Substring([Math]::Max(0, $before.Length - 20))
+                $isStatement = ($pos -lt $clean.Length -and $clean[$pos] -eq ';') -and ($before.Length -eq 0 -or [regex]::IsMatch($tail, $statementTail))
+                $overloads = @($contract.Subs[$member])
+                $kinds = @($overloads | ForEach-Object { $_.Kind })
+                if ($isStatement -and $kinds -notcontains 'PROCEDURE') {
+                    Add-Failure 'plsql' "$where calls function $package.$member as a statement (PLS-00221). Use its return value, e.g. l_result := $package.$member(...);"
+                    continue
+                }
+                if (-not $isStatement -and $kinds -notcontains 'FUNCTION') {
+                    Add-Failure 'plsql' "$where uses procedure $package.$member as an expression (PLS-00222). Call it as a statement."
+                    continue
+                }
+
+                $named = @(); $positional = 0; $argText = @{}
+                foreach ($arg in $callArgs) {
+                    $nm = [regex]::Match($arg, '^(\w+)\s*=>\s*([\s\S]*)$')
+                    if ($nm.Success) { $key = $nm.Groups[1].Value.ToLowerInvariant(); $named += $key; $argText[$key] = $nm.Groups[2].Value.Trim() }
+                    else { $positional++ }
+                }
+                $wanted = if ($isStatement) { 'PROCEDURE' } else { 'FUNCTION' }
+                $fits = $false; $problem = ''
+                foreach ($overload in ($overloads | Where-Object { $_.Kind -eq $wanted })) {
+                    $names = @($overload.Params | ForEach-Object { $_.Name })
+                    $unknown = @($named | Where-Object { $names -notcontains $_ })
+                    if ($unknown.Count) { $problem = "has no parameter $($unknown -join ', ')"; continue }
+                    if ($positional + $named.Count -gt $names.Count) { $problem = "takes $($names.Count) argument(s) but the call passes $($positional + $named.Count)"; continue }
+                    $covered = @($names | Select-Object -First $positional) + $named
+                    $missing = @($overload.Params | Where-Object { -not $_.Optional -and $covered -notcontains $_.Name } | ForEach-Object { $_.Name })
+                    if ($missing.Count) { $problem = "is called without required argument(s) $($missing -join ', ')"; continue }
+                    $badOut = @($overload.Params | Where-Object { $_.Mode -ne 'IN' -and $argText.ContainsKey($_.Name) -and $argText[$_.Name] -notmatch '^:?[\w.$#]+$' } | ForEach-Object { $_.Name })
+                    if ($badOut.Count) { $problem = "passes an expression to OUT parameter(s) $($badOut -join ', ') (PLS-00363)"; continue }
+                    $fits = $true; break
+                }
+                if (-not $fits) {
+                    Add-Failure 'plsql' "$where : $package.$member $problem (PLS-00306). Match the call to the spec."
+                }
             }
         }
     }

@@ -60,6 +60,20 @@ For `ORA-` errors:
 4. Separate the database cause from the APEX symptom. Fix the database cause or map it to a user-safe APEX error; do not hide it with `WHEN OTHERS THEN NULL`.
 5. For destructive or DDL operations, stop and require explicit approval, a migration path, and a rollback plan.
 
+## PL/SQL Call Errors in Page Code
+
+`apex validate` does not compile PL/SQL inside `.apx` processes, validations, or conditions, so these appear only when the page runs (`ORA-06550` wrapping a `PLS-` code):
+
+| Code | Cause | Fix |
+| --- | --- | --- |
+| `PLS-00221: 'X' is not a procedure or is undefined` | A `FUNCTION` called as a statement (`pkg.f(:APP_USER);`) | Use the return value: `declare l_id number; begin l_id := pkg.f(:APP_USER); end;` Do not change the spec to make the page compile. |
+| `PLS-00222: no function with name 'X'` | A `PROCEDURE` used inside an expression | Call it as a statement, or use the function the spec declares. |
+| `PLS-00302: component 'X' must be declared` | The member is not in the package spec | Call the name the `.pks` declares, or add it to the spec and body. |
+| `PLS-00306: wrong number or types of arguments` | Parameter name or count does not match the spec | Copy the parameter names from the `.pks`; pass every parameter without a `DEFAULT`. |
+| `PLS-00363: expression cannot be used as an assignment target` | A literal or expression passed to an `OUT` parameter | Pass a local variable or a page item bind. |
+
+`scripts/verify-delivery.ps1` checks every `pkg.member(...)` call in `.apx`, package bodies, and tests against the `.pks` and reports these before deployment. If it flags a call, fix the call; do not rename the spec.
+
 ## Recording Lessons
 
 Record a lesson in `.memory/instincts.md` only when the same command reproduced it and the fix passed validation. Include:
