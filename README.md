@@ -46,10 +46,10 @@ claude
 ### 4. Build & Validate
 Use the built-in commands and skills inside your agent chat:
 
-| Step | OpenCode Command | Antigravity (`agy`) Skill | Description |
+| Step | OpenCode Command | Claude Code / Codex / Antigravity / DSH Skill | Description |
 | :--- | :--- | :--- | :--- |
 | **1. Requirement** | `working/page-design/requirement.md` | `working/page-design/requirement.md` | You write: pages, rules, and the look you want |
-| **1b. Application Design** | `/apex.design` | *(agent writes it)* | Agent writes `application-design.md`; you approve before any code |
+| **1b. Application Design** | `/apex.design` | `/apex-design` | Agent writes `application-design.md`; you approve before any code |
 | **2. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
 | **3. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
 | **4. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
@@ -244,6 +244,8 @@ docker compose down -v
 ## 🛠️ Core Commands Reference
 
 ### 🎯 APEX & PL/SQL Domain Commands
+OpenCode uses `/apex.<name>`; Claude Code, Codex, Antigravity, and DSH use the same workflow as `/apex-<name>` (for example `/apex.plsql` = `/apex-plsql`). The skill copies are generated from `.opencode/commands/` by `node scripts/sync-agent-commands.mjs`.
+
 | Command | Purpose |
 | :--- | :--- |
 | `/apex.design <scope>` | Design page map, layout, theme, templates, and staticIds before implementation |

@@ -354,6 +354,10 @@ exit 0
     }
     Add-Result -Name 'agent adapters carry the delivery contract' -Ok ($drift.Count -eq 0) -Detail ($drift -join "`n")
 
+    # Command bridges: Claude Code and .agents skills are generated from .opencode/commands.
+    $bridgeOutput = & node (Join-Path $scripts 'sync-agent-commands.mjs') --check 2>&1 | Out-String
+    Add-Result -Name 'command bridges match .opencode/commands' -Ok ($LASTEXITCODE -eq 0) -Detail $bridgeOutput
+
     $runtimeVerifier = Join-Path $scripts 'verify-apex-runtime.mjs'
     $runtimeOutput = & node --check $runtimeVerifier 2>&1 | Out-String
     Add-Result -Name 'runtime verifier parses' -Ok ($LASTEXITCODE -eq 0) -Detail $runtimeOutput

@@ -1,11 +1,15 @@
 ---
 name: apex-plsql
-description: Implement or review PL/SQL packages for Oracle APEX business rules, transaction boundaries, and data integrity.
+description: Implement or review PL/SQL packages for Oracle APEX business rules
 ---
 
-# APEX PL/SQL
+<!-- Generated from .opencode/commands/apex.plsql.md by scripts/sync-agent-commands.mjs. Edit the source, then re-run the script. -->
 
-Implement or review the PL/SQL package for APEX business rules.
+Canonical instructions: `AGENTS.md`. The delivery contract and gates there apply to this workflow.
+
+Work within the role and limits in `.opencode/agents/apex.md` (ignore its OpenCode-only frontmatter).
+
+Implement or review the PL/SQL for: the user's request (the text after the skill name)
 
 Read `skills/apex-domains/SKILL.md`, `skills/apex-domains/references/plsql-engineering.md`, and the relevant files under `skills/db/plsql/` and `skills/db/sql-dev/`.
 

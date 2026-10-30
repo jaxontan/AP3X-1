@@ -14,7 +14,7 @@ This repository is an Oracle APEX agent harness. `AGENTS.md` is the canonical in
 - APEXLang, import, or `ORA-` error diagnosis: `skills/harness/error-triage/SKILL.md`.
 - Security review: `skills/harness/security-review/SKILL.md`.
 
-A project skill bridge is available at `.claude/skills/oracle-apex/SKILL.md`.
+A project skill bridge is available at `.claude/skills/oracle-apex/SKILL.md`. Workflow skills `/apex-design`, `/apex-plsql`, `/apex-apexlang`, `/apex-verify`, `/apex-review`, `/apex-deploy`, and the others in `.claude/skills/apex-*/` are generated from `.opencode/commands/` by `scripts/sync-agent-commands.mjs`; edit the source, not the copies.
 
 ## Non-negotiables
 

@@ -68,11 +68,13 @@ PL/SQL mode also reads `skills/apex-domains/references/smartdb-plsql.md` for the
 | Host | Entry point |
 | --- | --- |
 | OpenCode | `opencode.jsonc` and `skills/` |
-| Codex CLI / VS Code Codex | `AGENTS.md` |
-| Claude Code / VS Code Claude | `CLAUDE.md`, `.claude/skills/oracle-apex/` |
+| Codex CLI / VS Code Codex | `AGENTS.md`, `.agents/skills/` |
+| Claude Code / VS Code Claude | `CLAUDE.md`, `.claude/skills/` |
 | Antigravity | `AGENTS.md`, `.agents/rules/`, `.agents/skills/` |
 | DSH (DeepSeek Harness) | `AGENTS.md`, `.agents/skills/` |
 | Other `AGENTS.md`-aware extension | `AGENTS.md` |
+
+Workflow commands are written once in `.opencode/commands/apex.*.md` (OpenCode `/apex.plsql`). `node scripts/sync-agent-commands.mjs` generates the matching `apex-*` skills in `.claude/skills/` and `.agents/skills/` (`/apex-plsql` in Claude Code, Codex, Antigravity, and DSH). Edit the OpenCode source, never the generated copies; `scripts/test-harness.ps1` fails when they drift.
 
 Setup matrix and no-key paths: `docs/harnesses/README.md`.
 

@@ -1,11 +1,15 @@
 ---
 name: apex-apexlang
-description: Implement approved APEXLang changes (.apx) and validate with SQLcl.
+description: Implement an approved APEXLang change and validate it with SQLcl
 ---
 
-# APEX APEXLang Implementation
+<!-- Generated from .opencode/commands/apex.apexlang.md by scripts/sync-agent-commands.mjs. Edit the source, then re-run the script. -->
 
-Implement the approved Oracle APEX change.
+Canonical instructions: `AGENTS.md`. The delivery contract and gates there apply to this workflow.
+
+Work within the role and limits in `.opencode/agents/apex.md` (ignore its OpenCode-only frontmatter).
+
+Implement the approved Oracle APEX change for: the user's request (the text after the skill name)
 
 Read `skills/apex-domains/SKILL.md`, `skills/apex-domains/references/apexlang-implementation.md`, and `skills/apex-delivery/SKILL.md`.
 
@@ -31,4 +35,4 @@ Then run:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate-apex-app.ps1 -AppDirectory "<app-directory>"
 ```
 
-Treat the change as done only when the command exits 0 and prints `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors.
+Treat the change as done only when the command exits 0 and prints `Validation successful` with no `FILE_IGNORED`, compile diagnostics, or `ORA-` errors. Report files changed, rules covered, validation evidence, and residual risks. Do not deploy unless the user explicitly asks. If validation fails, follow `skills/harness/error-triage/SKILL.md` and stop after three attempts on the same diagnostic.
