@@ -2,6 +2,8 @@
 
 Use this scorecard before and after a redesign. It makes "better" measurable without replacing the requirement, APEX inventory, or runtime verification. Score the same content at the same viewports both times.
 
+The automated gate comes first: `node scripts/score-design.mjs --preview <dir> --kit <brand-kit.json>` must print `DESIGN SCORE PASS` (85+/100, no failed blocker). This scorecard is the reviewer's judgment layer on top of it; a scorecard total never overrides a failing automated score.
+
 ## 1. Scoring scale
 
 Score each dimension from 0 to 5.

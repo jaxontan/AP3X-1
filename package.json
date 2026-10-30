@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Optional Playwright and axe visual verification for APEX design prototypes.",
+  "description": "Optional Playwright tooling: design reference capture, brand kit, prototype rendering, design scoring, and visual verification for APEX apps.",
   "scripts": {
+    "design:reference": "node scripts/capture-design-reference.mjs",
+    "design:kit": "node scripts/build-brand-kit.mjs",
+    "design:font": "node scripts/fetch-open-font.mjs",
+    "design:render": "node scripts/render-design-prototype.mjs",
+    "design:score": "node scripts/score-design.mjs",
+    "design:ut-index": "node scripts/refresh-ut-css-vars.mjs",
     "design:verify": "node scripts/verify-design-preview.mjs",
     "design:verify:install": "playwright install chromium",
     "runtime:verify": "node scripts/verify-apex-runtime.mjs"

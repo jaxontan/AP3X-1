@@ -6,6 +6,9 @@ This repository is an Oracle APEX agent harness. `AGENTS.md` is the canonical in
 
 - Business analysis, domain model, application design, PL/SQL, or APEXLang: `skills/apex-domains/SKILL.md`.
 - Visual/UX design, page mapping, custom look, or redesign: `skills/apex-design-system/SKILL.md`, `skills/apex-ui-redesign/SKILL.md`, and `skills/apex-ui-redesign/references/design-scorecard.md`.
+- Any visual decision: `skills/apex-design-system/references/craft.md`.
+- A design reference website (URL in `requirement.md` or the request): `skills/apex-design-system/references/design-reference.md`; capture it with `node scripts/capture-design-reference.mjs --url <url>` and view the screenshots before designing.
+- Any look or prototype: run the design pipeline in `.opencode/agents/apex-designer.md`. Generate `brand.css` with `scripts/build-brand-kit.mjs` (never hand-write it), render with `scripts/render-design-prototype.mjs`, and require `DESIGN SCORE PASS` from `scripts/score-design.mjs`.
 - Any design direction in `requirement.md` (colours, badges, shadows, tone), new app or existing: `skills/apex-design-system/references/brand-layer.md`. Stock Universal Theme is the floor, not the ceiling; user-supplied brand values are requirements.
 - Prototype rendering or accessibility evidence: `.opencode/agents/apex-design-verifier.md` and `scripts/verify-design-preview.mjs`.
 - Any APEX creation, change, validation, or deployment: `skills/apex-delivery/SKILL.md`.

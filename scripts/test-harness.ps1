@@ -318,7 +318,11 @@ exit 0
         @{ Name = 'delivery gate rejects a trace row citing a structural line'; Override = @{ 'page-design\application-design.md' = "| Status | IMPLEMENTED |`n`n## Requirement trace`n`n| # | Requirement | Status | Implemented at |`n| 1 | Brand colours | DONE | app/shared-components/static-files/css/brand.css:1 |`n| 2 | Pill badges | DONE | app/pages/p00001-home.apx:3 |`n| 3 | Page 1 lists claims | DONE | app/pages/p00001-home.apx:6 |`n" }; Expect = 'a structural line' },
         @{ Name = 'delivery gate rejects a trace row citing unrelated code'; Override = @{ 'page-design\application-design.md' = "| Status | IMPLEMENTED |`n`n## Requirement trace`n`n| # | Requirement | Status | Implemented at |`n| 1 | Brand colours | DONE | app/shared-components/static-files/css/brand.css:1 |`n| 2 | Pill badges | DONE | app/pages/p00001-home.apx:3 |`n| 3 | Page 1 lists claims | DONE | app/shared-components/static-files/css/brand.css:2 |`n" }; Expect = 'nothing within 15 lines mentions' },
         @{ Name = 'delivery gate rejects a requested chart that was not built'; Override = @{ 'page-design\requirement.md' = "# Req`n`n- **Brand colours**: primary #7C3AED`n- Pill-shaped status badges`n- Page 1 lists claims with a chart by month`n" }; Expect = "asks for 'chart'" },
-        @{ Name = 'delivery gate rejects a hard-coded statistic'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    name: Claims`n    region r (`n        cssClasses: brand-pill t-Badge`n        plsqlCode: :P1_STAT_AVG_IN := '09:02';`n    )`n)`n" }; Expect = 'hard-coded value' }
+        @{ Name = 'delivery gate rejects a hard-coded statistic'; Override = @{ 'app\pages\p00001-home.apx' = "page 1 (`n    name: Claims`n    region r (`n        cssClasses: brand-pill t-Badge`n        plsqlCode: :P1_STAT_AVG_IN := '09:02';`n    )`n)`n" }; Expect = 'hard-coded value' },
+        @{ Name = 'delivery gate rejects a brand.css variable APEX never reads'; Override = @{ 'app\shared-components\static-files\css\brand.css' = ":root {`n  --brand-primary: #7C3AED;`n  --ut-made-up-color: var(--brand-primary);`n}`n.brand-pill { border-radius: 999px; }`n" }; Expect = 'never reads' },
+        @{ Name = 'delivery gate rejects a primary override that leaves hot buttons stock'; Override = @{ 'app\shared-components\static-files\css\brand.css' = ":root {`n  --brand-primary: #7C3AED;`n  --ut-palette-primary: var(--brand-primary);`n}`n.brand-pill { border-radius: 999px; }`n" }; Expect = 'not .t-Button--hot' },
+        @{ Name = 'delivery gate rejects a brand font that is not shipped'; Override = @{ 'app\shared-components\static-files\css\brand.css' = "@font-face { font-family: `"Inter`"; src: url(`"../fonts/inter-latin-400-normal.woff2`") format(`"woff2`"); }`n:root {`n  --brand-primary: #7C3AED;`n}`n.brand-pill { border-radius: 999px; }`n" }; Expect = 'fonts/inter-latin-400-normal.woff2 does not exist' },
+        @{ Name = 'delivery gate rejects a design reference without a generated kit'; Override = @{ 'page-design\requirement.md' = "# Req`n`n- **Brand colours**: primary #7C3AED`n- **Design reference**: https://www.mcdonalds.com.sg/`n- Pill-shaped status badges`n- Page 1 lists claims`n" }; Expect = 'no generated kit' }
     )
     $caseIndex = 0
     foreach ($case in $gateCases) {
@@ -387,6 +391,77 @@ exit 0
     $designOutput = & node $designVerifier --help 2>&1 | Out-String
     $designExit = $LASTEXITCODE
     Add-Result -Name 'design verifier prints usage' -Ok ($designExit -eq 0 -and $designOutput -match '--preview') -Detail $designOutput
+
+    $referenceCapture = Join-Path $scripts 'capture-design-reference.mjs'
+    $referenceOutput = & node --check $referenceCapture 2>&1 | Out-String
+    Add-Result -Name 'design reference capture parses' -Ok ($LASTEXITCODE -eq 0) -Detail $referenceOutput
+    $referenceOutput = & node $referenceCapture --help 2>&1 | Out-String
+    Add-Result -Name 'design reference capture prints usage' -Ok ($LASTEXITCODE -eq 0 -and $referenceOutput -match '--url') -Detail $referenceOutput
+    $savedErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $referenceOutput = & node $referenceCapture --url 'file:///etc/passwd' 2>&1 | Out-String
+    $referenceExit = $LASTEXITCODE
+    $ErrorActionPreference = $savedErrorAction
+    Add-Result -Name 'design reference capture rejects non-http URLs' -Ok ($referenceExit -eq 2 -and $referenceOutput -match 'http and https') -Detail $referenceOutput
+
+    # Design pipeline scripts parse and print usage.
+    foreach ($tool in @(
+            @{ Script = 'build-brand-kit.mjs'; Usage = '--reference' },
+            @{ Script = 'render-design-prototype.mjs'; Usage = '--brand' },
+            @{ Script = 'score-design.mjs'; Usage = '--kit' },
+            @{ Script = 'fetch-open-font.mjs'; Usage = '--family' },
+            @{ Script = 'refresh-ut-css-vars.mjs'; Usage = 'ut-css' })) {
+        $toolPath = Join-Path $scripts $tool.Script
+        $toolOutput = & node --check $toolPath 2>&1 | Out-String
+        $parsed = $LASTEXITCODE -eq 0
+        $toolOutput += & node $toolPath --help 2>&1 | Out-String
+        Add-Result -Name "$($tool.Script) parses and prints usage" -Ok ($parsed -and $LASTEXITCODE -eq 0 -and $toolOutput -match [regex]::Escape($tool.Usage)) -Detail $toolOutput
+    }
+    foreach ($ver in '26.1', '26.2') {
+        $index = Join-Path $Root "skills\apex-design-system\assets\ut-css\$ver"
+        $indexOk = (Test-Path -LiteralPath (Join-Path $index 'consumed-vars.txt')) -and (Test-Path -LiteralPath (Join-Path $index 'stock.json')) -and (Test-Path -LiteralPath (Join-Path $index 'scoped-rules.json'))
+        Add-Result -Name "Universal Theme $ver variable index exists" -Ok $indexOk -Detail "Run node scripts/refresh-ut-css-vars.mjs $ver"
+    }
+
+    # Brand kit: a synthetic capture builds a contrast-safe brand.css that re-declares hot buttons and uses only real variables.
+    $kitRoot = Join-Path $tempRoot 'brand-kit'
+    New-Item -ItemType Directory -Force -Path $kitRoot | Out-Null
+    $reference = @{
+        url = 'https://reference.invalid/'; captured = '2026-01-01T00:00:00Z'
+        roles = @{ ground = '#FFFFFF'; surface = '#FFFFFF'; ink = '#222222'; primary = '#DB0007'; accent = '#FFBC0D' }
+        captures = @(@{ viewport = @{ name = 'desktop' }; measured = @{
+                    body = @{ fontFamily = 'Speedee-Regular, sans-serif' }
+                    header = @{ background = $null; height = 100 }
+                    typography = @{ families = @(@{ value = 'Speedee-Regular'; weight = 100 }) }
+                    headings = @(@{ fontFamily = 'Speedee-Bold'; fontWeight = '400' })
+                    buttons = @(@{ background = '#FFBC0D'; height = 49; borderRadius = '10px'; inHeader = $false }, @{ background = '#DB0007'; height = 33; borderRadius = '10px'; inHeader = $true })
+                    shape = @{ radii = @(@{ value = 10; weight = 30 }); shadows = @(@{ value = 'rgba(0,0,0,.15) 2px 3px 5px 0px'; weight = 4 }) }
+                } })
+    }
+    $referencePath = Join-Path $kitRoot 'reference.json'
+    [System.IO.File]::WriteAllText($referencePath, ($reference | ConvertTo-Json -Depth 10), [System.Text.UTF8Encoding]::new($false))
+    $kitOut = Join-Path $kitRoot 'brand'
+    $kitOutput = & node (Join-Path $scripts 'build-brand-kit.mjs') --reference $referencePath --out $kitOut 2>&1 | Out-String
+    $kitExit = $LASTEXITCODE
+    $kitCss = if (Test-Path -LiteralPath (Join-Path $kitOut 'css\brand.css')) { [System.IO.File]::ReadAllText((Join-Path $kitOut 'css\brand.css')) } else { '' }
+    $kitJson = if (Test-Path -LiteralPath (Join-Path $kitOut 'brand-kit.json')) { [System.IO.File]::ReadAllText((Join-Path $kitOut 'brand-kit.json')) } else { '' }
+    Add-Result -Name 'brand kit builds from a capture and passes contrast' -Ok ($kitExit -eq 0 -and $kitOutput -match 'BRAND KIT PASS') -Detail $kitOutput
+    Add-Result -Name 'brand kit re-declares hot buttons and side-nav state' -Ok ($kitCss -match '\.t-Button--hot' -and $kitCss -match '\.t-TreeNav' -and $kitCss -match '--a-base-font-family') -Detail $kitCss.Substring(0, [Math]::Min(400, $kitCss.Length))
+    Add-Result -Name 'brand kit picks the content CTA colour and an open-licence font' -Ok ($kitJson -match '"action":\s*"#FFBC0D"' -and $kitJson -match '"family":\s*"Nunito Sans"') -Detail $kitJson
+    $renderOutput = & node (Join-Path $scripts 'render-design-prototype.mjs') --brand $kitOut --out (Join-Path $kitRoot 'preview') 2>&1 | Out-String
+    $renderedHtml = Join-Path $kitRoot 'preview\index.html'
+    Add-Result -Name 'prototype renderer writes real Universal Theme markup with brand.css' -Ok ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $renderedHtml) -and ([System.IO.File]::ReadAllText($renderedHtml) -match 't-Button--hot') -and (Test-Path -LiteralPath (Join-Path $kitRoot 'preview\css\brand.css'))) -Detail $renderOutput
+
+    # Designer guidance: the craft and reference docs exist and the designer profile cites them.
+    $designerText = [System.IO.File]::ReadAllText((Join-Path $Root '.opencode\agents\apex-designer.md'))
+    $designerGaps = @()
+    foreach ($doc in 'skills/apex-design-system/references/craft.md', 'skills/apex-design-system/references/design-reference.md', 'scripts/capture-design-reference.mjs') {
+        if (-not (Test-Path -LiteralPath (Join-Path $Root $doc))) { $designerGaps += "$doc is missing" }
+        if ($designerText.IndexOf($doc.Replace('skills/apex-design-system/references/', '')) -lt 0) { $designerGaps += "apex-designer.md does not cite $doc" }
+    }
+    $requirementTemplate = [System.IO.File]::ReadAllText((Join-Path $Root 'docs\templates\requirement.template.md'))
+    if ($requirementTemplate -notmatch 'Design reference') { $designerGaps += 'requirement.template.md has no Design reference field' }
+    Add-Result -Name 'designer cites craft and design-reference guidance' -Ok ($designerGaps.Count -eq 0) -Detail ($designerGaps -join "`n")
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) {

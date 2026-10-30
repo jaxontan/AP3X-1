@@ -12,7 +12,10 @@
              have evidence in the build; statistic items are not hard-coded;
              no inline style/handlers/javascript: or hex in .apx; hex in brand.css only on
              --brand-* token lines; brand-* classes are defined and used; every Font APEX icon
-             exists; every styling column a view exposes is used by a page.
+             exists; every styling column a view exposes is used by a page; brand.css sets only
+             variables the APEX theme CSS reads, re-declares hot buttons, and ships its fonts;
+             a Design reference in requirement.md requires the generated brand kit and a
+             passing scripts/score-design.mjs result.
     PL/SQL   every public package subprogram is called somewhere; every pkg.member(...) call
              matches the spec (function vs procedure, parameter names, required arguments);
              tests exist.
@@ -424,13 +427,69 @@ else {
         if ($used -notcontains $class) { Add-Warning 'design' "Class '$class' is defined in brand.css but never used." }
     }
 
-    # 2d. Every Font APEX icon must exist in the version's icon index.
     $version = '26.1'
     $versionFile = Join-Path $appDir '.apex\apexlang.json'
     if (Test-Path -LiteralPath $versionFile) {
         $mmd = [string](Get-Content -LiteralPath $versionFile -Raw | ConvertFrom-Json).mmdVersion
         if ($mmd -match '^(\d+\.\d+)') { $version = $Matches[1] }
     }
+
+    # 2c2. brand.css must work at runtime: only variables the theme CSS reads, hot buttons re-declared, fonts shipped.
+    if ($hasBrandCss) {
+        $consumedPath = Join-Path $repoRoot "skills\apex-design-system\assets\ut-css\$version\consumed-vars.txt"
+        if (Test-Path -LiteralPath $consumedPath) {
+            $consumed = New-Object 'System.Collections.Generic.HashSet[string]'
+            foreach ($name in (Read-Text $consumedPath).Split("`n")) { if ($name.Trim()) { [void]$consumed.Add($name.Trim()) } }
+            $dead = @([regex]::Matches($brandCss, '(?m)^\s*(--(?:ut|a)-[a-z0-9-]+)\s*:') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique | Where-Object { -not $consumed.Contains($_) })
+            if ($dead.Count) {
+                Add-Failure 'design' "brand.css sets variables the APEX $version theme CSS never reads, so they have no effect: $($dead -join ', '). Generate brand.css with scripts/build-brand-kit.mjs."
+            }
+        }
+        else {
+            Add-Warning 'design' "No Universal Theme variable index for APEX $version; run node scripts/refresh-ut-css-vars.mjs $version."
+        }
+        if ($brandCss -match '--ut-palette-primary\s*:' -and $brandCss -notmatch '\.t-Button--hot') {
+            Add-Failure 'design' 'brand.css overrides --ut-palette-primary but not .t-Button--hot. Vita hard-codes the hot button colour on that selector, so primary buttons stay stock blue. Generate brand.css with scripts/build-brand-kit.mjs.'
+        }
+        $staticApxText = Read-Text (Join-Path $appDir 'shared-components\static-files.apx')
+        foreach ($font in @([regex]::Matches($brandCss, 'url\(\s*["'']?\.\./fonts/([^"''\)]+)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)) {
+            if (-not (Test-Path -LiteralPath (Join-Path $appDir "shared-components\static-files\fonts\$font"))) {
+                Add-Failure 'design' "brand.css loads fonts/$font, but app/shared-components/static-files/fonts/$font does not exist."
+            }
+            elseif ($staticApxText -notmatch [regex]::Escape("file `"fonts/$font`"")) {
+                Add-Failure 'design' "fonts/$font is not registered in shared-components/static-files.apx (mimeType: font/woff2)."
+            }
+        }
+    }
+
+    # 2c3. A design reference in the requirement must flow through the generated kit and a passing design score.
+    $referenceMatch = [regex]::Match($requirement, '(?im)^\s*-\s*\*\*Design reference\*\*\s*:\s*(?!\[)[^\r\n]*?(https?://[^\s\)\]>]+)')
+    if (-not $requirementIsTemplate -and $referenceMatch.Success -and $referenceMatch.Groups[1].Value -notmatch 'example\.com') {
+        $kitDir = Join-Path $project 'page-design\design\brand'
+        $kitCss = Join-Path $kitDir 'css\brand.css'
+        if (-not (Test-Path -LiteralPath (Join-Path $kitDir 'brand-kit.json')) -or -not (Test-Path -LiteralPath $kitCss)) {
+            Add-Failure 'design' "requirement.md names a design reference ($($referenceMatch.Groups[1].Value)) but page-design/design/brand/ has no generated kit. Run scripts/capture-design-reference.mjs and scripts/build-brand-kit.mjs."
+        }
+        elseif (-not $hasBrandCss -or (((Read-Text $kitCss) -replace "`r", '').Trim() -ne ($brandCss -replace "`r", '').Trim())) {
+            Add-Failure 'design' 'app/shared-components/static-files/css/brand.css differs from the generated kit (page-design/design/brand/css/brand.css). Change brand-kit.json, rebuild, and copy the file; never hand-edit brand.css.'
+        }
+        $scores = @()
+        $previewRoot = Join-Path $project 'design-preview'
+        if (Test-Path -LiteralPath $previewRoot) {
+            $scores = @(Get-ChildItem -LiteralPath $previewRoot -Recurse -File -Filter 'score.json' | Sort-Object LastWriteTime -Descending)
+        }
+        if (-not $scores.Count) {
+            Add-Failure 'design' 'requirement.md names a design reference but no design score exists. Run scripts/score-design.mjs on the prototype (or the deployed page).'
+        }
+        else {
+            $latest = Get-Content -LiteralPath $scores[0].FullName -Raw | ConvertFrom-Json
+            if (-not $latest.pass) {
+                Add-Failure 'design' "The latest design score ($(Get-RelativePath $scores[0].FullName)) is $($latest.total)/100 and FAILS. Fix the listed checks and rescore."
+            }
+        }
+    }
+
+    # 2d. Every Font APEX icon must exist in the version's icon index.
     $indexPath = Join-Path $repoRoot "skills\apex\apexlang\$version\apexlang-generation\assets\indexes\font-apex-icon-index.json"
     if (-not (Test-Path -LiteralPath $indexPath)) {
         $indexPath = Join-Path $repoRoot 'skills\apex\apexlang\26.1\apexlang-generation\assets\indexes\font-apex-icon-index.json'

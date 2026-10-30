@@ -7,11 +7,14 @@ Use it whenever `requirement.md` contains a design direction (colours, mood, sha
 ## 1. Authority order
 
 1. The user's design direction in `working/page-design/requirement.md` or the current request. User-supplied hex values, fonts, radii, and shadows are **requirements**, not suggestions. Never drop them silently.
-2. Accessibility contract (WCAG 2.2 AA). If a user colour fails contrast for a role, keep the colour and adjust *its usage* (darker shade for text, use as fill with contrasting text, use for borders/accents only). Report the adjustment; do not swap in a different brand.
-3. The target version's inventory for every APEX component, template, template option, and property.
-4. Universal Theme defaults, for everything the user did not specify.
+2. The user's **design reference** website, captured with `scripts/capture-design-reference.mjs` and read per `references/design-reference.md`. Its measured colours, type character, radius, shadow, and density are requirements for everything the user did not state explicitly.
+3. Accessibility contract (WCAG 2.2 AA). If a user or reference colour fails contrast for a role, keep the colour and adjust *its usage* (darker shade for text, use as fill with contrasting text, use for borders/accents only). Report the adjustment; do not swap in a different brand.
+4. The target version's inventory for every APEX component, template, template option, and property.
+5. Universal Theme defaults, for everything the user and the reference did not specify.
 
-The "do not copy hex from external research" rule still applies to direction banks, screenshots you were not asked to match, and prototypes. It never overrides colours the user gave.
+The "do not copy hex from external research" rule still applies to direction banks, screenshots you were not asked to match, and prototypes. It never overrides colours the user gave or a reference site the user chose.
+
+Before choosing tokens, read `references/craft.md`: its lever list (header, ground and surfaces, typography, primary action, region chrome) decides whether the app looks designed or looks like stock APEX with a new accent colour.
 
 ## 2. Freedom levels
 
@@ -26,7 +29,7 @@ Pick the lowest level that fully delivers the requested look. State the choice i
 
 Default when the requirement contains *any* design direction: **L2**.
 
-## 3. L1/L2 implementation (validated on APEXLang 26.1)
+## 3. L1/L2 implementation (validated against the APEX 26.1 and 26.2 theme CSS)
 
 ### 3.1 Files
 
@@ -55,46 +58,33 @@ css {
 
 Do not use `#MIN#` unless you also ship a `brand.min.css`; otherwise the runtime requests a file that does not exist.
 
-### 3.2 `brand.css` structure
+### 3.2 Generate `brand.css`; never hand-write it
 
-```css
-/* 1. Brand tokens: the ONLY hex values in the app. Names = roles, not colours. */
-:root {
-  --brand-primary: #7C3AED;
-  --brand-primary-strong: #5B21B6;   /* text-safe shade for 4.5:1 on light ground */
-  --brand-accent: #A855F7;
-  --brand-on-primary: #FFFFFF;
-  --brand-surface: #FAF8FF;
-  --brand-radius: 12px;
-  --brand-shadow: 0 1px 2px rgb(17 12 34 / .06), 0 8px 24px rgb(76 29 149 / .08);
-}
+Always generate `brand.css` with the brand kit, with or without a reference site:
 
-/* 2. Map tokens onto Universal Theme variables so every native component follows. */
-:root {
-  --ut-palette-primary: var(--brand-primary);
-  --ut-palette-primary-contrast: var(--brand-on-primary);
-  --ut-link-text-color: var(--brand-primary-strong);
-  --ut-focus-outline-color: var(--brand-accent);
-  --ut-region-border-radius: var(--brand-radius);
-  --ut-component-border-radius: var(--brand-radius);
-  --a-button-border-radius: calc(var(--brand-radius) - 4px);
-  --a-field-input-border-radius: calc(var(--brand-radius) - 4px);
-  --a-field-input-focus-border-color: var(--brand-primary);
-}
-
-/* 3. Dark mode: redefine tokens, never the component rules. */
-@media (prefers-color-scheme: dark) { :root { /* ... */ } }
-
-/* 4. Brand components: every class is prefixed brand-, scoped, and token-driven. */
-.brand-card   { border-radius: var(--brand-radius); box-shadow: var(--brand-shadow); }
-.brand-pill   { border-radius: 999px; }
-.brand-kpi    { /* ... */ }
-
-/* 5. Motion respects the user. */
-@media (prefers-reduced-motion: reduce) { .brand-card { transition: none; } }
+```bash
+node scripts/build-brand-kit.mjs --reference working/page-design/design/reference/reference.json   # from a captured reference
+node scripts/build-brand-kit.mjs --init --set colors.primary=#7C3AED --set colors.action=#7C3AED      # no reference
+node scripts/build-brand-kit.mjs --kit working/page-design/design/brand/brand-kit.json               # rebuild after editing decisions
 ```
 
-Variable names in section 2 must exist in `skills/apex-design-system/assets/universal-theme-42/tokens/` or be verified on the target instance. Report any variable you could not verify.
+Why a generator and not a template to copy:
+
+- **Vita hard-codes colours on selectors.** The hot button (`.t-Button--hot` and its simple/link/noUI variants) and the side-nav current/selected/hover rows carry literal colours in the Vita style. A `brand.css` that only overrides `--ut-palette-primary` at `:root` leaves every primary button stock blue and the selected nav row charcoal. The kit re-declares those selectors from an index of the real theme CSS (`assets/ut-css/<version>/scoped-rules.json`).
+- **Only real variables work.** The kit checks every `--ut-*`/`--a-*` it writes against the variables the APEX theme CSS for that version actually reads (`assets/ut-css/<version>/consumed-vars.txt`, built from Oracle's CDN by `scripts/refresh-ut-css-vars.mjs`). The delivery gate applies the same check to the app's `brand.css`.
+- **Contrast is computed, not hoped for.** Text-safe shades, button label colours, nav selection, and subtle status-badge tints are derived to meet WCAG 2.2 AA; `kit-report.md` lists every pair and the build fails on any miss.
+- **Typography is real.** `--a-base-font-family` (the variable APEX reads for the UI font) points at a self-hosted open-licence font from `scripts/fetch-open-font.mjs`; heading weight is applied to region titles and the page title.
+
+The generated file has six sections: `@font-face`, brand tokens (the only colour literals), the Universal Theme variable mapping, hot-button rules, side-nav rules, heading weight, and reduced motion. Copy it and its fonts into the app unchanged:
+
+```text
+working/page-design/design/brand/css/brand.css  -> app/shared-components/static-files/css/brand.css
+working/page-design/design/brand/fonts/*.woff2  -> app/shared-components/static-files/fonts/
+```
+
+Register each font in `static-files.apx` with `mimeType: font/woff2`. `brand.css` references fonts as `../fonts/<file>`, which resolves inside the application's static files.
+
+Brand component classes (`brand-pill`, `brand-kpi`, …) are optional extras for what template options cannot express. Put them in a separate, hand-reviewed section only when a page uses them; every `brand-*` class defined must be used and vice versa.
 
 ### 3.3 Applying the look to components
 
@@ -108,7 +98,7 @@ Variable names in section 2 must exist in `skills/apex-design-system/assets/univ
 
 - `style="..."`, `onclick=`, `javascript:` in `.apx`, region HTML, or Template Components. Put the rule in `brand.css` and attach a class.
 - Hex values outside the token block of `brand.css`.
-- A second CSS framework (Bootstrap, Tailwind, etc.) or remote font/CSS imports that break CSP. Web fonts go in static files.
+- A second CSS framework (Bootstrap, Tailwind, etc.) or remote font/CSS imports that break CSP. Web fonts go in static files, and only open-licence fonts: never ship a reference site's proprietary font files.
 - Whole pages built from raw HTML in a Static Content region. Rich *content* (a policy text) is fine when it uses classes, not inline styles.
 - Overriding Universal Theme internals by deep selectors (`.t-Body .t-Region > div > ...`). Override variables or attach a class.
 
@@ -124,7 +114,7 @@ Use when the brand must be a named, selectable style or be edited later in Theme
 
 Every design brief that uses this reference records:
 
-1. **Design direction trace**: one row per design bullet in the requirement (colour, badge, icon, shadow, label style, currency, tone) with the implementing file and line, or `NOT DONE: <reason>`.
+1. **Design direction trace**: one row per design bullet in the requirement (colour, badge, icon, shadow, label style, currency, tone, design reference) with the implementing file and line, or `NOT DONE: <reason>`.
 2. Freedom level (L1–L4) and why.
 3. Token table: role, value, source (user / derived / UT default), contrast result.
 4. Brand class inventory: class, purpose, where used.
@@ -133,7 +123,8 @@ Every design brief that uses this reference records:
 ## 6. Verification
 
 - `scripts/validate-apex-app.ps1` must pass (it proves the files compile, not the look).
-- `scripts/verify-delivery.ps1 -ProjectDirectory working` must pass. It enforces sections 3.3–3.4 and the trace mechanically: hex only on `--brand-*` lines, requirement colours present, brand classes defined and used, icons real, styling columns consumed.
+- `scripts/verify-delivery.ps1 -ProjectDirectory working` must pass. It enforces sections 3.2–3.4 and the trace mechanically: hex only on `--brand-*` lines, requirement colours present, brand classes defined and used, icons real, styling columns consumed, only variables the theme CSS reads, hot buttons re-declared, fonts shipped and registered, and (with a design reference) the app `brand.css` identical to the generated kit plus a passing design score.
+- `node scripts/score-design.mjs --preview <prototype> --kit <brand-kit.json>` must print `DESIGN SCORE PASS` (85+ and no blocker). Run it again on the deployed page with `--url`.
 - Run the design scorecard and `scripts/verify-design-preview.mjs` on a prototype that loads the same `brand.css`, or on the deployed page.
 - Check that no requirement design bullet is missing from the trace, every `brand-*` class in `brand.css` is used, and every class used in `.apx` exists in `brand.css`.
 - If a browser is not available, mark the visual result `NOT VERIFIED`; never claim the look from code alone.

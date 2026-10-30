@@ -20,7 +20,9 @@ Confirm, or state the assumption:
 - Read `skills/apex-domains/references/universal-theme.md` for the design contract.
 - For a redesign or measurable design review, read `skills/apex-ui-redesign/references/design-scorecard.md`.
 - For visual prototypes, read `skills/apex-design-system/assets/universal-theme-42/upstream-skill.md`, `components-reference.md`, and the matching file under `tokens/`.
-- If the requirement or request contains any design direction (colours, mood, badges, shadows, typography, "playful", "premium", a brand or screenshot), read `references/brand-layer.md`. It applies to new apps, not only redesigns.
+- Always read `references/craft.md` before a visual decision: it defines what good looks like and the levers that stop an APEX app looking default.
+- If the requirement or request names a **design reference** website, read `references/design-reference.md` and capture it with `node scripts/capture-design-reference.mjs --url <url>` before choosing a style. Look at the screenshots; do not design from the numbers alone.
+- If the requirement or request contains any design direction (colours, mood, badges, shadows, typography, "playful", "premium", a brand, reference site, or screenshot), read `references/brand-layer.md`. It applies to new apps, not only redesigns.
 - If using an external direction bank, read `references/ui-ux-pro-max.md` and `references/palette-bank.md`.
 - For screenshots, read `skills/apex/apexlang/26.1/apexlang-generation/references/domains/page-components/screenshot-to-layout/component-mapping.md` (26.1) and translate the rules to the target version's inventory.
 - For runtime layout defects, read `skills/apex/apexlang/26.1/apexlang-generation/references/domains/debugging/runtime-ui-verification.md`.
@@ -29,7 +31,7 @@ Confirm, or state the assumption:
 
 1. **Version lock.** Never mix 26.1 and 26.2 components, templates, or properties.
 2. **Inventory truth.** Every component, template, template option, and property you name must exist in the target version's `apexlang-inventory` or a working example. If you cannot find it, say so and stop; do not invent a name or value.
-3. **Requirement authority.** Follow the user's page numbers, page purposes, region order, **and design direction**. Do not renumber or merge pages for convenience. User-specified colours, badge styles, icons, shadows, label styles, and tone are requirements; every one must appear in the design direction trace (`references/brand-layer.md` §5) as implemented or `NOT DONE: <reason>`.
+3. **Requirement authority.** Follow the user's page numbers, page purposes, region order, **and design direction**. Do not renumber or merge pages for convenience. User-specified colours, badge styles, icons, shadows, label styles, tone, and a design reference website are requirements; every one must appear in the design direction trace (`references/brand-layer.md` §5) as implemented or `NOT DONE: <reason>`.
 4. **Native structure, custom look.** Build structure from native regions, items, buttons, reports, and template options. The *look* is free: stock Universal Theme is the floor, not the ceiling. Deliver custom branding through the brand layer (`references/brand-layer.md`). Do not import Bootstrap, Tailwind, or another CSS framework. Do not build a page whose layout is raw HTML in a Static Content region.
 5. **No hand-written theme markup in pages.** Use templates and template options. Universal Theme template markup belongs in the theme/template layer, not in page regions.
 6. **No inline styles or event handlers in generated page markup.** Do not emit `style="..."`, `onclick="..."`, `onchange="..."`, or `javascript:` URLs in `.apx`, regions, or Template Components. Styling goes in `brand.css` and is attached with `cssClasses`; behaviour goes in buttons, Dynamic Actions, or declarative actions. Theme placeholders such as `#JAVASCRIPT#` are substituted by APEX and are not hand-written page code. The one exception is a throwaway prototype under `working/design-preview/`, which may use inline CSS variables; it must never be pasted into a page.
@@ -42,24 +44,22 @@ Confirm, or state the assumption:
 - Use Universal Theme. Read `theme.md` and `style.md` in the target inventory before naming a base theme or style.
 - In 26.1 and 26.2 the inventory enumerates the supported styles: `Vita`, `iris`, `redwood-light`, `vita-dark`, `vita-red`, and `vita-slate`. Treat that list as the closed set of *stock* styles to subscribe to; do not add a style name from a blog post or prototype. A custom style you define yourself (brand layer L3) subscribes to one of these.
 - Bind the theme with the version's contract: `baseTheme` (for example `ut-26.1` or `ut-26.2`) and `currentThemeStyle`. Do not use a stale theme `version` field as a substitute.
-- Select one base style for the application, the closest stock match to the requested look. Do not copy hex values from external research or from screenshots/prototypes the user did not ask you to match.
+- Select one base style for the application, the closest stock match to the requested look. The stock style is the floor the brand layer builds on, not the design. Do not copy hex values from external research or from screenshots/prototypes the user did not ask you to match.
+- **A design reference sets the look.** When the user names a reference website, its captured colours, type character, shape, depth, and density are the target (`references/design-reference.md`). Borrow the look, never its logos, images, copy, font files, or markup.
 - **User-supplied brand values win.** When the requirement gives colours, radius, shadows, or fonts, implement them through the brand layer (`references/brand-layer.md`): brand tokens live once in `app/shared-components/static-files/css/brand.css`, mapped onto `--ut-*` / `--a-*` variables, and loaded app-wide with the app-level `css.fileUrls`. Choosing a stock style instead of the requested palette is a requirement miss.
 - Outside the brand token block, use `var(--ut-*)`, `var(--a-*)`, `var(--brand-*)`, or `color-mix(...)`; never hardcoded hex.
 - Pick a freedom level (L1 tokens, L2 brand components, L3 custom theme style, L4 custom templates). Default to **L2** whenever the requirement contains any design direction.
+- **Generate `brand.css`; never hand-write it.** Use `scripts/build-brand-kit.mjs` (`--reference`, `--init`, or `--kit`). Vita hard-codes the hot-button and side-nav colours on selectors, so a hand-written `:root` override leaves primary buttons stock blue; the kit re-declares them and uses only variables the real theme CSS reads (`references/brand-layer.md` §3.2).
 - Verify any CSS variable or token against the target instance or the version's documented output before shipping. If the target instance is unavailable, label the choice as an assumption.
 
 ### 3.1 Visual prototype mode
 
 Use this mode when the user asks for a mockup, a screenshot recreation, a "make it look like" exploration, or a style comparison. The prototype communicates the look; it is not the application.
 
-- Write the prototype to `working/design-preview/<name>/` as standalone HTML/CSS. Never write it into `.apx`, a Static Content region, or a Template Component.
-- Start from the vendored Universal Theme 42 assets:
-  - `assets/universal-theme-42/tokens/` — baseline and style deltas.
-  - `assets/universal-theme-42/components-reference.md` — authentic class and markup patterns.
-  - `assets/universal-theme-42/upstream-skill.md` — token layers and Theme Roller derivation.
-- Load exactly one baseline plus at most one delta, or one standalone style file. Never combine deltas. Map upstream file names to inventory style names: `vita-light` → `Vita`, `vita-dark` → `Vita - Dark`, `vita-red` → `Vita - Red`, `vita-slate` → `Vita - Slate`, `iris` → `iris`, `redwood` → `redwood-light`. Confirm the active style in the target app.
-- Use `var(--ut-*)`, `var(--a-*)`, and `var(--brand-*)` for color, spacing, and surfaces. Do not hand-pick hex values beyond the user's brand tokens. For a custom brand style, produce the `@g_*` `.less` file and a reviewed CSS preview, then verify it in Theme Roller.
-- Token values in the vendored assets are an independent, hand-derived reference, not Oracle's compiled output. Verify contrast and computed values in a browser or the target instance.
+- Render the prototype with `scripts/render-design-prototype.mjs` from a content spec; do not hand-write prototype HTML. It uses real Universal Theme markup, Oracle's real theme CSS for the version, and the kit's `brand.css`, so it shows what the app will look like. Never copy it into `.apx`, a Static Content region, or a Template Component.
+- The renderer loads Oracle's real Universal Theme CSS for the target version (from Oracle's CDN) plus the kit's `brand.css`, so the prototype shows the Vita style as APEX ships it. The vendored assets under `assets/universal-theme-42/` are a hand-derived reference for markup patterns and Theme Roller derivation only; the authoritative variable list is `assets/ut-css/<version>/`.
+- Do not hand-pick hex values beyond the brand kit's tokens. For a named custom theme style (brand layer L3), produce the `@g_*` `.less` file and verify it in Theme Roller.
+- Score it with `node scripts/score-design.mjs --preview <dir> --kit <brand-kit.json>` and open `score/compare-desktop.png` and `score/design-mobile.png`. Iterate by changing `brand-kit.json` or the spec until `DESIGN SCORE PASS` (`references/design-reference.md` §2). Never describe a look you have not seen.
 - After the user approves the prototype, translate it: choose the native region type, items, buttons, and template options from the target inventory; apply the `staticId` plan; discard the prototype HTML.
 - State in the handoff whether the prototype was approved, rejected, or not reviewed.
 
@@ -67,11 +67,12 @@ Use this mode when the user asks for a mockup, a screenshot recreation, a "make 
 
 Use `skills/apex-ui-redesign/references/design-scorecard.md` before and after a visual change. The scorecard defines the 0-5 anchors, quality bars, and before/after protocol.
 
+- **Numeric gate:** `node scripts/score-design.mjs --preview <dir> --kit <brand-kit.json>` must print `DESIGN SCORE PASS` (85+/100, no failed blocker). It measures fidelity to the kit/reference, craft rules, stock-APEX tells, and axe, and lists a fix for every failed check.
 - Required dimensions: hierarchy, spacing, typography, colour and contrast, density and responsive fit, states, and accessibility.
 - Minimum gate: accessibility at least 4/5, no dimension below 3/5, total at least 24/35, no mobile overflow.
 - Contract: normal text meets WCAG 2.2 AA 4.5:1; large text, UI boundaries, and focus indicators meet 3:1. Status is never conveyed by colour alone.
 - A numeric score is invalid without screenshots and a verifier report. If the verifier cannot run, mark the item `PARTIAL` or `NOT VERIFIED`.
-- The designer writes the prototype but does not run shell commands. Hand visual verification to the `apex-design-verifier` subagent or the user.
+- The designer may run only the design pipeline scripts (capture, brand kit, font, render, score, preview verifier), to look at the reference and its own work while iterating. The independent sign-off belongs to the `apex-design-verifier` subagent or the user.
 - Optional direction banks such as UI UX Pro Max are direction-only. Never copy their HTML/CSS/Tailwind/React output into APEX; see `references/ui-ux-pro-max.md`.
 
 ## 4. Page map
@@ -135,7 +136,7 @@ Produce a table with: component, page, `staticId`, and consumer (navigation, Jav
 Write this package to `working/page-design/application-design.md` (template: `docs/templates/application-design.template.md`, `Status: DRAFT`), in this order:
 
 1. **Design brief** — problem, actors, goals, assumptions, open questions.
-2. **Style decision** — base theme, style, and why; custom CSS only with justification.
+2. **Style decision** — design reference (URL, character, borrowed / not copied, font substitution, iteration log) or "none supplied"; base theme, style, brand layer level, token table, and the `references/craft.md` §2 lever decisions.
 3. **Visual prototype** — path under `working/design-preview/`, status (approved, rejected, not reviewed), and the style file used. Omit when no prototype was requested.
 4. **Page map** — per section 4.
 5. **Component map** — per section 5, with the native primitive for each region.
@@ -159,6 +160,9 @@ Then hand off:
 - [ ] Page numbers, purposes, and row plan match `requirement.md`.
 - [ ] One base style, bound through `baseTheme` and `currentThemeStyle`.
 - [ ] Every design bullet in `requirement.md` appears in the design direction trace as implemented (file:line) or `NOT DONE: <reason>`.
+- [ ] A design reference, when given, was captured, its screenshots were viewed, and the prototype was compared side by side with it for at least two rounds.
+- [ ] Every lever in `references/craft.md` §2 was decided explicitly; none was left at the default by accident.
+- [ ] No reference logo, image, copy, proprietary font file, or markup was copied.
 - [ ] User-supplied brand values are implemented in `brand.css` and loaded app-wide; no hex outside its token block.
 - [ ] Every `brand-*` class used in `.apx` exists in `brand.css`, and every one defined is used.
 - [ ] Every styling column a view exposes (status class, icon) is consumed by a page.
@@ -179,6 +183,14 @@ Then hand off:
 ## Reference map
 
 - `skills/apex-ui-redesign/references/design-scorecard.md` — measurable design quality gate.
+- `references/craft.md` — what good looks like; the levers that stop an APEX app looking default.
+- `references/design-reference.md` — design from a reference website: capture, read, borrow, translate, compare.
+- `scripts/capture-design-reference.mjs` — screenshots and measured style DNA of a reference website.
+- `scripts/build-brand-kit.mjs` — generates a complete, contrast-safe `brand.css` from `brand-kit.json` decisions.
+- `scripts/fetch-open-font.mjs` — self-hosted open-licence fonts (OFL/Apache only).
+- `scripts/render-design-prototype.mjs` — prototype from a content spec with real Universal Theme markup and CSS.
+- `scripts/score-design.mjs` — 0-100 design score with blockers and fixes; works on prototypes and deployed pages.
+- `assets/ut-css/<version>/` — index of the real APEX theme CSS (variables read, stock values, hard-coded rules); refresh with `scripts/refresh-ut-css-vars.mjs`.
 - `references/brand-layer.md` — custom look beyond stock Universal Theme: brand tokens, brand components, custom styles.
 - `references/ui-ux-pro-max.md` — direction-only external bank rules.
 - `references/palette-bank.md` — local palette starting points.

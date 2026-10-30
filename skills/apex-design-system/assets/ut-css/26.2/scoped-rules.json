@@ -1,0 +1,105 @@
+[
+  {
+    "family": "hot-button",
+    "selector": ".a-Button--hot,.a-CardView-button--hot,.apex-button-group input:checked+label,.t-Button--hot,.t-Form-fieldContainer--radioButtonGroup .apex-item-group--rc input:checked+label,.ui-button--hot",
+    "properties": [
+      "--a-button-background-color",
+      "--a-button-text-color",
+      "--a-button-hover-background-color",
+      "--a-button-active-background-color"
+    ],
+    "important": false
+  },
+  {
+    "family": "hot-button",
+    "selector": ".a-Button--hot.t-Button--simple,.a-CardView-button--hot.t-Button--simple,.apex-button-group input:checked+label.t-Button--simple,.t-Button--hot.t-Button--simple,.t-Form-fieldContainer--radioButtonGroup .apex-item-group--rc input:checked+label.t-Button--simple,.ui-button--hot.t-Button--simple",
+    "properties": [
+      "--a-button-border-color",
+      "--a-button-text-color",
+      "--a-button-hover-text-color"
+    ],
+    "important": false
+  },
+  {
+    "family": "hot-button",
+    "selector": ".a-Button--hot.t-Button--link,.a-CardView-button--hot.t-Button--link,.apex-button-group input:checked+label.t-Button--link,.t-Button--hot.t-Button--link,.t-Form-fieldContainer--radioButtonGroup .apex-item-group--rc input:checked+label.t-Button--link,.ui-button--hot.t-Button--link",
+    "properties": [
+      "--a-button-text-color"
+    ],
+    "important": false
+  },
+  {
+    "family": "hot-button",
+    "selector": ".a-Button--hot.a-Button--noUI,.a-Button--hot.t-Button--noUI,.a-CardView-button--hot.a-Button--noUI,.a-CardView-button--hot.t-Button--noUI,.apex-button-group input:checked+label.a-Button--noUI,.apex-button-group input:checked+label.t-Button--noUI,.t-Button--hot.a-Button--noUI,.t-Button--hot.t-Button--noUI,.t-Form-fieldContainer--radioButtonGroup .apex-item-group--rc input:checked+label.a-Button--noUI,.t-Form-fieldContainer--radioButtonGroup .apex-item-group--rc input:checked+label.t-Button--noUI,.ui-button--hot.a-Button--noUI,.ui-button--hot.t-Button--noUI",
+    "properties": [
+      "--a-button-text-color",
+      "color"
+    ],
+    "important": false
+  },
+  {
+    "family": "hot-button",
+    "selector": ".t-Button--hot .fa:after,.t-Button--simple.t-Button--hot:hover .fa:after",
+    "properties": [
+      "background-color"
+    ],
+    "important": false
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav .a-TreeView-node--topLevel .a-TreeView-row.is-current,.t-TreeNav .a-TreeView-node--topLevel .a-TreeView-row.is-current--top.is-selected,.t-TreeNav .a-TreeView-node--topLevel .a-TreeView-row.is-selected",
+    "properties": [
+      "background-color"
+    ],
+    "important": false
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav .a-TreeView-node--topLevel .a-TreeView-row.is-current--top,.t-TreeNav .a-TreeView-node--topLevel ul,.t-TreeNav .a-TreeView-node--topLevel.is-collapsible>.a-TreeView-row",
+    "properties": [
+      "background-color",
+      "color"
+    ],
+    "important": false
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav .a-TreeView-node--topLevel .a-TreeView-row.is-hover",
+    "properties": [
+      "background-color"
+    ],
+    "important": true
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-row.is-current--top,.t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-row.is-current--top.is-selected",
+    "properties": [
+      "background-color"
+    ],
+    "important": false
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-content.is-current--top,.t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-row.is-current--top+.a-TreeView-toggle,.t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-row.is-current--top.is-selected+.a-TreeView-toggle",
+    "properties": [
+      "color"
+    ],
+    "important": false
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-content.is-current--top.is-hover",
+    "properties": [
+      "color"
+    ],
+    "important": true
+  },
+  {
+    "family": "treenav",
+    "selector": ".t-TreeNav--styleB .a-TreeView-node--topLevel .a-TreeView-row.is-current--top.is-hover",
+    "properties": [
+      "background-color"
+    ],
+    "important": true
+  }
+]

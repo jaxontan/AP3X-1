@@ -11,6 +11,7 @@ working/page-design/application-design.md, and waits for your approval before bu
 - **Target Audience & Roles**: [e.g. Staff, Manager, Administrator]
 - **Core Purpose**: [What problem does this application solve?]
 - **Design & Theme Direction** (optional; you are not limited to the stock Universal Theme look):
+  - **Design reference**: [URL of a website whose look you want the app to follow, e.g. https://www.example.com — and what to take from it: colours / typography / shapes / overall feel. The agent borrows the look, never logos, images, or text.]
   - **Brand colours**: [e.g. primary `#7C3AED`, accent `#A855F7`, or "use stock theme"]
   - **Visual tone**: [e.g. modern and playful / calm enterprise / premium editorial]
   - **Shape & depth**: [e.g. 12px rounded corners, soft card shadows, pill-shaped status badges]

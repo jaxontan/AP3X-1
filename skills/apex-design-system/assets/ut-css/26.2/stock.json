@@ -1,0 +1,23 @@
+{
+  "source": {
+    "base": "https://static.oracle.com/cdn/apex/26.2.0",
+    "appUi": "https://static.oracle.com/cdn/apex/26.2.0/app_ui/css/Core.min.css",
+    "themeCore": "https://static.oracle.com/cdn/apex/26.2.0/themes/theme_42/26.2/css/Core.min.css",
+    "vita": "https://static.oracle.com/cdn/apex/26.2.0/themes/theme_42/26.2/css/Vita.min.css"
+  },
+  "stock": {
+    "--ut-palette-primary": "#056ac8",
+    "--ut-palette-primary-contrast": "#fff",
+    "--ut-header-background-color": "#056ac8",
+    "--ut-header-text-color": "#fff",
+    "--ut-body-background-color": "#fdfdfd",
+    "--ut-body-text-color": "#000",
+    "--ut-body-nav-background-color": "#2e3439",
+    "--ut-region-background-color": "#fff",
+    "--ut-component-border-radius": ".25rem",
+    "--ut-region-box-shadow": "var(--ut-shadow-sm)",
+    "--ut-header-height": "3rem",
+    "--a-base-font-family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Fira Sans\", \"Droid Sans\", \"Helvetica Neue\", sans-serif",
+    "--ut-link-text-color": "#056ac8"
+  }
+}

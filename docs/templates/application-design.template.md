@@ -49,9 +49,34 @@ Every rule in `requirement.md` section "Business Rules & Validations". Each rule
 
 ## 5. Visual design (brand layer)
 
-See `skills/apex-design-system/references/brand-layer.md`.
+See `skills/apex-design-system/references/brand-layer.md` and `skills/apex-design-system/references/craft.md`.
 
-- **Base theme / stock style**:
+### 5.1 Design reference
+
+See `skills/apex-design-system/references/design-reference.md`. Write "none supplied" if the requirement has no reference URL.
+
+- **Reference URL**:
+- **Capture**: `working/page-design/design/reference/` (date, desktop and mobile screenshots viewed: yes / no)
+- **Brand kit**: `working/page-design/design/brand/brand-kit.json` (generated `css/brand.css`; contrast: see `kit-report.md`)
+- **Design score**: `working/design-preview/<name>/score/score.md` (total /100, PASS / FAIL, rounds)
+- **Character in one sentence**:
+- **Signature element translated into APEX**:
+- **Borrowed** (colour roles, type character, shape, depth, density):
+- **Not copied** (logos, imagery, copy, font files, markup):
+- **Font substitution** (reference font → open-licence font → why):
+
+Prototype vs reference iteration log:
+
+| Round | Score | Biggest differences from the reference (from `compare-desktop.png`) | `brand-kit.json` / spec changes |
+| --- | ---: | --- | --- |
+| 1 | | | |
+| 2 | | | |
+
+Remaining differences accepted, and why:
+
+### 5.2 Style decision
+
+- **Base theme / stock style** (the floor, not the design):
 - **Freedom level**: L1 tokens / L2 brand components / L3 custom style / L4 custom templates, and why
 - **Tone and signature element**:
 
@@ -63,7 +88,9 @@ Signature elements: one row for every visual or interactive element the requirem
 
 Token table (name tokens by role, e.g. `--brand-primary`, not by colour, e.g. `--brand-teal`):
 
-| Token | Value | Source (user / derived / UT default) | Contrast check |
+Lever decisions (`craft.md` §2): header, ground and surfaces, typography, primary action, region chrome, navigation, reports, status, empty states, home page. One line each: what changes, or why it stays default.
+
+| Token | Value | Source (user / reference / derived / UT default) | Contrast check |
 | --- | --- | --- | --- |
 | `--brand-primary` | | | |
 

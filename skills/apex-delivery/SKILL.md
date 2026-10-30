@@ -174,6 +174,14 @@ node scripts/verify-apex-runtime.mjs --url https://localhost:8443/ords/r/<worksp
 
 It must print `RUNTIME GATE PASS`. It writes screenshots per user, page and viewport plus `report.md` under `working/runtime-verification/`. Use `--brand` whenever the app has a brand layer.
 
+When the app has a brand kit (`working/page-design/design/brand/brand-kit.json`), score the deployed home page against it as well; the prototype score does not prove the deployed look:
+
+```powershell
+node scripts/score-design.mjs --url https://localhost:8443/ords/r/<workspace>/<alias>/home --kit working/page-design/design/brand/brand-kit.json --user EMP1 --insecure --out working/design-preview/deployed/score
+```
+
+It must print `DESIGN SCORE PASS`. Implement the look exactly as the design handoff says: copy the kit's `css/brand.css` and `fonts/*.woff2` into `app/shared-components/static-files/` unchanged, register them in `static-files.apx` (`text/css`, `font/woff2`), and load `brand.css` app-wide. The delivery gate rejects a hand-edited `brand.css`.
+
 Report `PASS`, `PARTIAL`, or `FAIL` with evidence. Do not claim a UI check that was not performed. Prototype rendering does not prove the deployed APEX page renders the same way.
 
 ## Failure playbook

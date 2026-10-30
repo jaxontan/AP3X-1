@@ -2,7 +2,7 @@
 
 Optional external design bank: [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT License.
 
-Use it to widen the **design direction** search, not to generate APEX markup. It is not part of the harness runtime and is not required for validation.
+Use it to widen the **design direction** search, not to generate APEX markup. When the user supplied a design reference website, that reference outranks this bank (`design-reference.md`); use the bank only to fill gaps the reference does not show. It is not part of the harness runtime and is not required for validation.
 
 ## Use for
 

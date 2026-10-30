@@ -15,6 +15,7 @@ Collect, or state the assumption:
 
 - Target application directory and the page or pages to redesign.
 - The user's edit request: screenshots, brand references, words, competitor examples, or "make it premium".
+- A **design reference** website, when given. Capture it with `node scripts/capture-design-reference.mjs --url <url>` and follow `skills/apex-design-system/references/design-reference.md`; it sets the target look for section 4.
 - `working/page-design/requirement.md`, when it exists. It wins over aesthetic preferences for page purpose, page numbers, and required content.
 - Target APEX version (`26.1` or `26.2`).
 - Whether the app may keep Universal Theme or must use a custom theme. Do not assume "custom" means "no APEX templates"; confirm the level in section 3.
@@ -61,9 +62,10 @@ Rules:
 
 ## 4. Define the visual direction
 
-Write a short direction before any code:
+Write a short direction before any code. Read `skills/apex-design-system/references/craft.md` first. With a design reference, the direction comes from the captured style DNA and screenshots, not from invention.
 
 - Subject, audience, and the page's primary job.
+- Design reference: the character sentence, signature element, and font substitution, or "none supplied".
 - One visual idea that belongs to this subject, not a generic dashboard.
 - Palette: 4-6 named hex values with roles (ground, ink, accent, surface, border, status).
 - Type: one or two families, the scale, weights, and line length.
@@ -109,7 +111,8 @@ Produce a change map, not just a picture:
 
 - Re-run the design checklist from `skills/apex-design-system/SKILL.md`.
 - Re-score the after state with `references/design-scorecard.md` using the same content and viewports as the baseline.
-- Hand the prototype to the `apex-design-verifier` subagent. The designer agent has no shell access; it must not claim a visual result it did not observe.
+- While iterating, the designer renders its own prototype with `scripts/verify-design-preview.mjs`, opens the screenshots, and compares them with the reference screenshots (`design-reference.md` §6). It must not claim a visual result it did not observe.
+- For sign-off, hand the prototype to the independent `apex-design-verifier` subagent.
 - The verifier runs the Playwright + axe gate at desktop 1440x900 and mobile 390x844:
   - `node scripts/verify-design-preview.mjs --preview working/design-preview/<name>`
   - Add `--strict` for a release candidate.

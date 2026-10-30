@@ -5,6 +5,9 @@
 # Dependencies
 node_modules/
 working/design-preview/**/verification/
+# Third-party reference screenshots and measurements: local evidence, not ours to commit.
+working/page-design/design/reference/
+working/design-preview/**/score/
 working/runtime-verification/
 
 # Secrets
