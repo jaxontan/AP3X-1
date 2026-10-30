@@ -2,18 +2,25 @@
 
 A developer harness for building, validating, and deploying Oracle APEX applications with AI coding agents. Works seamlessly across **OpenCode**, **Antigravity**, **Claude Code**, **Codex**, and **DSH** without requiring paid API keys.
 
+**Setup in four steps:**
+
+1. [Install dependencies](#-step-1-install-dependencies) — one command installs the free toolchain.
+2. [Install Docker and the local APEX sandbox](#-step-2-install-docker-and-the-local-apex-sandbox) — a disposable database with APEX 26.2 to build against.
+3. [Understand the pipeline](#-step-3-the-pipeline-idea--apex-app) — how an idea becomes a validated APEX app.
+4. [Use it](#-step-4-how-to-use-it) — start your agent, build, deploy, and start new projects.
+
 ---
 
-## ⚡ Quick Start (non-technical)
+## 📦 Step 1: Install Dependencies
 
 You do **not** need to install Java, SQLcl, Node.js, or Python one by one. The bootstrap installs the free prerequisites, verifies them, and prints a clear result. It never asks for an API key.
 
-### 1. Get the folder
+### 1.1 Get the folder
 Download the repository as a ZIP and unzip it, or clone it with Git if you already have Git. Then open a terminal **in the repository root** (the folder that contains `README.md` and `bootstrap.cmd`).
 
 > **Windows tip:** some bundled APEX example files have long paths. Keep the folder near the drive root (for example `C:\dev\AP3X-1`), or run `git config --global core.longpaths true` before cloning, to avoid `Filename too long` errors.
 
-### 2. Run the one-command setup
+### 1.2 Run the one-command setup
 
 **Windows** — double-click `bootstrap.cmd`, or run it from PowerShell:
 ```powershell
@@ -25,38 +32,9 @@ Download the repository as a ZIP and unzip it, or clone it with Git if you alrea
 bash scripts/bootstrap.sh
 ```
 
-The script asks for confirmation before installing anything. Add `--yes` (`-Yes` on Windows) to skip prompts. Add `--with-docker` (`-WithDocker` on Windows) only if you want the optional local Oracle Database sandbox. On macOS/Linux the script may ask for your password because system packages and Homebrew require it.
+The script asks for confirmation before installing anything. Add `--yes` (`-Yes` on Windows) to skip prompts. Add `--with-docker` (`-WithDocker` on Windows) to also install Docker for Step 2. On macOS/Linux the script may ask for your password because system packages and Homebrew require it.
 
-It installs only free developer tools: Git, Node.js LTS, Python 3, uv, JDK 21, SQLcl, and PowerShell 7 (macOS/Linux). Docker is optional. It does not install an AI agent; use the one you already have (see step 3). When it finishes successfully it prints `Harness is ready.` Full details and troubleshooting: [`docs/getting-started.md`](docs/getting-started.md).
-
-### 3. Launch Your AI Assistant
-Start your preferred agent:
-```powershell
-# OpenCode:
-opencode
-
-# Or Antigravity CLI:
-agy
-
-# Or Claude Code:
-claude
-```
-*(Or open this repository directly in the Antigravity IDE, VS Code, or Codex).*
-
-### 4. Build & Validate
-Use the built-in commands and skills inside your agent chat:
-
-| Step | OpenCode Command | Claude Code / Codex / Antigravity / DSH Skill | Description |
-| :--- | :--- | :--- | :--- |
-| **1. Requirement** | `working/page-design/requirement.md` | `working/page-design/requirement.md` | You write: pages, rules, and the look you want |
-| **1b. Application Design** | `/apex.design` | `/apex-design` | Agent writes `application-design.md`; you approve before any code |
-| **2. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
-| **3. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
-| **4. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
-| **5. Delivery gate** | `scripts/verify-delivery.ps1 -ProjectDirectory working` | same | Blocks delivery if anything in your requirement or design was dropped |
-| **6. Runtime gate** | `node scripts/verify-apex-runtime.mjs ...` | same | After import: logs in as each role and checks the live app (errors, icons, mobile, accessibility, access control) |
-
-*(Note: Validation runs automatically whenever APEXLang code is generated or modified).*
+It installs only free developer tools: Git, Node.js LTS, Python 3, uv, JDK 21, SQLcl, and PowerShell 7 (macOS/Linux). Docker is optional. It does not install an AI agent; use the one you already have (see [Step 4](#-step-4-how-to-use-it)). When it finishes successfully it prints `Harness is ready.` Full details and troubleshooting: [`docs/getting-started.md`](docs/getting-started.md).
 
 <details>
 <summary><strong>Manual setup (advanced users)</strong></summary>
@@ -83,16 +61,66 @@ Always run commands from the repository root. The doctor ends with `Harness is r
 
 ---
 
-## ✅ What the Harness Guarantees
+## 🐳 Step 2: Install Docker and the Local APEX Sandbox
 
-Every rule that matters is enforced by a script, and every script has self-tests proving it catches the defect. The full list of guarantees, the gate behind each one, and the known limits are in [`docs/harness-standard.md`](docs/harness-standard.md).
+To develop and test locally without touching production or shared databases, spin up Oracle AI Database 26ai Free, ORDS 26.3, and **APEX 26.2** in Docker. Everything binds to `127.0.0.1`; it is a laptop sandbox, not a server.
 
-- **Your requirement wins.** You write `working/page-design/requirement.md`; the agent writes `application-design.md` and waits for your approval before building.
-- **Your look, not a stock theme.** Brand colours, badges, shadows and tone are implemented through the brand layer and checked mechanically.
-- **Nothing silently dropped.** Every requirement line is traced to `file:line` or marked `NOT DONE` with a reason.
-- **Checked live.** After import, the runtime gate logs in as each role and verifies the running app.
+### 2.1 Install Docker
 
-## 🔄 End-to-End Pipeline Walkthrough: Idea ➔ APEX App
+- **Windows / macOS:** install and start Docker Desktop, or re-run the bootstrap with `-WithDocker` (`--with-docker` on macOS/Linux).
+- **Linux:** install Docker Engine with the Compose plugin.
+- **Requirements:** about 20 GB free disk, 8 GB RAM recommended (4 GB minimum), and **ports 1521 and 8181 free**.
+
+Check that it works:
+```powershell
+docker version
+docker compose version
+```
+
+### 2.2 Start the sandbox
+
+From the repository root:
+
+```powershell
+# 1. Start the database and ORDS containers (downloads APEX 26.2 on first run)
+cd local-dev
+docker compose up -d
+
+# 2. Watch the one-time APEX install (10-20 minutes on first run)
+docker compose logs -f ords
+```
+
+Wait for `The Oracle APEX has been installed` in the log, then press `Ctrl+C` (the containers keep running). Nothing else to download or configure: the first start downloads APEX, installs ORDS and APEX, creates the APEX `ADMIN` user, and prepares the database user that the deploy script uses. Later starts take under a minute.
+
+### 2.3 Sign in
+
+One local password for everything: **`Oracle123!`**
+
+| What | Where | Login |
+| :--- | :--- | :--- |
+| APEX instance administration | [http://localhost:8181/ords/apex_admin](http://localhost:8181/ords/apex_admin) | `ADMIN` / `Oracle123!` |
+| APEX workspace login | [http://localhost:8181/ords/apex](http://localhost:8181/ords/apex) | workspace `INTERNAL`, `ADMIN` / `Oracle123!` |
+| Database | `localhost:1521`, service `FREEPDB1` | `ADMIN`, `SYSTEM`, `SYS` / `Oracle123!` |
+
+All logins: [`access.md`](access.md). To use a different password, set `ORACLE_PASSWORD` in `local-dev/.env` before the first start (see `local-dev/.env.example`).
+
+### 2.4 Stop or reset
+
+```powershell
+cd local-dev
+docker compose down       # stop, keep the database and the APEX install
+docker compose down -v    # stop and delete everything; the next start reinstalls
+```
+
+Full beginner walkthrough, ports, reset steps, and troubleshooting: [`local-dev/README.md`](local-dev/README.md).
+
+> The old all-in-one `adb-free:latest` compose file is gone: that tag is the **19c** image, and the 26ai `adb-free` image ships APEX 26.1.5, so neither can give you 26.2.
+
+*(Alternatively, run `powershell -File scripts/install-local-apex.ps1 -Execute` if you prefer the dedicated APEX 26.2 multi-container sandbox powered by `uc-local-apex-dev`. Set `LOCAL_SERVICE=myatp` for the deploy scripts when you use it.)*
+
+---
+
+## 🔄 Step 3: The Pipeline: Idea ➔ APEX App
 
 This harness uses a **streamlined vibe coding workflow** that transforms natural language business requirements directly into validated, production-grade Oracle APEX applications without unnecessary ceremony:
 
@@ -103,11 +131,20 @@ flowchart LR
     C --> D["4. Deploy Preview<br/>/apex-deploy"]
 ```
 
-### 📋 How It Works
+### ✅ What the harness guarantees
+
+Every rule that matters is enforced by a script, and every script has self-tests proving it catches the defect. The full list of guarantees, the gate behind each one, and the known limits are in [`docs/harness-standard.md`](docs/harness-standard.md).
+
+- **Your requirement wins.** You write `working/page-design/requirement.md`; the agent writes `application-design.md` and waits for your approval before building.
+- **Your look, not a stock theme.** Brand colours, badges, shadows and tone are implemented through the brand layer and checked mechanically.
+- **Nothing silently dropped.** Every requirement line is traced to `file:line` or marked `NOT DONE` with a reason.
+- **Checked live.** After import, the runtime gate logs in as each role and verifies the running app.
+
+### 📋 How it works
 
 Here is how a feature travels through the harness:
 
-#### Step 1: User Defines Page Design & Rules (`working/page-design/requirement.md`)
+#### Pipeline step 1: You define page design & rules (`working/page-design/requirement.md`)
 You define your desired page layout, regions, items, and rules in `working/page-design/requirement.md`:
 - **Pages & Components:** Page numbers, titles, reports, forms, and modal dialogs.
 - **Business Rules:** Input validation, state transitions, and authorization rules.
@@ -117,18 +154,14 @@ The agent then writes `working/page-design/application-design.md`: the data mode
 
 The assistant strictly follows your architecture rather than inventing an arbitrary design.
 
----
-
-#### Step 2: PL/SQL Implementation (`/apex-plsql` or `/apex.plsql`)
+#### Pipeline step 2: PL/SQL implementation (`/apex-plsql` or `/apex.plsql`)
 Business logic is implemented inside database packages under `working/database/packages/` (following the SmartDB contract):
 - Encapsulates multi-table writes, row locking, and status transitions.
 - Keeps APEX page processes thin, declarative, and unit-testable via utPLSQL.
 - Prevents raw SQL queries and complex business rules from scattering across pages.
 
----
-
-#### Step 3: Generate Declarative APEXLang (Autonomous Auto-Validation)
-The assistant creates declarative `.apx` files under `working/app/`. 
+#### Pipeline step 3: Declarative APEXLang (automatic validation)
+The assistant creates declarative `.apx` files under `working/app/`.
 
 Every time an `.apx` file is generated or modified, the harness **automatically normalizes line endings and runs SQLcl `apex validate`** in the background—guaranteeing clean syntax without any manual validation commands:
 ```text
@@ -140,27 +173,96 @@ APEX validation PASSED.
 > [!IMPORTANT]
 > The validation gate fails if there are compile diagnostics, UTF-8 BOM characters, CRLF line endings, or `ORA-` errors.
 
----
-
-#### Step 4: Safe Deployment Preview & Import (`/apex-deploy` or `/apex.deploy`)
-Deployments are strictly gated and previewed first using `-WhatIf`:
+#### Pipeline step 4: Deployment preview & import (`/apex-deploy` or `/apex.deploy`)
+Deployments are strictly gated and previewed first using `-WhatIf`. Against the local sandbox from Step 2, no connection setup is needed:
 ```powershell
 # 1. Preview the import plan safely
-powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app -WhatIf
+powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app -Local -WhatIf
 
-# 2. Deploy to target APEX instance once approved
-powershell -ExecutionPolicy Bypass -File scripts/deploy-apex-app.ps1 -AppDirectory working/app
+# 2. Deploy schema, packages, tests, workspace, users, and the app in one go
+powershell -ExecutionPolicy Bypass -File scripts/deploy-project.ps1 -Workspace MYAPP -TestUsers EMP1
 ```
+
+`deploy-project.ps1` creates the workspace, its schema, and the workspace users (all with the sandbox password), deploys `working/database`, runs the tests, validates `working/app`, and imports it. Then sign in at [http://localhost:8181/ords/apex](http://localhost:8181/ords/apex) with workspace `MYAPP`. For any other database, set `SQLCL_CONNECTION_STRING` (or pass `-ConnectionString`) and use `deploy-apex-app.ps1` without `-Local`.
 
 ---
 
-## 🆕 Starting a New Project (Keep vs. Reset)
+## 🚀 Step 4: How to Use It
+
+### 4.1 Start your AI assistant
+From the repository root, start your preferred agent:
+```powershell
+# Claude Code:
+claude
+
+# Or Antigravity CLI:
+agy
+
+# Or OpenCode (install it yourself; the bootstrap does not):
+opencode
+```
+*(Or open this repository directly in the Antigravity IDE, VS Code, or Codex).*
+
+### 4.2 Build & validate
+Use the built-in commands and skills inside your agent chat:
+
+| Step | OpenCode Command | Claude Code / Codex / Antigravity / DSH Skill | Description |
+| :--- | :--- | :--- | :--- |
+| **1. Requirement** | `working/page-design/requirement.md` | `working/page-design/requirement.md` | You write: pages, rules, and the look you want |
+| **1b. Application Design** | `/apex.design` | `/apex-design` | Agent writes `application-design.md`; you approve before any code |
+| **2. PL/SQL** | `/apex.plsql <package>` | `/apex-plsql <package>` | Package APIs & transaction boundaries |
+| **3. APEXLang** | `/apex.apexlang working/app` | `/apex-apexlang working/app` | Generate clean `.apx` APEXLang declarative code |
+| **4. Validate** | *(Automatic on edit)* | *(Automatic on edit)* | Deterministic SQLcl compiler validation gate |
+| **5. Delivery gate** | `scripts/verify-delivery.ps1 -ProjectDirectory working` | same | Blocks delivery if anything in your requirement or design was dropped |
+| **6. Deploy** | `/apex.deploy working/app` | `/apex-deploy working/app` | Import into the sandbox from Step 2 (`-WhatIf` preview first) |
+| **7. Runtime gate** | `node scripts/verify-apex-runtime.mjs ...` | same | After import: logs in as each role and checks the live app (errors, icons, mobile, accessibility, access control) |
+
+*(Note: Validation runs automatically whenever APEXLang code is generated or modified).*
+
+### 4.3 Commands reference
+
+#### 🎯 APEX & PL/SQL domain commands
+OpenCode uses `/apex.<name>`; Claude Code, Codex, Antigravity, and DSH use the same workflow as `/apex-<name>` (for example `/apex.plsql` = `/apex-plsql`). The skill copies are generated from `.opencode/commands/` by `node scripts/sync-agent-commands.mjs`.
+
+| Command | Purpose |
+| :--- | :--- |
+| `/apex.design <scope>` | Design page map, layout, theme, templates, and staticIds before implementation |
+| `/apex.prototype <page>` | Build a standalone Universal Theme visual prototype and translation plan |
+| `/apex.ui-redesign <page>` | Audit and redesign an existing page, including a custom non-default look |
+| `/apex.verify-design <preview-dir>` | Render a local prototype with Playwright and run axe accessibility checks |
+| `/apex.plsql <package>` | Write robust PL/SQL packages encapsulating business logic |
+| `/apex.apexlang <app-dir>` | Generate clean `.apx` APEXLang declarative definitions |
+
+#### 🔒 Quality & deployment gates
+| Command | Purpose |
+| :--- | :--- |
+| `/apex.verify <app-dir>` | Static verification of changed files against rules |
+| *(Auto-Validation)* | Automatically executes on every `.apx` save/generation |
+| `/apex.review <app-dir>` | Trigger subagent review for APEXLang, security, SQL, and accessibility |
+| `/apex.deploy <app-dir>` | Import into target DB (`-WhatIf` preview first; requires approval) |
+| `scripts/reset-project.ps1` | Clean or archive `working/` directory to start a new project |
+
+#### Visual design verification (optional)
+
+The designer agent cannot run a browser. A separate verifier renders `working/design-preview/<name>/before.html` and `after.html` at 1440x900 and 390x844, captures screenshots, checks horizontal overflow, and runs axe WCAG 2.2 AA checks.
+
+```bash
+npm install
+npx playwright install chromium
+node scripts/verify-design-preview.mjs --preview working/design-preview/<name>
+```
+
+The verifier requires Node.js 22.12 or newer. On Windows PowerShell, use `npm.cmd` and `npx.cmd` if script execution is restricted. The first browser download is about 300 MB. Reports and screenshots are written to `working/design-preview/<name>/verification/`. A baseline that fails does not fail the gate when a passing `after.html` is present; `--strict` adds moderate and minor axe findings.
+
+Design scoring remains in `skills/apex-ui-redesign/references/design-scorecard.md`. The verifier does not prove keyboard behavior, 200% zoom, states, or real APEX runtime rendering.
+
+### 4.4 Starting a new project (keep vs. reset)
 
 Each harness workspace is dedicated to **one project at a time** inside the `working/` folder. When you are ready to build a second application, **you do not need to delete the repo or re-download tools**.
 
 Choose the path that fits your workflow:
 
-### Option A: Keep Project with Git Branches (Single Repo, Multiple Apps)
+#### Option A: Keep project with Git branches (single repo, multiple apps)
 If you want to keep your completed project (e.g., Time-Off Portal) safely tracked while keeping your existing tools and environment ready:
 
 1. **Commit your current project:**
@@ -180,9 +282,7 @@ If you want to keep your completed project (e.g., Time-Off Portal) safely tracke
 > [!TIP]
 > You can switch back to your previous project anytime with `git checkout main`.
 
----
-
-### Option B: Keep Project as a Separate Folder (Side-by-Side Repos)
+#### Option B: Keep project as a separate folder (side-by-side repos)
 If you prefer having separate folders on your drive (e.g., `AP3X-Project-One` and `AP3X-Project-Two`):
 
 1. **Rename or copy your current folder:**
@@ -195,9 +295,7 @@ If you prefer having separate folders on your drive (e.g., `AP3X-Project-One` an
    ```
 3. **Skip tool downloads (Fast-track):** Copy the `tools/sqlcl` folder from your existing repo into the new clone so you don't need to re-download 100+ MB of tools.
 
----
-
-### Option C: Reset and Archive (Disposable Workspace)
+#### Option C: Reset and archive (disposable workspace)
 If you want to quickly start fresh in this folder without switching branches:
 
 Run the automated reset script:
@@ -214,86 +312,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-project.ps1 -A
 
 ---
 
-## 🐳 Disposable Local Database (DB + ORDS + APEX 26.2)
+## 📚 Reference
 
-To develop and test locally without touching production or shared databases, spin up Oracle AI Database 26ai Free, ORDS 26.3, and **APEX 26.2**. The ORDS container installs APEX 26.2 from the downloaded distribution on first start, so the APEX version is pinned by the zip, not by an image tag.
-
-> The old all-in-one `adb-free:latest` compose file is gone: that tag is the **19c** image, and the 26ai `adb-free` image ships APEX 26.1.5, so neither can give you 26.2.
-
-### 🚀 Setup & Launch
-
-From the repository root:
-
-```powershell
-# 1. Start the database and ORDS containers (downloads APEX 26.2 on first run)
-cd local-dev
-docker compose up -d
-
-# 2. Watch the one-time APEX install (10-20 minutes on first run)
-docker compose logs -f ords
-```
-
-Once started:
-- **APEX instance administration:** [http://localhost:8181/ords/apex_admin](http://localhost:8181/ords/apex_admin)
-- **APEX workspace login:** [http://localhost:8181/ords/apex](http://localhost:8181/ords/apex)
-- **Database Port:** `1521` (Service name: `FREEPDB1`)
-- **Admin User:** `ADMIN` (workspace `INTERNAL`), password `Oracle123!`
-- **Password for everything (ADMIN, SYS, SYSTEM, ORDS, APEX):** `Oracle123!` (or configure `ORACLE_PASSWORD` in `local-dev/.env`)
-- **All logins:** [`access.md`](access.md)
-
-After signing in to `apex_admin` as `ADMIN`, create a workspace for your app, then sign in at `/ords/apex`.
-
-When you are finished, dispose of the database with:
-```powershell
-docker compose down -v
-```
-
-Full beginner walkthrough, ports, reset steps, and troubleshooting: [`local-dev/README.md`](local-dev/README.md).
-
-*(Alternatively, run `powershell -File scripts/install-local-apex.ps1 -Execute` if you prefer the dedicated APEX 26.2 multi-container sandbox powered by `uc-local-apex-dev`).*
-
----
-
-## 🛠️ Core Commands Reference
-
-### 🎯 APEX & PL/SQL Domain Commands
-OpenCode uses `/apex.<name>`; Claude Code, Codex, Antigravity, and DSH use the same workflow as `/apex-<name>` (for example `/apex.plsql` = `/apex-plsql`). The skill copies are generated from `.opencode/commands/` by `node scripts/sync-agent-commands.mjs`.
-
-| Command | Purpose |
-| :--- | :--- |
-| `/apex.design <scope>` | Design page map, layout, theme, templates, and staticIds before implementation |
-| `/apex.prototype <page>` | Build a standalone Universal Theme visual prototype and translation plan |
-| `/apex.ui-redesign <page>` | Audit and redesign an existing page, including a custom non-default look |
-| `/apex.verify-design <preview-dir>` | Render a local prototype with Playwright and run axe accessibility checks |
-| `/apex.plsql <package>` | Write robust PL/SQL packages encapsulating business logic |
-| `/apex.apexlang <app-dir>` | Generate clean `.apx` APEXLang declarative definitions |
-
-### 🔒 Quality & Deployment Gates
-| Command | Purpose |
-| :--- | :--- |
-| `/apex.verify <app-dir>` | Static verification of changed files against rules |
-| *(Auto-Validation)* | Automatically executes on every `.apx` save/generation |
-| `/apex.review <app-dir>` | Trigger subagent review for APEXLang, security, SQL, and accessibility |
-| `/apex.deploy <app-dir>` | Import into target DB (`-WhatIf` preview first; requires approval) |
-| `scripts/reset-project.ps1` | Clean or archive `working/` directory to start a new project |
-
-### Visual Design Verification (optional)
-
-The designer agent cannot run a browser. A separate verifier renders `working/design-preview/<name>/before.html` and `after.html` at 1440x900 and 390x844, captures screenshots, checks horizontal overflow, and runs axe WCAG 2.2 AA checks.
-
-```bash
-npm install
-npx playwright install chromium
-node scripts/verify-design-preview.mjs --preview working/design-preview/<name>
-```
-
-The verifier requires Node.js 22.12 or newer. On Windows PowerShell, use `npm.cmd` and `npx.cmd` if script execution is restricted. The first browser download is about 300 MB. Reports and screenshots are written to `working/design-preview/<name>/verification/`. A baseline that fails does not fail the gate when a passing `after.html` is present; `--strict` adds moderate and minor axe findings.
-
-Design scoring remains in `skills/apex-ui-redesign/references/design-scorecard.md`. The verifier does not prove keyboard behavior, 200% zoom, states, or real APEX runtime rendering.
-
----
-
-## 🤖 Supported Coding Assistants (No-API-Key Paths)
+### 🤖 Supported coding assistants (no-API-key paths)
 
 This repository works with multiple host assistants without paid API keys:
 
@@ -305,9 +326,7 @@ This repository works with multiple host assistants without paid API keys:
 | **Codex CLI** | `AGENTS.md` | Local Ollama models (`--oss --local-provider ollama`) |
 | **DSH** | `AGENTS.md` + `.agents/skills` | Local Ollama models |
 
----
-
-## 🛡️ Safety & Engineering Rules
+### 🛡️ Safety & engineering rules
 
 1. **Evidence over claims:** Never assume an APEX build passed; verify the output of `validate-apex-app.ps1`.
 2. **Deterministic file format:** `.apx` files must use **UTF-8 (no BOM)** and **LF line endings** (CRLF causes SQLcl parser errors). Run `scripts/normalize-apx-tree.ps1` to auto-fix.
@@ -315,9 +334,7 @@ This repository works with multiple host assistants without paid API keys:
 4. **No secrets in files:** Never commit `.env`, passwords, or wallet credentials. Saved SQLcl connections (`conn -save <name> -savepwd`) are used for deployment.
 5. **Separation of concerns:** Business logic belongs in PL/SQL packages; APEX page processes should only orchestrate package calls.
 
----
-
-## 📂 Repository Layout
+### 📂 Repository layout
 
 ```text
 AP3X-1/
@@ -325,21 +342,20 @@ AP3X-1/
 │   ├── page-design/          # requirement.md (you), application-design.md (agent), credentials.md
 │   ├── database/             # Schemas, PL/SQL packages, and utPLSQL tests
 │   └── app/                  # Declarative APEXLang application tree (.apx)
-├── local-dev/                # Disposable database (docker-compose.yml & audit scripts)
+├── local-dev/                # Disposable APEX sandbox (docker-compose.yml & audit scripts)
 ├── scripts/                  # Bootstrap, doctor, validate, deploy, normalize, reset, watch
 ├── skills/                   # Vendored Oracle APEX, APEXLang, DB, & ECC meta-skills
-├── tools/                    # Local toolchain (SQLcl 26.3, OpenCode v2)
+├── tools/                    # Local toolchain (SQLcl 26.3; optional OpenCode v2)
 ├── docs/                     # Getting started, harness matrix, provenance, ADRs
 ├── AGENTS.md                 # Master agent operating rules and skill routing
 ├── CLAUDE.md                 # Claude Code adapter
+├── access.md                 # Local sandbox URLs and logins
 ├── bootstrap.cmd             # One-command Windows setup
 ├── opencode.jsonc            # OpenCode agent & permission configuration
 └── README.md                 # This guide
 ```
 
----
-
-## 🧪 Self-Tests & Doctor
+### 🧪 Self-tests & doctor
 
 Run harness diagnostics anytime.
 
