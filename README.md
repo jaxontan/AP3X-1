@@ -225,14 +225,11 @@ To develop and test locally without touching production or shared databases, spi
 From the repository root:
 
 ```powershell
-# 1. Download and extract APEX 26.2 (~337 MB) into local-dev/apex
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1
-
-# 2. Start the database and ORDS containers
+# 1. Start the database and ORDS containers (downloads APEX 26.2 on first run)
 cd local-dev
 docker compose up -d
 
-# 3. Watch the one-time APEX install (10-20 minutes on first run)
+# 2. Watch the one-time APEX install (10-20 minutes on first run)
 docker compose logs -f ords
 ```
 
@@ -240,8 +237,9 @@ Once started:
 - **APEX instance administration:** [http://localhost:8181/ords/apex_admin](http://localhost:8181/ords/apex_admin)
 - **APEX workspace login:** [http://localhost:8181/ords/apex](http://localhost:8181/ords/apex)
 - **Database Port:** `1521` (Service name: `FREEPDB1`)
-- **Admin User:** `ADMIN`, created once after the install with `apxchpwd` (step 5 in the walkthrough)
-- **Database / ORDS / APEX_PUBLIC_USER Password:** `Welcome123456#` (or configure `ORACLE_PASSWORD` in `local-dev/.env`)
+- **Admin User:** `ADMIN` (workspace `INTERNAL`), password `Oracle123!`
+- **Password for everything (ADMIN, SYS, SYSTEM, ORDS, APEX):** `Oracle123!` (or configure `ORACLE_PASSWORD` in `local-dev/.env`)
+- **All logins:** [`access.md`](access.md)
 
 After signing in to `apex_admin` as `ADMIN`, create a workspace for your app, then sign in at `/ords/apex`.
 

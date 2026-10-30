@@ -64,25 +64,21 @@ Everything binds to `127.0.0.1` only. It is a laptop sandbox, not a server.
 
 **Requirements:** about 20 GB free disk (the two images are ~16 GB), 4 GB RAM minimum, 8 GB recommended, and **ports 1521 and 8181 free**.
 
-### 2. Download APEX 26.2
+### 2. APEX 26.2 download (automatic)
 
-From the repository root:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1
-```
-
-The script downloads `apex_26.2.zip` (about 337 MB), checks the download size, and extracts it to `local-dev/apex/`. That folder must contain `apexins.sql` and `images/`; the ORDS container reads it on first start. The script is safe to re-run and skips the download when the distribution is already present. Both the zip and the extracted folder are git-ignored.
+Nothing to do. On the first start the `apex-prepare` container downloads `apex_26.2.zip` (about 337 MB) and extracts it to `local-dev/apex/`, which the ORDS container reads to install APEX. If the folder already holds the distribution, the download is skipped. To download ahead of time instead (for example for an offline machine), run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1` from the repository root. Both the zip and the extracted folder are git-ignored.
 
 ### 3. Set the password (optional)
 
-The compose file has a local default password. To use your own, create `local-dev/.env`:
+The sandbox uses one local password for everything: **`Oracle123!`**. It is used for `SYS`, `SYSTEM`, `PDBADMIN`, `ORDS_PUBLIC_USER`, `APEX_PUBLIC_USER`, and the APEX instance administrator `ADMIN`. All logins are listed in [`access.md`](../access.md).
+
+To use your own password, create `local-dev/.env` before the first start:
 
 ```powershell
 Copy-Item local-dev\.env.example local-dev\.env
 ```
 
-Edit `ORACLE_PASSWORD`. It is used for `SYS`, `ORDS_PUBLIC_USER`, and `APEX_PUBLIC_USER`. It does **not** create the APEX `ADMIN` user; you create that user once after the first install (step 5). Use upper case, lower case, a digit, and a special character, or the APEX install rejects it.
+Edit `ORACLE_PASSWORD`. Use upper case, a digit, and a special character, or the APEX install rejects it. The password is applied on the first start only; to change it later, run `docker compose down -v` and start again.
 
 Never commit `local-dev/.env`.
 
@@ -101,34 +97,18 @@ docker compose logs -f ords
 
 Wait for `The Oracle APEX has been installed` in the ORDS log, followed by the ORDS startup messages. Press `Ctrl+C` to stop following the log; the containers keep running.
 
-### 5. Create the APEX administrator (one time)
+### 5. Open APEX
 
-The ORDS container installs APEX but does not create the APEX `ADMIN` user. Create it once, from `local-dev`:
-
-```powershell
-docker compose exec -it ords sql /nolog
-```
-
-At the SQLcl prompt:
-
-```text
-conn sys/<your ORACLE_PASSWORD>@//db:1521/FREEPDB1 as sysdba
-@/opt/oracle/apex/apxchpwd.sql
-exit
-```
-
-`apxchpwd.sql` asks for a username (press Enter for `ADMIN`), an email, and a password. The script lives in the APEX 26.2 distribution mounted in the ORDS container, so this works without copying files into the database container.
-
-### 6. Open APEX
+The APEX install creates the instance administrator `ADMIN` with the sandbox password, so there is no extra step.
 
 | What | Value |
 | --- | --- |
 | APEX instance administration | <http://localhost:8181/ords/apex_admin> |
 | APEX workspace login | <http://localhost:8181/ords/apex> |
 | ORDS landing page | <http://localhost:8181/ords/> |
-| Instance administrator | `ADMIN`, password set in step 5 |
+| Instance administrator | `ADMIN` / `Oracle123!` (workspace `INTERNAL`) |
 | Database | `localhost:1521`, service `FREEPDB1` |
-| Database users | `SYS` / `SYSTEM` / `PDBADMIN`, password `ORACLE_PASSWORD` |
+| Database users | `SYS` / `SYSTEM` / `PDBADMIN`, password `Oracle123!` |
 
 Sign in to `apex_admin` as `ADMIN`, then create a workspace for your app (for example `MYWORKSPACE` with a workspace administrator). After that, sign in to the workspace at `/ords/apex`. The `INTERNAL` workspace is for instance administration only; application work belongs in your own workspace.
 
@@ -160,11 +140,11 @@ The new project is named `apex-26-2` and uses its own volumes (`apex-26-2_db-dat
 | Symptom | Cause and fix |
 | --- | --- |
 | `port is already allocated` for 1521 or 8181 | Another Oracle container or a local listener is using the port. Stop it, or change the host side of the mapping in `docker-compose.yml`. |
+| `apex-prepare` exits with an error | The APEX download failed. Run `docker compose logs apex-prepare`, check the internet connection, and run `docker compose up -d` again; a partial download is retried. |
 | ORDS container keeps restarting | It exited three times and gave up. Run `docker compose logs ords`. The usual cause is too little free RAM during the APEX install, or `local-dev/apex/apexins.sql` missing. Fix the cause, then `docker compose down -v` and start again. |
-| `http://localhost:8181/ords/apex` returns 404 | APEX was not installed. Check that `local-dev/apex/apexins.sql` exists and that the ORDS log shows the APEX install. If the folder was empty on first start, stop with `down -v`, download APEX, and start again. |
-| APEX login fails | `ADMIN` is the instance administrator and only exists after step 5. Use `/ords/apex_admin` for `ADMIN`, and `/ords/apex` for a workspace user. If `ADMIN` does not exist, run `apxchpwd` again. |
+| `http://localhost:8181/ords/apex` returns 404 | APEX was not installed. Check that `local-dev/apex/apexins.sql` exists and that the ORDS log shows the APEX install. Check `docker compose logs apex-prepare` for a failed download, then `docker compose down -v` and start again. |
+| APEX login fails | Use `/ords/apex_admin` for `ADMIN`, and `/ords/apex` for a workspace user. The password is `Oracle123!`, or `ORACLE_PASSWORD` from `local-dev/.env` as it was on the first start. To reset `ADMIN`, run `docker compose exec -it ords sql sys/Oracle123!@//db:1521/FREEPDB1 as sysdba @/opt/oracle/apex/apxchpwd.sql`. |
 | `/ords/apex` says there is no workspace | Sign in to `/ords/apex_admin` as `ADMIN` and create a workspace first. |
-| `sql: command not found` in the ORDS container | Copy the distribution to the database container and use `sqlplus`: `docker cp local-dev/apex apex-26-2-db:/tmp/apex`, then `docker compose exec -it db sqlplus sys/<password>@//localhost:1521/FREEPDB1 as sysdba @/tmp/apex/apxchpwd.sql`. |
 | The `ords:26.3.0` tag cannot be pulled | Use `container-registry.oracle.com/database/ords:latest` in `docker-compose.yml`. At the time of writing it resolves to 26.3.0. |
 | `docker compose` is not a command | Docker Compose v2 ships with Docker Desktop. On Linux, install the Compose plugin; `docker-compose` (v1) is not supported by this file. |
 | Apple Silicon | Both `database/free:latest` and `database/ords:26.3.0` publish `linux/arm64` images, so Docker Desktop on Apple Silicon works. Make sure Docker Desktop itself is the Apple Silicon build. |
@@ -283,6 +263,6 @@ The harness does not ship an automatic sync or destructive merge script. The v3 
 
 ## What is not verified here
 
-Docker is not installed on this machine, so the compose stack and `scripts/get-apex-26.2.ps1` have not been executed end to end. The image tags, multi-arch manifests, ORDS environment variables, and the APEX 26.2 download URL were checked against the Oracle Container Registry API and Oracle release notes, but the first `docker compose up -d` on a machine with Docker remains the real test.
+Option 1 was run end to end on 2026-10-30 (Windows 11, Docker Desktop) from an empty `local-dev/apex/` folder: `apex-prepare` downloaded APEX 26.2, ORDS 26.3.0 and APEX 26.2.0 installed, `/ords/apex_admin` and `/ords/apex` served their sign-in pages, and every login in [`access.md`](../access.md) worked with `Oracle123!`. Only the x86-64 images were exercised; the Apple Silicon path was not tested.
 
 The SQL scripts are read-only and use Oracle dictionary views documented in `skills/db/`; run them against a disposable local database before relying on the output. SQLcl's command-line console failed to initialize under the non-interactive automation shell on this machine (`java.io.IOException: Incorrect function`), so the scripts were reviewed statically rather than executed here. The SQLcl MCP path is separate and connected successfully. The upstream `uc-local-apex-dev` project, not this harness, owns the container lifecycle for Option 3.

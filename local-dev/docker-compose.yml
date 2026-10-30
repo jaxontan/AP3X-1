@@ -8,11 +8,13 @@
 # Beginner walkthrough: local-dev/README.md
 #
 # Usage:
-#   1. powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1
-#   2. Optional: copy local-dev/.env.example to local-dev/.env and set ORACLE_PASSWORD
-#   3. docker compose up -d
-#   4. Create the APEX ADMIN user with apxchpwd (local-dev/README.md, step 5)
-#   5. Open http://localhost:8181/ords/apex_admin as ADMIN
+#   1. docker compose up -d          (first run: downloads APEX, 10-20 min install)
+#   2. Open http://localhost:8181/ords/apex_admin as ADMIN / Oracle123!
+#
+# One local password for everything (SYS, SYSTEM, PDBADMIN, ORDS_PUBLIC_USER,
+# APEX_PUBLIC_USER and the APEX ADMIN user): Oracle123!
+# Override it with ORACLE_PASSWORD in local-dev/.env before the first start.
+# All logins: access.md in the repository root.
 #
 # Why not adb-free:
 #   - container-registry.oracle.com/database/adb-free:latest is the 19c image.
@@ -25,13 +27,61 @@
 name: apex-26-2
 
 services:
+  # Downloads APEX 26.2 into ./apex when it is empty (scripts/get-apex-26.2.ps1
+  # does the same and is skipped here when already run), then wraps the APEX
+  # installer so the ORDS image creates the APEX ADMIN user with ORACLE_PASSWORD
+  # instead of its hard-coded passwords.
+  apex-prepare:
+    image: container-registry.oracle.com/database/ords:26.3.0
+    user: "0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        cd /opt/oracle/apex
+        if [ ! -f apexins.sql ]; then
+          echo "Downloading APEX 26.2 (~337 MB)..."
+          curl -fL --retry 5 --retry-delay 5 -C - -o /tmp/apex.zip             https://download.oracle.com/otn_software/apex/apex_26.2.zip
+          echo "Extracting APEX..."
+          mkdir -p /tmp/x && cd /tmp/x
+          jar xf /tmp/apex.zip
+          cp -R /tmp/x/apex/. /opt/oracle/apex/
+          rm -rf /tmp/x /tmp/apex.zip
+          cd /opt/oracle/apex
+        fi
+        if [ ! -f apxsilentins.oracle.sql ]; then
+          cp apxsilentins.sql apxsilentins.oracle.sql
+        fi
+        cat > apxsilentins.sql <<'SQL'
+        Rem Local sandbox wrapper around the APEX silent installer.
+        Rem The ORDS image calls this script with hard-coded passwords.
+        Rem This wrapper uses ORACLE_PASSWORD for ADMIN and the APEX accounts.
+        set define '^'
+        set concat on
+        set verify off
+
+        define DATTS   = '^1'
+        define FF_TBLS = '^2'
+        define TEMPTBL = '^3'
+        define IMGPR   = '^4'
+        define PREFIX  = '@'
+
+        @^PREFIX.apxsilentins.oracle.sql ^DATTS ^FF_TBLS "^TEMPTBL" ^IMGPR '__APEX_PWD__' '__APEX_PWD__' '__APEX_PWD__'
+        SQL
+        sed -i "s|__APEX_PWD__|$${APEX_PWD}|g" apxsilentins.sql
+        echo "APEX installer prepared."
+    environment:
+      APEX_PWD: ${ORACLE_PASSWORD:-Oracle123!}
+    volumes:
+      - ./apex:/opt/oracle/apex
+
   db:
     image: container-registry.oracle.com/database/free:latest
     container_name: apex-26-2-db
     hostname: apex-db
     restart: unless-stopped
     environment:
-      ORACLE_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+      ORACLE_PWD: ${ORACLE_PASSWORD:-Oracle123!}
       ORACLE_PDB: FREEPDB1
     ports:
       - "127.0.0.1:1521:1521"
@@ -51,6 +101,8 @@ services:
     container_name: apex-26-2-ords
     restart: on-failure:3
     depends_on:
+      apex-prepare:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
     environment:
@@ -58,17 +110,15 @@ services:
       DBPORT: "1521"
       DBSERVICENAME: FREEPDB1
       # SYS password used to install ORDS and APEX.
-      ORACLE_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+      ORACLE_PWD: ${ORACLE_PASSWORD:-Oracle123!}
       # ORDS_PUBLIC_USER password.
-      ORACLE_USER_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
-      # APEX_PUBLIC_USER password (not the APEX ADMIN user; create ADMIN
-      # afterwards with apxchpwd, see local-dev/README.md).
-      APEX_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+      ORACLE_USER_PWD: ${ORACLE_PASSWORD:-Oracle123!}
+      # APEX ADMIN and APEX_PUBLIC_USER password (via the apex-prepare wrapper).
+      APEX_PWD: ${ORACLE_PASSWORD:-Oracle123!}
     ports:
       - "127.0.0.1:8181:8080"
     volumes:
-      # Extracted APEX 26.2 distribution (contains apexins.sql and images/).
-      # If this folder is empty, ORDS starts but APEX is not installed.
+      # Extracted APEX 26.2 distribution, filled by apex-prepare.
       - ./apex:/opt/oracle/apex:ro
       - ords-config:/etc/ords/config
     networks:

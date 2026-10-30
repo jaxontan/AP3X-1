@@ -83,7 +83,7 @@ if ($bomFiles.Count -gt 0) {
 
 if ($Local) {
     if (-not $ConnectionString) {
-        $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
+        $localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Oracle123!' }
         $localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'myatp' }
         $ConnectionString = "ADMIN/`"$localPwd`"@localhost:1521/$localService"
     }
@@ -96,7 +96,7 @@ $workspaceClause = if ($Workspace) { "-workspace `"$Workspace`"" } else { "" }
 
 $provisionSql = ""
 if ($Workspace) {
-    $adminPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
+    $adminPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Oracle123!' }
     $provisionSql = @"
 declare
   l_ws varchar2(255) := upper('$Workspace');

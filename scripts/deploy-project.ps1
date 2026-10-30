@@ -55,7 +55,7 @@ foreach ($user in $TestUsers) {
 }
 $testUserCalls = ($TestUsers | ForEach-Object { "    create_ws_user('$_', '$($_.ToLowerInvariant())@example.com', 'USER');" }) -join "`n"
 
-$localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Welcome123456#' }
+$localPwd = if ($env:ORACLE_PASSWORD) { $env:ORACLE_PASSWORD } else { 'Oracle123!' }
 $localService = if ($env:LOCAL_SERVICE) { $env:LOCAL_SERVICE } else { 'myatp' }
 $adminConn = "ADMIN/`"$localPwd`"@localhost:1521/$localService"
 $schemaConn = "$Workspace/`"$localPwd`"@localhost:1521/$localService"
