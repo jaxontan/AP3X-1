@@ -214,28 +214,43 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-project.ps1 -A
 
 ---
 
-## 🐳 Disposable Local Database (DB + APEX + ORDS)
+## 🐳 Disposable Local Database (DB + ORDS + APEX 26.2)
 
-To develop and test locally without touching production or shared databases, spin up the pre-configured all-in-one Autonomous Database Free container (DB + APEX + ORDS preinstalled):
+To develop and test locally without touching production or shared databases, spin up Oracle AI Database 26ai Free, ORDS 26.3, and **APEX 26.2**. The ORDS container installs APEX 26.2 from the downloaded distribution on first start, so the APEX version is pinned by the zip, not by an image tag.
+
+> The old all-in-one `adb-free:latest` compose file is gone: that tag is the **19c** image, and the 26ai `adb-free` image ships APEX 26.1.5, so neither can give you 26.2.
 
 ### 🚀 Setup & Launch
 
+From the repository root:
+
 ```powershell
+# 1. Download and extract APEX 26.2 (~337 MB) into local-dev/apex
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1
+
+# 2. Start the database and ORDS containers
 cd local-dev
 docker compose up -d
+
+# 3. Watch the one-time APEX install (10-20 minutes on first run)
+docker compose logs -f ords
 ```
 
 Once started:
-- **APEX URL:** [https://localhost:8443/ords/apex](https://localhost:8443/ords/apex)
+- **APEX instance administration:** [http://localhost:8181/ords/apex_admin](http://localhost:8181/ords/apex_admin)
+- **APEX workspace login:** [http://localhost:8181/ords/apex](http://localhost:8181/ords/apex)
 - **Database Port:** `1521` (Service name: `FREEPDB1`)
-- **Workspace:** `INTERNAL` (or create a workspace for your app)
-- **Admin User:** `ADMIN`
-- **Default Password:** `Welcome123456#` (or configure via `ORACLE_PASSWORD` in your `.env`)
+- **Admin User:** `ADMIN`, created once after the install with `apxchpwd` (step 5 in the walkthrough)
+- **Database / ORDS / APEX_PUBLIC_USER Password:** `Welcome123456#` (or configure `ORACLE_PASSWORD` in `local-dev/.env`)
+
+After signing in to `apex_admin` as `ADMIN`, create a workspace for your app, then sign in at `/ords/apex`.
 
 When you are finished, dispose of the database with:
 ```powershell
 docker compose down -v
 ```
+
+Full beginner walkthrough, ports, reset steps, and troubleshooting: [`local-dev/README.md`](local-dev/README.md).
 
 *(Alternatively, run `powershell -File scripts/install-local-apex.ps1 -Execute` if you prefer the dedicated APEX 26.2 multi-container sandbox powered by `uc-local-apex-dev`).*
 

@@ -24,6 +24,9 @@ ewallet.p12
 .opencode/*.local.*
 .specify/feature.json
 local-dev/uc-local-apex-dev/
+# Downloaded APEX distribution and zip for the local Docker sandbox (~1.4 GB)
+local-dev/apex/
+local-dev/apex-*.zip
 snapshot_*.csv
 promotion_audit_*.txt
 

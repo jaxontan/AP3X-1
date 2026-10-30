@@ -1,38 +1,83 @@
 # ==============================================================================
-# Disposable Oracle Database with APEX and ORDS
+# Disposable Oracle Database 26ai Free + ORDS 26.3 + APEX 26.2
 # ==============================================================================
-# Usage:
-#   1. Set ORACLE_PASSWORD in your .env file or environment (default: Welcome123456#)
-#   2. Run: docker compose up -d
-#   3. Access APEX at: https://localhost:8443/ords/apex
-#      Workspace: INTERNAL | User: ADMIN | Password: <your password>
+# APEX is not part of the database image. The ORDS container installs APEX from
+# the distribution mounted at /opt/oracle/apex on its first start, so the APEX
+# version is pinned by the downloaded APEX zip (26.2), not by an image tag.
 #
-# NOTE ON IMAGE FLAVORS:
-#   - DO NOT use "slim" or "latest-lite" images for APEX.
-#   - The "slim" flavor removes Oracle XML DB and Oracle Text, which APEX prerequisites require.
-#   - "adb-free" is the smallest official all-in-one container bundling Oracle 23ai/26ai Free,
-#     APEX, and ORDS together out of the box.
+# Beginner walkthrough: local-dev/README.md
+#
+# Usage:
+#   1. powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1
+#   2. Optional: copy local-dev/.env.example to local-dev/.env and set ORACLE_PASSWORD
+#   3. docker compose up -d
+#   4. Create the APEX ADMIN user with apxchpwd (local-dev/README.md, step 5)
+#   5. Open http://localhost:8181/ords/apex_admin as ADMIN
+#
+# Why not adb-free:
+#   - container-registry.oracle.com/database/adb-free:latest is the 19c image.
+#   - The 26ai adb-free tag carries the APEX version Oracle baked in
+#     (26.9.4.2 ships APEX 26.1.5), so it cannot be pinned to 26.2.
+#   - Do not use slim / latest-lite database images: they drop Oracle XML DB,
+#     which APEX requires.
 # ==============================================================================
+
+name: apex-26-2
 
 services:
-  apex-disposable:
-    image: container-registry.oracle.com/database/adb-free:latest
-    container_name: apex-disposable-db
-    ports:
-      - "1521:1521"
-      - "1522:1522"
-      - "8443:8443"
-    environment:
-      - WORKLOAD_TYPE=ATP
-      - WALLET_PASSWORD=${ORACLE_PASSWORD:-Welcome123456#}
-      - ADMIN_PASSWORD=${ORACLE_PASSWORD:-Welcome123456#}
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    volumes:
-      - adb-data:/data
+  db:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: apex-26-2-db
+    hostname: apex-db
     restart: unless-stopped
+    environment:
+      ORACLE_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+      ORACLE_PDB: FREEPDB1
+    ports:
+      - "127.0.0.1:1521:1521"
+    volumes:
+      - db-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/oracle/checkDBStatus.sh >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 30s
+      retries: 60
+      start_period: 60s
+    networks:
+      - apexnet
+
+  ords:
+    image: container-registry.oracle.com/database/ords:26.3.0
+    container_name: apex-26-2-ords
+    restart: on-failure:3
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DBHOST: db
+      DBPORT: "1521"
+      DBSERVICENAME: FREEPDB1
+      # SYS password used to install ORDS and APEX.
+      ORACLE_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+      # ORDS_PUBLIC_USER password.
+      ORACLE_USER_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+      # APEX_PUBLIC_USER password (not the APEX ADMIN user; create ADMIN
+      # afterwards with apxchpwd, see local-dev/README.md).
+      APEX_PWD: ${ORACLE_PASSWORD:-Welcome123456#}
+    ports:
+      - "127.0.0.1:8181:8080"
+    volumes:
+      # Extracted APEX 26.2 distribution (contains apexins.sql and images/).
+      # If this folder is empty, ORDS starts but APEX is not installed.
+      - ./apex:/opt/oracle/apex:ro
+      - ords-config:/etc/ords/config
+    networks:
+      - apexnet
 
 volumes:
-  adb-data:
+  db-data:
+  ords-config:
+
+networks:
+  apexnet:
+    name: apex-26-2-net

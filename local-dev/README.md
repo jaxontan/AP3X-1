@@ -9,42 +9,169 @@ The sandbox is optional. It is not required for offline APEXLang validation, and
 - Local Oracle Database Free `FREEPDB1` with ORDS and APEX.
 - Full local schema development, including DDL, PL/SQL compilation, APEX import, and disposable experiments.
 - Read-only metadata snapshots and a promotion audit that can run against either local or commercial connections.
-- Version lock at APEX 26.1 or 26.2. The sandbox is pinned to the `26-2` branch so it matches the harness's 26.2 skills.
+- Version lock at APEX 26.1 or 26.2. The local sandbox is pinned to **APEX 26.2**, matching the harness's 26.2 skills.
 
-## Disposable database images
+## Pick a sandbox
 
-Image flavor is not a database version. Oracle AI Database 26ai Free is published as `23.26.3`; the flavor controls which components are present.
+| Option | What runs | First start | Use when |
+| --- | --- | --- | --- |
+| 1. Docker Compose (recommended) | Database 26ai Free + ORDS 26.3 + APEX 26.2, two containers | 10-20 minutes | You want APEX 26.2 and a working URL with the least setup |
+| 2. Database only | Database 26ai Free, no APEX | 2-5 minutes | You only need SQL and PL/SQL smoke tests |
+| 3. `uc-local-apex-dev` | Database + ORDS + APEX, managed by an upstream installer | 20-40 minutes | You want a multi-container sandbox with upstream lifecycle scripts |
 
-| Use case | Image | Why |
+### Images and why they changed
+
+APEX is **not** part of the database image. The compose stack uses the official ORDS image, which installs APEX from a mounted distribution on first start. The APEX version is therefore pinned by the downloaded APEX zip, not by an image tag.
+
+| Use case | Image | Notes |
 | --- | --- | --- |
-| APEX and ORDS (All-in-One) | `container-registry.oracle.com/database/adb-free:latest` | Bundles Oracle Free DB, APEX, and ORDS pre-configured in a single container. Ready via `docker compose up -d` in `local-dev/`. |
-| APEX and ORDS (Custom sandbox) | `container-registry.oracle.com/database/free:latest` or `gvenzl/oracle-free:23.26.3` | Full or regular flavor. Base DB only; use `scripts/install-local-apex.ps1` to orchestrate APEX 26.2 and ORDS. |
-| Database and PL/SQL only | `gvenzl/oracle-free:23.26.3-slim` | Smallest image (~800 MB). Suitable for schema, SQL, and PL/SQL smoke tests only. |
-| Not for APEX | `gvenzl/oracle-free:slim`, `container-registry.oracle.com/database/free:latest-lite` | Removes Oracle Text, Spatial/Locator, MLE, RMAN, `wrap`, and XML DB files. APEX requires XML DB for a full development environment; community testing of `gvenzl/oracle-free:23-slim` reports that `apexins.sql` stops at that prerequisite check. |
+| Database for APEX 26.2 | `container-registry.oracle.com/database/free:latest` | Oracle AI Database 26ai Free (currently release 23.26.3.0.0). Includes XML DB, which APEX needs. |
+| ORDS and APEX install | `container-registry.oracle.com/database/ords:26.3.0` | ORDS 26.3. On first start it installs ORDS into `FREEPDB1` and APEX from `/opt/oracle/apex`. |
+| APEX distribution | `apex_26.2.zip` from `download.oracle.com/otn_software/apex/` | About 337 MB. Downloaded by `scripts/get-apex-26.2.ps1`. |
+| All-in-one, APEX 26.1.x only | `ghcr.io/oracle/adb-free:latest-26ai` | Convenient single container, but it ships the APEX version Oracle baked in (release 26.9.4.2 ships APEX 26.1.5). It cannot be pinned to 26.2. |
+| Not for this harness | `container-registry.oracle.com/database/adb-free:latest` | This tag is the **19c** image, not 26ai. The previous compose file used it by mistake. |
+| Database and PL/SQL only | `gvenzl/oracle-free:23.26.3-slim` | Smallest image (~800 MB). No APEX. |
+| Not for APEX | `gvenzl/oracle-free:slim`, `container-registry.oracle.com/database/free:latest-lite` | Removes Oracle Text, Spatial/Locator, MLE, RMAN, `wrap`, and XML DB files. APEX requires XML DB; community testing reports `apexins.sql` stops at that prerequisite check. |
 
 `gvenzl/oracle-free:slim` is about 809 MB compressed, `latest` about 1.1 GB, and `full` about 2.1 GB. For reproducible environments, pin `23.26.3` or a digest instead of `latest`.
 
-### Option 1: Quick Disposable Docker Compose (All-in-One DB + APEX + ORDS)
+The database image is the only unpinned component. `free:latest` currently resolves to the 26ai Free release `RDBMS_23.26.3.0.0DBRU_LINUX.X64_260704`. To pin it, replace the image with that tag, or record the digest:
 
-To quickly spin up a single disposable container containing Oracle Database Free, APEX, and ORDS:
+```powershell
+docker image inspect container-registry.oracle.com/database/free:latest --format '{{index .RepoDigests 0}}'
+```
+
+
+## Option 1: APEX 26.2 with Docker Compose (recommended)
+
+This starts two containers on a private network:
+
+- `db`: Oracle AI Database 26ai Free, PDB `FREEPDB1`, port `1521`.
+- `ords`: ORDS 26.3, installs APEX 26.2 on first start, port `8181`.
+
+Everything binds to `127.0.0.1` only. It is a laptop sandbox, not a server.
+
+### 1. Install and start Docker
+
+- Windows or macOS: install Docker Desktop and start it.
+- Linux: install Docker Engine and make sure your user can run `docker compose`.
+- Confirm it works:
+
+  ```powershell
+  docker version
+  docker compose version
+  ```
+
+**Requirements:** about 20 GB free disk (the two images are ~16 GB), 4 GB RAM minimum, 8 GB recommended, and **ports 1521 and 8181 free**.
+
+### 2. Download APEX 26.2
+
+From the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/get-apex-26.2.ps1
+```
+
+The script downloads `apex_26.2.zip` (about 337 MB), checks the download size, and extracts it to `local-dev/apex/`. That folder must contain `apexins.sql` and `images/`; the ORDS container reads it on first start. The script is safe to re-run and skips the download when the distribution is already present. Both the zip and the extracted folder are git-ignored.
+
+### 3. Set the password (optional)
+
+The compose file has a local default password. To use your own, create `local-dev/.env`:
+
+```powershell
+Copy-Item local-dev\.env.example local-dev\.env
+```
+
+Edit `ORACLE_PASSWORD`. It is used for `SYS`, `ORDS_PUBLIC_USER`, and `APEX_PUBLIC_USER`. It does **not** create the APEX `ADMIN` user; you create that user once after the first install (step 5). Use upper case, lower case, a digit, and a special character, or the APEX install rejects it.
+
+Never commit `local-dev/.env`.
+
+### 4. Start the stack
 
 ```powershell
 cd local-dev
 docker compose up -d
 ```
 
-- APEX URL: `https://localhost:8443/ords/apex`
-- Workspace: `INTERNAL` | User: `ADMIN` | Password: defined in `.env` (or default `Welcome123456#`)
-- Database port: `1521` (service name: `FREEPDB1`)
+The first run pulls ~16 GB of images. The database reports healthy after a few minutes; ORDS then installs ORDS and APEX, which takes another 10-20 minutes. Watch it with:
 
-To stop and clean up when done:
 ```powershell
+docker compose logs -f ords
+```
+
+Wait for `The Oracle APEX has been installed` in the ORDS log, followed by the ORDS startup messages. Press `Ctrl+C` to stop following the log; the containers keep running.
+
+### 5. Create the APEX administrator (one time)
+
+The ORDS container installs APEX but does not create the APEX `ADMIN` user. Create it once, from `local-dev`:
+
+```powershell
+docker compose exec -it ords sql /nolog
+```
+
+At the SQLcl prompt:
+
+```text
+conn sys/<your ORACLE_PASSWORD>@//db:1521/FREEPDB1 as sysdba
+@/opt/oracle/apex/apxchpwd.sql
+exit
+```
+
+`apxchpwd.sql` asks for a username (press Enter for `ADMIN`), an email, and a password. The script lives in the APEX 26.2 distribution mounted in the ORDS container, so this works without copying files into the database container.
+
+### 6. Open APEX
+
+| What | Value |
+| --- | --- |
+| APEX instance administration | <http://localhost:8181/ords/apex_admin> |
+| APEX workspace login | <http://localhost:8181/ords/apex> |
+| ORDS landing page | <http://localhost:8181/ords/> |
+| Instance administrator | `ADMIN`, password set in step 5 |
+| Database | `localhost:1521`, service `FREEPDB1` |
+| Database users | `SYS` / `SYSTEM` / `PDBADMIN`, password `ORACLE_PASSWORD` |
+
+Sign in to `apex_admin` as `ADMIN`, then create a workspace for your app (for example `KANS` with a workspace administrator). After that, sign in to the workspace at `/ords/apex`. The `INTERNAL` workspace is for instance administration only; application work belongs in your own workspace.
+
+### Stop, reset, and upgrade
+
+```powershell
+cd local-dev
+
+# Stop, keep the database and the APEX install
+docker compose down
+
+# Stop and delete the database volume. The next start reinstalls ORDS and APEX.
 docker compose down -v
 ```
 
-### Option 2: Database-only smoke test (Smallest DB, No APEX)
+To move to another APEX version later, download and extract that distribution into `local-dev/apex/`, then run `docker compose down -v` and start again. A new APEX version needs a clean database volume; do not reuse the old one.
 
-If you only need SQL and PL/SQL testing without APEX, use the slim image:
+If you used the previous `adb-free` compose file, remove its container and volume first. The old container was also named `apex-disposable-db` and the old volume is usually `local-dev_adb-data`:
+
+```powershell
+docker rm -f apex-disposable-db
+docker volume rm local-dev_adb-data
+```
+
+The new project is named `apex-26-2` and uses its own volumes (`apex-26-2_db-data`, `apex-26-2_ords-config`).
+
+### Troubleshooting
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `port is already allocated` for 1521 or 8181 | Another Oracle container or a local listener is using the port. Stop it, or change the host side of the mapping in `docker-compose.yml`. |
+| ORDS container keeps restarting | It exited three times and gave up. Run `docker compose logs ords`. The usual cause is too little free RAM during the APEX install, or `local-dev/apex/apexins.sql` missing. Fix the cause, then `docker compose down -v` and start again. |
+| `http://localhost:8181/ords/apex` returns 404 | APEX was not installed. Check that `local-dev/apex/apexins.sql` exists and that the ORDS log shows the APEX install. If the folder was empty on first start, stop with `down -v`, download APEX, and start again. |
+| APEX login fails | `ADMIN` is the instance administrator and only exists after step 5. Use `/ords/apex_admin` for `ADMIN`, and `/ords/apex` for a workspace user. If `ADMIN` does not exist, run `apxchpwd` again. |
+| `/ords/apex` says there is no workspace | Sign in to `/ords/apex_admin` as `ADMIN` and create a workspace first. |
+| `sql: command not found` in the ORDS container | Copy the distribution to the database container and use `sqlplus`: `docker cp local-dev/apex apex-26-2-db:/tmp/apex`, then `docker compose exec -it db sqlplus sys/<password>@//localhost:1521/FREEPDB1 as sysdba @/tmp/apex/apxchpwd.sql`. |
+| The `ords:26.3.0` tag cannot be pulled | Use `container-registry.oracle.com/database/ords:latest` in `docker-compose.yml`. At the time of writing it resolves to 26.3.0. |
+| `docker compose` is not a command | Docker Compose v2 ships with Docker Desktop. On Linux, install the Compose plugin; `docker-compose` (v1) is not supported by this file. |
+| Apple Silicon | Both `database/free:latest` and `database/ords:26.3.0` publish `linux/arm64` images, so Docker Desktop on Apple Silicon works. Make sure Docker Desktop itself is the Apple Silicon build. |
+
+## Option 2: Database-only smoke test (no APEX)
+
+If you only need SQL and PL/SQL testing without APEX, use the slim image. Run from `local-dev` so the `.env` file is picked up:
 
 ```powershell
 docker volume create oracle-free-data
@@ -55,13 +182,13 @@ docker run --name oracle-free `
   -d gvenzl/oracle-free:23.26.3-slim
 ```
 
-Add `ORACLE_PASSWORD` to the gitignored `.env` file before starting; do not put it in this repository. Wait for `DATABASE IS READY TO USE` before connecting. Do not reuse a database volume across 26ai point releases without testing; the upstream image notes that migrations can require a fresh volume.
+Add `ORACLE_PASSWORD` to `local-dev/.env` before starting. Wait for `DATABASE IS READY TO USE` in `docker logs -f oracle-free` before connecting. Do not reuse a database volume across 26ai point releases without testing; the upstream image notes that migrations can require a fresh volume.
 
-### Option 3: Dedicated APEX 26.2 Sandbox (`uc-local-apex-dev`)
+## Option 3: Dedicated APEX 26.2 Sandbox (`uc-local-apex-dev`)
 
-For a dedicated APEX 26.2 sandbox orchestrated with independent DB and ORDS containers, use the supported sandbox workflow below. Do not substitute `slim` or `latest-lite`.
+For a dedicated APEX 26.2 sandbox orchestrated with independent DB and ORDS containers and upstream lifecycle scripts, use the supported sandbox workflow below. Do not substitute `slim` or `latest-lite`.
 
-## Prerequisites
+### Prerequisites for Option 3
 
 - Docker Desktop or Podman with Compose.
 - Git and Git Bash (the upstream installer is a shell script).
@@ -71,7 +198,7 @@ For a dedicated APEX 26.2 sandbox orchestrated with independent DB and ORDS cont
 
 Upstream: <https://github.com/United-Codes/uc-local-apex-dev> (MIT). The upstream default branch is `26-4`; do not use it with this harness. Use `26-2` or `26-1`.
 
-## Install the sandbox
+### Install the sandbox
 
 Preview the plan first:
 
@@ -156,6 +283,6 @@ The harness does not ship an automatic sync or destructive merge script. The v3 
 
 ## What is not verified here
 
-The preview mode was executed on this machine and correctly reported only the missing Docker/Podman prerequisite. Docker is not installed, so the sandbox installer has not been executed with `-Execute`, and the SQL scripts have not been run against a live database.
+Docker is not installed on this machine, so the compose stack and `scripts/get-apex-26.2.ps1` have not been executed end to end. The image tags, multi-arch manifests, ORDS environment variables, and the APEX 26.2 download URL were checked against the Oracle Container Registry API and Oracle release notes, but the first `docker compose up -d` on a machine with Docker remains the real test.
 
-The SQL scripts are read-only and use Oracle dictionary views documented in `skills/db/`; run them against a disposable local database before relying on the output. SQLcl's command-line console failed to initialize under the non-interactive automation shell on this machine (`java.io.IOException: Incorrect function`), so the scripts were reviewed statically rather than executed here. The SQLcl MCP path is separate and connected successfully. The upstream `uc-local-apex-dev` project, not this harness, owns the container lifecycle.
+The SQL scripts are read-only and use Oracle dictionary views documented in `skills/db/`; run them against a disposable local database before relying on the output. SQLcl's command-line console failed to initialize under the non-interactive automation shell on this machine (`java.io.IOException: Incorrect function`), so the scripts were reviewed statically rather than executed here. The SQLcl MCP path is separate and connected successfully. The upstream `uc-local-apex-dev` project, not this harness, owns the container lifecycle for Option 3.
