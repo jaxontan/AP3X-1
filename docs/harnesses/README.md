@@ -17,7 +17,7 @@ The Oracle APEX harness is host-agnostic. `AGENTS.md` is the canonical instructi
 
 ## OpenCode
 
-The bootstrap installs OpenCode and the rest of the toolchain. To run the setup manually, start from the repository root (make sure your prompt is inside the project folder, not `C:\Windows\System32`):
+The bootstrap installs the toolchain but not OpenCode. Install OpenCode first (below), then start from the repository root (make sure your prompt is inside the project folder, not `C:\Windows\System32`):
 
 **Windows**
 ```powershell
@@ -38,7 +38,7 @@ To install the optional project-local 2.x binary on Windows:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-opencode-v2.ps1
 ```
 
-On macOS/Linux, OpenCode's official installer is used instead; `scripts/bootstrap.sh` runs it. If the Windows machine policy blocks dot-sourcing, use the process-scoped line; it does not change the machine policy. You can also run scripts individually with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
+On macOS/Linux, use OpenCode's official installer: `curl -fsSL https://opencode.ai/v2/install | bash`. If the Windows machine policy blocks dot-sourcing, use the process-scoped line; it does not change the machine policy. You can also run scripts individually with `powershell -NoProfile -ExecutionPolicy Bypass -File <script>`.
 
 `opencode.jsonc` pins a free model by default. Change it only to another zero-cost model.
 

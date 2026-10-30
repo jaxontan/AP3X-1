@@ -6,14 +6,12 @@ set -euo pipefail
 
 YES=0
 WITH_DOCKER=0
-SKIP_OPENCODE=0
 DRY_RUN=0
 
 for arg in "$@"; do
     case "$arg" in
         --yes|-y) YES=1 ;;
         --with-docker) WITH_DOCKER=1 ;;
-        --skip-opencode) SKIP_OPENCODE=1 ;;
         --dry-run) DRY_RUN=1 ;;
         --help|-h)
             cat <<'EOF'
@@ -22,7 +20,6 @@ Usage: bash scripts/bootstrap.sh [options]
 Options:
   -y, --yes             Install without asking for confirmation
       --with-docker     Also install Docker (needed only for the local Oracle sandbox)
-      --skip-opencode   Do not install OpenCode
       --dry-run         Print the plan without installing anything
   -h, --help            Show this help
 EOF
@@ -79,7 +76,7 @@ persist_path_file() {
     if ! grep -Fq '# >>> apex-harness path >>>' "$rc" 2>/dev/null; then
         {
             printf '\n# >>> apex-harness path >>>\n'
-            printf 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:/snap/bin:$PATH"\n'
+            printf 'export PATH="$HOME/.local/bin:/snap/bin:$PATH"\n'
             printf '# <<< apex-harness path <<<\n'
         } >> "$rc"
     fi
@@ -146,7 +143,6 @@ if ! have_python; then add_missing "Python 3"; fi
 if ! have uv; then add_missing "uv"; fi
 if [ "${JAVA_MAJOR:-0}" -lt 21 ]; then add_missing "JDK 21"; fi
 if [ ! -x "$ROOT/tools/sqlcl/bin/sql" ]; then add_missing "SQLcl"; fi
-if [ "$SKIP_OPENCODE" -eq 0 ] && ! have opencode; then add_missing "OpenCode"; fi
 if [ "$WITH_DOCKER" -eq 1 ] && ! have docker; then add_missing "Docker"; fi
 if ! have pwsh; then add_missing "PowerShell 7"; fi
 
@@ -294,16 +290,6 @@ if [ -n "$MISSING" ]; then
     esac
 fi
 
-if [ "$SKIP_OPENCODE" -eq 0 ] && ! have opencode; then
-    say "Installing OpenCode..."
-    if [ "$DRY_RUN" -eq 1 ]; then
-        printf '  DRY RUN: curl -fsSL https://opencode.ai/v2/install | bash\n'
-    else
-        curl -fsSL https://opencode.ai/v2/install | bash
-    fi
-    export PATH="$HOME/.opencode/bin:$PATH"
-fi
-
 if [ ! -x "$ROOT/tools/sqlcl/bin/sql" ]; then
     say "Installing SQLcl into tools/sqlcl..."
     SQLCL_TMP="$(mktemp -d 2>/dev/null || mktemp -d -t apex-harness)"
@@ -315,17 +301,11 @@ if [ ! -x "$ROOT/tools/sqlcl/bin/sql" ]; then
     run chmod +x "$ROOT/tools/sqlcl/bin/sql"
 fi
 
-export PATH="$HOME/.local/bin:$HOME/.opencode/bin:/snap/bin:$PATH"
+export PATH="$HOME/.local/bin:/snap/bin:$PATH"
 persist_paths
 
 if [ "$DRY_RUN" -eq 1 ]; then
     printf '\nDry run complete. No software was installed and no files were changed.\n'
-    exit 0
-fi
-
-if [ "$SKIP_OPENCODE" -eq 1 ] && ! have opencode; then
-    warn "OpenCode was skipped. Install it before running the doctor."
-    printf 'The rest of the toolchain is installed. Reopen your terminal to pick up PATH changes.\n'
     exit 0
 fi
 
@@ -341,8 +321,8 @@ else
 fi
 
 if [ "$CODE" -eq 0 ]; then
-    printf '\nBootstrap complete. Start your agent with: opencode\n'
-    printf 'Then open this repository in the agent and ask it to design or build your APEX app.\n'
+    printf '\nBootstrap complete. Open this repository in your coding agent\n'
+    printf 'and ask it to design or build your APEX app.\n'
 else
     warn "Bootstrap finished, but the doctor reported problems above."
 fi

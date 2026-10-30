@@ -24,7 +24,6 @@ Useful options:
 .\bootstrap.cmd -DryRun                 # show the plan, install nothing
 .\bootstrap.cmd -Yes                    # do not ask for confirmation
 .\bootstrap.cmd -WithDocker             # also install Docker Desktop
-.\bootstrap.cmd -SkipOpenCode           # do not install OpenCode
 ```
 
 ### macOS
@@ -56,7 +55,6 @@ Useful options for macOS and Linux:
 bash scripts/bootstrap.sh --dry-run      # show the plan, install nothing
 bash scripts/bootstrap.sh --yes          # do not ask for confirmation
 bash scripts/bootstrap.sh --with-docker  # also install Docker
-bash scripts/bootstrap.sh --skip-opencode
 ```
 
 ## What gets installed
@@ -64,13 +62,12 @@ bash scripts/bootstrap.sh --skip-opencode
 | Tool | Why the harness needs it | Windows | macOS | Linux |
 | --- | --- | --- | --- | --- |
 | Git | Clone/update projects | `Git.Git` via winget | Homebrew | Package manager |
-| Node.js LTS | OpenCode, MCP launcher | `OpenJS.NodeJS.LTS` | Homebrew | Package manager / NodeSource 22 |
+| Node.js LTS | MCP launcher and scripts | `OpenJS.NodeJS.LTS` | Homebrew | Package manager / NodeSource 22 |
 | Python 3 | SQLcl MCP helper and scripts | `Python.Python.3.12` | Homebrew | Package manager |
 | uv | Python tool runner | `astral-sh.uv` | Homebrew | Official uv installer |
 | JDK 21 | SQLcl and APEX validation | `Microsoft.OpenJDK.21` | Temurin 21 cask | OpenJDK 21 package |
 | SQLcl | APEXLang validation, import, MCP | Downloaded into `tools/sqlcl` | Downloaded into `tools/sqlcl` | Downloaded into `tools/sqlcl` |
 | PowerShell 7 | Harness doctor and scripts | Built in (5.1 is enough) | Homebrew cask | snap or GitHub release |
-| OpenCode | Default free AI host | Project-local V2 binary | Official V2 installer | Official V2 installer |
 | Docker (optional) | Local Oracle Database sandbox | Docker Desktop | Docker Desktop | Docker Engine |
 
 The bootstrap also verifies the repository with `scripts/harness-doctor.ps1`. A successful run ends with:
@@ -83,10 +80,10 @@ If it ends with a problem list, fix the named item and run the doctor again. The
 
 ## After setup
 
-Start OpenCode from the repository root:
+The bootstrap does not install an AI agent. Start the one you use (see the table below) from the repository root, for example:
 
 ```bash
-opencode
+claude
 ```
 
 Then open this repository in the agent and ask it to design, build, validate, or deploy an APEX application. The agent reads `AGENTS.md` automatically.
@@ -95,13 +92,13 @@ Optional AI hosts use the same repository but their own installers:
 
 | Host | Entry point | Notes |
 | --- | --- | --- |
-| OpenCode | `opencode` | Installed by the bootstrap; free model supported |
+| OpenCode | `opencode` | Optional: `powershell -File scripts\install-opencode-v2.ps1` (Windows) or the official installer; free model supported |
 | Antigravity | `agy` | Install with the vendor installer; workspace MCP uses `.agents/mcp_config.json` |
 | Claude Code | `claude` | `npm install -g @anthropic-ai/claude-code` |
 | Codex CLI | `codex` | `npm install -g @openai/codex` |
 | DSH | `dsh` | `npm install -g @deepseek-ai/dsh` |
 
-On Windows, use `npm.cmd` instead of `npm` if PowerShell blocks the `npm.ps1` shim. These hosts are optional; OpenCode is installed by the bootstrap. Do not create a metered API key just to use the harness. Use a host account login or a free/local model. The doctor warns when common paid-key environment variables are present.
+On Windows, use `npm.cmd` instead of `npm` if PowerShell blocks the `npm.ps1` shim. These hosts are optional and not installed by the bootstrap. Do not create a metered API key just to use the harness. Use a host account login or a free/local model. The doctor warns when common paid-key environment variables are present.
 
 ## Visual design verification (optional)
 
@@ -131,7 +128,7 @@ For the optional local sandbox, see [`local-dev/README.md`](../local-dev/README.
 | Symptom | What to do |
 | --- | --- |
 | `winget` is not recognized | Install **App Installer** from the Microsoft Store, then rerun `bootstrap.cmd`. |
-| `opencode` is not recognized after setup | Close and reopen the terminal, or run `. .\scripts\set-env.ps1` in PowerShell. The bootstrap puts the project-local binary on `PATH` for new shells. |
+| `opencode` is not recognized after setup | OpenCode is not installed by the bootstrap. Install it (see the AI hosts table), then close and reopen the terminal, or run `. .\scripts\set-env.ps1` in PowerShell. |
 | macOS cannot find `brew` | Run `/opt/homebrew/bin/brew shellenv` (Apple Silicon) or `/usr/local/bin/brew shellenv` (Intel), then retry. |
 | Linux has an old Node.js | Install Node.js 22 from NodeSource, or rerun the bootstrap; it upgrades Node when the major version is below 20. |
 | PowerShell says scripts are disabled | Use `bootstrap.cmd`, or run `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\harness-doctor.ps1`. |

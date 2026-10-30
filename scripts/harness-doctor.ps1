@@ -29,7 +29,7 @@ $checks = @(
     [pscustomobject]@{ Name = 'Node.js';    Path = (Get-ToolPath 'node');                     Required = $true;  Version = $(if (Get-Command node -ErrorAction SilentlyContinue) { node --version } else { '' }) }
     [pscustomobject]@{ Name = 'Python';     Path = $pythonPath;                               Required = $true;  Version = $(if ($pythonPath) { (& $pythonPath --version 2>&1) } else { '' }) }
     [pscustomobject]@{ Name = 'uv';         Path = $uvPath;                                 Required = $true;  Version = $(if ($uvPath) { (& $uvPath --version) 2>&1 } else { '' }) }
-    [pscustomobject]@{ Name = 'OpenCode';   Path = (Get-ToolPath 'opencode');                 Required = $true;  Version = $(if (Get-Command opencode -ErrorAction SilentlyContinue) { opencode --version } else { '' }) }
+    [pscustomobject]@{ Name = 'OpenCode';   Path = (Get-ToolPath 'opencode');                 Required = $false;  Version = $(if (Get-Command opencode -ErrorAction SilentlyContinue) { opencode --version } else { '' }) }
     [pscustomobject]@{ Name = 'Java';       Path = (Get-ToolPath 'java');                     Required = $true;  Version = $(if (Get-Command java -ErrorAction SilentlyContinue) { (java -version 2>&1 | Select-Object -First 1) } else { '' }) }
     [pscustomobject]@{ Name = 'SQLcl';      Path = $sqlclPath;                                Required = $true;  Version = $(if ($sqlclPath) { (& $sqlclPath -V 2>&1 | Select-Object -First 1) } else { '' }) }
 )
@@ -41,8 +41,8 @@ Write-Host '==================================='
 foreach ($check in $checks) {
     $ok = [bool]$check.Path
     if (-not $ok -and $check.Required) { $failures.Add($check.Name) }
-    $status = if ($ok) { 'OK' } else { 'MISSING' }
-    $color = if ($ok) { 'Green' } else { 'Red' }
+    $status = if ($ok) { 'OK' } elseif ($check.Required) { 'MISSING' } else { 'SKIP' }
+    $color = if ($ok) { 'Green' } elseif ($check.Required) { 'Red' } else { 'Yellow' }
     Write-Host ('{0,-10} {1,-8} {2}' -f $check.Name, $status, $check.Version) -ForegroundColor $color
     if ($ok) { Write-Host ('           {0}' -f $check.Path) -ForegroundColor DarkGray }
 }

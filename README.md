@@ -6,7 +6,7 @@ A developer harness for building, validating, and deploying Oracle APEX applicat
 
 ## ⚡ Quick Start (non-technical)
 
-You do **not** need to install Java, SQLcl, Node.js, Python, or OpenCode one by one. The bootstrap installs the free prerequisites, verifies them, and prints a clear result. It never asks for an API key.
+You do **not** need to install Java, SQLcl, Node.js, or Python one by one. The bootstrap installs the free prerequisites, verifies them, and prints a clear result. It never asks for an API key.
 
 ### 1. Get the folder
 Download the repository as a ZIP and unzip it, or clone it with Git if you already have Git. Then open a terminal **in the repository root** (the folder that contains `README.md` and `bootstrap.cmd`).
@@ -27,7 +27,7 @@ bash scripts/bootstrap.sh
 
 The script asks for confirmation before installing anything. Add `--yes` (`-Yes` on Windows) to skip prompts. Add `--with-docker` (`-WithDocker` on Windows) only if you want the optional local Oracle Database sandbox. On macOS/Linux the script may ask for your password because system packages and Homebrew require it.
 
-It installs only free developer tools: Git, Node.js LTS, Python 3, uv, JDK 21, SQLcl, PowerShell 7 (macOS/Linux), and OpenCode. Docker is optional. When it finishes successfully it prints `Harness is ready.` Full details and troubleshooting: [`docs/getting-started.md`](docs/getting-started.md).
+It installs only free developer tools: Git, Node.js LTS, Python 3, uv, JDK 21, SQLcl, and PowerShell 7 (macOS/Linux). Docker is optional. It does not install an AI agent; use the one you already have (see step 3). When it finishes successfully it prints `Harness is ready.` Full details and troubleshooting: [`docs/getting-started.md`](docs/getting-started.md).
 
 ### 3. Launch Your AI Assistant
 Start your preferred agent:

@@ -2,7 +2,6 @@
 param(
     [switch]$Yes,
     [switch]$WithDocker,
-    [switch]$SkipOpenCode,
     [switch]$DryRun
 )
 
@@ -141,7 +140,6 @@ if (-not (Test-Python)) { $missing.Add('Python 3.12') }
 if (-not (Test-Command 'uv')) { $missing.Add('uv') }
 if (-not (Test-Java21)) { $missing.Add('Microsoft OpenJDK 21') }
 if (-not (Test-Path (Join-Path $root 'tools\sqlcl\bin\sql.exe'))) { $missing.Add('SQLcl') }
-if (-not $SkipOpenCode -and -not (Test-Command 'opencode')) { $missing.Add('OpenCode') }
 if ($WithDocker -and -not (Test-Command 'docker')) { $missing.Add('Docker Desktop (optional)') }
 
 Write-Head 'Oracle APEX Harness bootstrap (Windows)'
@@ -205,19 +203,6 @@ if ($missing.Contains('SQLcl')) {
     }
 }
 
-if ($missing.Contains('OpenCode')) {
-    if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') {
-        Install-WingetPackage -Id 'SST.opencode' -Label 'OpenCode'
-    }
-    elseif ($DryRun) {
-        Write-Host '  DRY RUN: install-opencode-v2.ps1' -ForegroundColor DarkGray
-    }
-    else {
-        & (Join-Path $PSScriptRoot 'install-opencode-v2.ps1')
-        if ($LASTEXITCODE -ne 0) { throw 'OpenCode installation failed.' }
-    }
-}
-
 if ($missing.Contains('Docker Desktop (optional)')) {
     try {
         Install-WingetPackage -Id 'Docker.DockerDesktop' -Label 'Docker Desktop'
@@ -241,12 +226,6 @@ Add-KnownPath (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\Scripts')
 Add-KnownPath (Join-Path $env:USERPROFILE '.local\bin')
 . (Join-Path $PSScriptRoot 'set-env.ps1')
 
-if ($SkipOpenCode -and -not (Test-Command 'opencode')) {
-    Write-Warn 'OpenCode was skipped. Install it before running the doctor.'
-    Write-Host 'The rest of the toolchain is installed. Reopen your terminal to pick up PATH changes.' -ForegroundColor Green
-    exit 0
-}
-
 Write-Head 'Verifying the harness'
 $powerShellExe = Join-Path $PSHOME 'powershell.exe'
 if (-not (Test-Path -LiteralPath $powerShellExe)) { $powerShellExe = 'powershell.exe' }
@@ -256,8 +235,8 @@ $code = $LASTEXITCODE
 
 Write-Host ''
 if ($code -eq 0) {
-    Write-Host 'Bootstrap complete. Start your agent with: opencode' -ForegroundColor Green
-    Write-Host 'Then open this repository in the agent and ask it to design or build your APEX app.' -ForegroundColor Green
+    Write-Host 'Bootstrap complete. Open this repository in your coding agent' -ForegroundColor Green
+    Write-Host 'and ask it to design or build your APEX app.' -ForegroundColor Green
 }
 else {
     Write-Warn 'Bootstrap finished, but the doctor reported problems above. Fix them and re-run: .\doctor.cmd'
