@@ -31,7 +31,7 @@ function Get-SqlclDownloadSize {
         [string]$Uri
     )
 
-    $headers = & $Curl -sS -L -I --connect-timeout 30 --max-time 60 --no-progress-meter $Uri
+    $headers = & $Curl -sS -L -I --connect-timeout 30 --max-time 60 $Uri
     if ($LASTEXITCODE -ne 0) {
         Write-Warning ("Could not read the SQLcl download size (curl exit {0}); the download will run without a size check." -f $LASTEXITCODE)
         return [long]0
@@ -78,7 +78,7 @@ function Invoke-SqlclDownload {
         }
 
         $curlArguments = @(
-            '-L', '--fail', '-sS', '--no-progress-meter',
+            '-L', '--fail', '-sS',
             '--connect-timeout', '30',
             '--output', $Path
         )
