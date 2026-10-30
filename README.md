@@ -183,15 +183,15 @@ If you want to keep your completed project (e.g., Time-Off Portal) safely tracke
 ---
 
 ### Option B: Keep Project as a Separate Folder (Side-by-Side Repos)
-If you prefer having separate folders on your drive (e.g., `Oracle_Apex-TimeOff` and `Oracle_Apex-CustomerPortal`):
+If you prefer having separate folders on your drive (e.g., `AP3X-Project-One` and `AP3X-Project-Two`):
 
 1. **Rename or copy your current folder:**
    ```powershell
-   Rename-Item -Path "AP3X-1" -NewName "Oracle_Apex-TimeOff"
+   Rename-Item -Path "AP3X-1" -NewName "AP3X-Project-One"
    ```
 2. **Clone a fresh copy of the harness template:**
    ```powershell
-   git clone https://github.com/jaxontan/AP3X-1.git Oracle_Apex-CustomerPortal
+   git clone https://github.com/jaxontan/AP3X-1.git AP3X-Project-Two
    ```
 3. **Skip tool downloads (Fast-track):** Copy the `tools/sqlcl` folder from your existing repo into the new clone so you don't need to re-download 100+ MB of tools.
 

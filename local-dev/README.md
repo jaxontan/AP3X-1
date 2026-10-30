@@ -130,7 +130,7 @@ exit
 | Database | `localhost:1521`, service `FREEPDB1` |
 | Database users | `SYS` / `SYSTEM` / `PDBADMIN`, password `ORACLE_PASSWORD` |
 
-Sign in to `apex_admin` as `ADMIN`, then create a workspace for your app (for example `KANS` with a workspace administrator). After that, sign in to the workspace at `/ords/apex`. The `INTERNAL` workspace is for instance administration only; application work belongs in your own workspace.
+Sign in to `apex_admin` as `ADMIN`, then create a workspace for your app (for example `MYWORKSPACE` with a workspace administrator). After that, sign in to the workspace at `/ords/apex`. The `INTERNAL` workspace is for instance administration only; application work belongs in your own workspace.
 
 ### Stop, reset, and upgrade
 
