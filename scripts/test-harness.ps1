@@ -184,6 +184,9 @@ exit 0
     $result = Invoke-HarnessScript -Script (Join-Path $scripts 'bootstrap.ps1') -Arguments @('-DryRun')
     Add-Result -Name 'bootstrap dry-run makes no changes' -Ok ($result.ExitCode -eq 0 -and $result.Output -match 'Dry run complete') -Detail $result.Output
 
+    $result = Invoke-HarnessScript -Script (Join-Path $scripts 'check-prereqs.ps1') -Arguments @('-CheckOnly')
+    Add-Result -Name 'prerequisite check-only reports without installing' -Ok ($result.ExitCode -in @(0, 1) -and $result.Output -match 'Prerequisite check finished') -Detail $result.Output
+
     $app = Join-Path $tempRoot 'app'
     New-TestApp -Path $app
 

@@ -36,6 +36,21 @@ The script asks for confirmation before installing anything. Add `--yes` (`-Yes`
 
 It installs only free developer tools: Git, Node.js LTS, Python 3, uv, JDK 21, SQLcl, and PowerShell 7 (macOS/Linux). Docker is optional. It does not install an AI agent; use the one you already have (see [Step 4](#-step-4-how-to-use-it)). When it finishes successfully it prints `Harness is ready.` Full details and troubleshooting: [`docs/getting-started.md`](docs/getting-started.md).
 
+### 1.3 Check everything (including Docker)
+
+To see at a glance what is installed and what is not, run the prerequisite check. It checks Git, Node.js, npm, Python, uv, JDK 21, SQLcl, PowerShell 7 (macOS/Linux), Docker, Docker Compose, whether the Docker engine is running, WSL 2 (Windows), and the optional Playwright tooling. For each problem it asks before installing or starting anything, and if you say no, or the fix cannot be automated, it prints how to fix it by hand. It does not check or install AI agents.
+
+```powershell
+.\check.cmd                 # Windows: check, then offer fixes
+.\check.cmd -CheckOnly      # report only, change nothing
+```
+```bash
+bash scripts/check-prereqs.sh              # macOS / Linux
+bash scripts/check-prereqs.sh --check-only
+```
+
+Add `-Yes` / `--yes` to accept every fix, or `-SkipDocker` / `--skip-docker` if you do not need the local sandbox. It ends with `Prerequisite check finished: everything required is ready.` and exit code 0.
+
 <details>
 <summary><strong>Manual setup (advanced users)</strong></summary>
 
@@ -67,7 +82,7 @@ To develop and test locally without touching production or shared databases, spi
 
 ### 2.1 Install Docker
 
-- **Windows / macOS:** install and start Docker Desktop, or re-run the bootstrap with `-WithDocker` (`--with-docker` on macOS/Linux).
+- **Windows / macOS:** install and start Docker Desktop, or run the [prerequisite check](#13-check-everything-including-docker), which installs and starts it for you (and WSL 2 on Windows).
 - **Linux:** install Docker Engine with the Compose plugin.
 - **Requirements:** about 20 GB free disk, 8 GB RAM recommended (4 GB minimum), and **ports 1521 and 8181 free**.
 
@@ -351,6 +366,7 @@ AP3X-1/
 ├── CLAUDE.md                 # Claude Code adapter
 ├── access.md                 # Local sandbox URLs and logins
 ├── bootstrap.cmd             # One-command Windows setup
+├── check.cmd                 # Check (and fix) Git, Docker, and every other prerequisite
 ├── opencode.jsonc            # OpenCode agent & permission configuration
 └── README.md                 # This guide
 ```
