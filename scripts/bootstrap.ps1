@@ -14,6 +14,7 @@ if ($env:OS -ne 'Windows_NT') {
 $root = Split-Path -Parent $PSScriptRoot
 
 . (Join-Path $PSScriptRoot 'set-env.ps1')
+. (Join-Path $PSScriptRoot 'windows-installers.ps1')
 
 function Write-Head {
     param([string]$Text)
@@ -108,15 +109,21 @@ function Install-WingetPackage {
     )
 
     if ($DryRun) {
-        Write-Host ("  DRY RUN: winget install --id {0} --exact --silent" -f $Id) -ForegroundColor DarkGray
+        if (Test-Command 'winget') {
+            Write-Host ("  DRY RUN: winget install --id {0} --exact --silent" -f $Id) -ForegroundColor DarkGray
+        }
+        else {
+            Write-Host ("  DRY RUN: download the official {0} installer (winget is not available)" -f $Label) -ForegroundColor DarkGray
+        }
         return
     }
 
+    Write-Host "  Installing $Label..." -ForegroundColor Yellow
     if (-not (Test-Command 'winget')) {
-        throw "winget is required to install $Label. Install 'App Installer' from the Microsoft Store, or install $Label manually."
+        Install-WithoutWinget -Id $Id
+        return
     }
 
-    Write-Host "  Installing $Label..." -ForegroundColor Yellow
     Invoke-Native -File 'winget' -Arguments @(
         'install', '--id', $Id, '--exact', '--silent',
         '--accept-package-agreements', '--accept-source-agreements',
@@ -183,6 +190,7 @@ if ($missing.Contains('Microsoft OpenJDK 21')) {
     Install-WingetPackage -Id 'Microsoft.OpenJDK.21' -Label 'Microsoft OpenJDK 21'
 }
 
+Add-KnownPath (Join-Path $env:ProgramFiles 'Git\cmd')
 Add-KnownPath (Join-Path $env:ProgramFiles 'nodejs')
 Add-KnownPath (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312')
 Add-KnownPath (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\Scripts')
@@ -220,6 +228,7 @@ if ($DryRun) {
     exit 0
 }
 
+Add-KnownPath (Join-Path $env:ProgramFiles 'Git\cmd')
 Add-KnownPath (Join-Path $env:ProgramFiles 'nodejs')
 Add-KnownPath (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312')
 Add-KnownPath (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\Scripts')

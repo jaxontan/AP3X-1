@@ -17,6 +17,7 @@ if ($env:OS -ne 'Windows_NT') {
 
 $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'set-env.ps1') | Out-Null
+. (Join-Path $PSScriptRoot 'windows-installers.ps1')
 
 $script:RestartWindows = $false
 $script:RestartTerminal = $false
@@ -97,7 +98,9 @@ function Invoke-Winget {
     param([string]$Id)
 
     if (-not (Test-Command 'winget')) {
-        throw "winget is not available. Install 'App Installer' from the Microsoft Store, then run this check again."
+        Install-WithoutWinget -Id $Id
+        $script:RestartTerminal = $true
+        return
     }
 
     $verb = 'install'
@@ -176,7 +179,7 @@ $checks = @(
         Key = 'winget'; Name = 'winget (App Installer)'; Required = $false
         Test = {
             $v = Get-FirstLine 'winget' @('--version')
-            if ($v) { New-Result $true $v } else { New-Result $false 'not found; automatic installs are unavailable' }
+            if ($v) { New-Result $true $v } else { New-Result $false 'not found; official installers are downloaded instead' }
         }
         Help = @('Install "App Installer" from the Microsoft Store:', 'https://apps.microsoft.com/detail/9NBLGGH4NNS1')
     }
@@ -405,6 +408,9 @@ function Complete-Check {
 Write-Head 'AP3X-1 prerequisite check (Windows)'
 Write-Host "Repository: $root"
 Write-Info 'Checks developer tools and Docker only. AI agents are not checked or installed.'
+if ($env:USERNAME -eq 'WDAGUtilityAccount' -and -not $SkipDocker) {
+    Write-Warn 'This looks like Windows Sandbox, which cannot run WSL or Docker. Re-run with -SkipDocker.'
+}
 Write-Host ''
 
 foreach ($check in $checks) { Invoke-Check $check | Out-Null }
