@@ -1,0 +1,31 @@
+# Aider adapter for the AP3X-1 Oracle APEX harness.
+# Canonical instructions live in AGENTS.md; this file only wires Aider to them.
+# Do not add API keys here and do not commit a .env file with keys.
+
+# Aider does not discover AGENTS.md; name the files explicitly.
+read:
+  - AGENTS.md
+  - CONVENTIONS.md
+
+# SQLcl rejects a CRLF .apx file, so never rewrite line endings.
+line-endings: lf
+encoding: utf-8
+
+# Keep Aider's runtime files out of git; .gitignore lists them explicitly.
+gitignore: false
+
+# No telemetry or update pings.
+analytics: false
+check-update: false
+show-release-notes: false
+
+# Show each change so it can be reviewed before commit or deploy.
+show-diffs: true
+
+# Deterministic gate. A fresh clone has no working/app, so auto-test stays off.
+# Set auto-test: true once working/app exists, or run /test after each change.
+test-cmd: node scripts/run-ps.mjs -NoProfile -File scripts/validate-apex-app.ps1 -AppDirectory working/app
+auto-test: false
+
+# Aider's built-in linters do not understand .apx or this repository's SQLcl gate.
+auto-lint: false

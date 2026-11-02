@@ -86,7 +86,7 @@ The bootstrap does not install an AI agent. Start the one you use (see the table
 claude
 ```
 
-Then open this repository in the agent and ask it to design, build, validate, or deploy an APEX application. The agent reads `AGENTS.md` automatically.
+Then open this repository in the agent and ask it to design, build, validate, or deploy an APEX application. Most hosts read `AGENTS.md` automatically; Aider loads `AGENTS.md` and `CONVENTIONS.md` from `.aider.conf.yml`.
 
 Optional AI hosts use the same repository but their own installers:
 
@@ -97,6 +97,7 @@ Optional AI hosts use the same repository but their own installers:
 | Claude Code | `claude` | `npm install -g @anthropic-ai/claude-code` |
 | Codex CLI | `codex` | `npm install -g @openai/codex` |
 | DSH | `dsh` | `npm install -g @deepseek-ai/dsh` |
+| Aider | `aider` | `uv tool install aider-chat`; run `aider --model ollama/<model>` and keep `OPENAI_API_KEY` unset |
 
 On Windows, use `npm.cmd` instead of `npm` if PowerShell blocks the `npm.ps1` shim. These hosts are optional and not installed by the bootstrap. Do not create a metered API key just to use the harness. Use a host account login or a free/local model. The doctor warns when common paid-key environment variables are present.
 

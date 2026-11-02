@@ -11,6 +11,7 @@ The Oracle APEX harness is host-agnostic. `AGENTS.md` is the canonical instructi
 | Claude Code / VS Code Claude | `CLAUDE.md`, `.claude/skills/oracle-apex/` | `/login` with an existing Claude subscription; keep `ANTHROPIC_API_KEY` unset | Claude Code has no official $0 local-model mode |
 | Antigravity | `AGENTS.md`, `.agents/rules/`, `.agents/skills/` | Sign in with a Google account; free tier | Free-tier quotas apply |
 | DSH (DeepSeek Harness) | `AGENTS.md`, `.agents/skills/` | `ollama launch dsh` or a local-provider plugin | DSH is a developer preview |
+| Aider | `CONVENTIONS.md`, `.aider.conf.yml` | `aider --model ollama/<model>` against a local Ollama server | No skills, MCP, or subagents; `.apx` has no repo-map or linter support |
 | Other `AGENTS.md`-aware extension | `AGENTS.md` | Depends on the host and model | Verify the host does not silently use a paid key |
 
 **No API keys means:** no `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENROUTER_API_KEY` is required by this harness. Existing environment variables are never read by the harness; `scripts/harness-doctor.ps1 -StrictNoKeys` warns if any are present.
@@ -118,6 +119,29 @@ ollama launch dsh
 `ollama launch dsh` uses a local Ollama model with no account login or API key. If you configure DSH manually, use an OpenAI-compatible local endpoint such as `http://127.0.0.1:11434/v1`; a local server does not need a real key.
 
 DSH is a developer preview and its configuration can change. The harness files (`AGENTS.md`, `.agents/skills/oracle-apex.md`) are deliberately plain Markdown so they survive plugin churn.
+
+## Aider
+
+Aider does not discover instruction files. The repository ships `.aider.conf.yml`, which loads `AGENTS.md` and `CONVENTIONS.md` as read-only context, sets `line-endings: lf` so `.apx` stays parser-safe, and points `test-cmd` at the SQLcl validation gate through `scripts/run-ps.mjs` (which uses `pwsh`, then falls back to Windows PowerShell).
+
+Install it in an isolated environment and run a local model so no paid key is involved:
+
+```bash
+uv tool install aider-chat
+ollama serve
+aider --model ollama/<model>
+```
+
+`aider --version` confirms the install. Do not set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`; Aider reads them automatically and would bill a metered key. `harness-doctor.ps1 -StrictNoKeys` warns when they are present.
+
+What Aider does not get:
+
+- **Skills:** no discovery of `skills/**/SKILL.md`. Load the matching file with `/read skills/apex-domains/SKILL.md` (reference) or `/add` (editable).
+- **MCP:** no client, so the `oracle-sqlcl` server is unavailable. Use `/run` with `tools/sqlcl/bin/sql`.
+- **Subagents:** `apex-reviewer`, `apex-designer`, and `oracle-dba` do not exist. Run the deterministic gates instead.
+- **APEXLang tooling:** `.apx` has no tree-sitter grammar, so it is absent from the repo map and from Aider's linter. Add page files explicitly and run `/test` after each change.
+
+Aider is a good fit for a small brownfield edit (one page, one process, one package). For greenfield design work, use OpenCode, Claude Code, Codex, Antigravity, or DSH, where the skills and subagents are available.
 
 ## Other agent extensions
 

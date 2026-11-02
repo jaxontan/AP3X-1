@@ -1,6 +1,6 @@
 # AP3X-1 — Oracle APEX Agent Harness
 
-A developer harness for building, validating, and deploying Oracle APEX applications with AI coding agents. Works seamlessly across **OpenCode**, **Antigravity**, **Claude Code**, **Codex**, and **DSH** without requiring paid API keys.
+A developer harness for building, validating, and deploying Oracle APEX applications with AI coding agents. Works seamlessly across **OpenCode**, **Antigravity**, **Claude Code**, **Codex**, **DSH**, and **Aider** without requiring paid API keys.
 
 **Setup in four steps:**
 
@@ -215,6 +215,9 @@ agy
 
 # Or OpenCode (install it yourself; the bootstrap does not):
 opencode
+
+# Or Aider with a local Ollama model (no API key):
+aider --model ollama/<model>
 ```
 *(Or open this repository directly in the Antigravity IDE, VS Code, or Codex).*
 
@@ -237,7 +240,7 @@ Use the built-in commands and skills inside your agent chat:
 ### 4.3 Commands reference
 
 #### 🎯 APEX & PL/SQL domain commands
-OpenCode uses `/apex.<name>`; Claude Code, Codex, Antigravity, and DSH use the same workflow as `/apex-<name>` (for example `/apex.plsql` = `/apex-plsql`). The skill copies are generated from `.opencode/commands/` by `node scripts/sync-agent-commands.mjs`.
+OpenCode uses `/apex.<name>`; Claude Code, Codex, Antigravity, and DSH use the same workflow as `/apex-<name>` (for example `/apex.plsql` = `/apex-plsql`). The skill copies are generated from `.opencode/commands/` by `node scripts/sync-agent-commands.mjs`. Aider has no skill discovery: load a skill with `/read skills/apex-delivery/SKILL.md`, and run `/test` after each `.apx` change.
 
 | Command | Purpose |
 | :--- | :--- |
@@ -340,6 +343,7 @@ This repository works with multiple host assistants without paid API keys:
 | **Claude Code** | `CLAUDE.md` + `.claude/` | Direct `/login` with existing subscription |
 | **Codex CLI** | `AGENTS.md` | Local Ollama models (`--oss --local-provider ollama`) |
 | **DSH** | `AGENTS.md` + `.agents/skills` | Local Ollama models |
+| **Aider** | `CONVENTIONS.md` + `.aider.conf.yml` | Local Ollama models (`--model ollama/<model>`) |
 
 ### 🛡️ Safety & engineering rules
 
@@ -364,6 +368,8 @@ AP3X-1/
 ├── docs/                     # Getting started, harness matrix, provenance, ADRs
 ├── AGENTS.md                 # Master agent operating rules and skill routing
 ├── CLAUDE.md                 # Claude Code adapter
+├── CONVENTIONS.md            # Aider adapter instructions
+├── .aider.conf.yml           # Aider context files, LF endings, and test command
 ├── access.md                 # Local sandbox URLs and logins
 ├── bootstrap.cmd             # One-command Windows setup
 ├── check.cmd                 # Check (and fix) Git, Docker, and every other prerequisite

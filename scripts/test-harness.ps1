@@ -344,7 +344,7 @@ exit 0
         'scripts/verify-delivery.ps1'
     )
     $adapters = @(
-        'AGENTS.md', 'CLAUDE.md',
+        'AGENTS.md', 'CLAUDE.md', 'CONVENTIONS.md',
         '.claude/skills/oracle-apex/SKILL.md',
         '.agents/skills/oracle-apex.md', '.agents/rules/oracle-apex.md',
         '.opencode/agents/apex.md', '.opencode/agents/apex-reviewer.md',
@@ -367,6 +367,23 @@ exit 0
     }
     Add-Result -Name 'agent adapters carry the delivery contract' -Ok ($drift.Count -eq 0) -Detail ($drift -join "`n")
 
+    # Aider names its context files explicitly; a typo here silently drops the contract.
+    $aiderConfig = Join-Path $Root '.aider.conf.yml'
+    $aiderDrift = @()
+    if (-not (Test-Path -LiteralPath $aiderConfig)) {
+        $aiderDrift += '.aider.conf.yml is missing'
+    }
+    else {
+        $aiderText = [System.IO.File]::ReadAllText($aiderConfig)
+        foreach ($target in 'AGENTS.md', 'CONVENTIONS.md') {
+            if ($aiderText.IndexOf($target) -lt 0) { $aiderDrift += ".aider.conf.yml does not read $target" }
+            elseif (-not (Test-Path -LiteralPath (Join-Path $Root $target))) { $aiderDrift += "$target is cited but missing" }
+        }
+        if ($aiderText -notmatch 'line-endings:\s*lf') { $aiderDrift += '.aider.conf.yml must set line-endings: lf for .apx files' }
+        if ($aiderText -match '(?m)^\s*(openai-api-key|anthropic-api-key|api-key)\s*:') { $aiderDrift += '.aider.conf.yml must not contain an API key' }
+    }
+    Add-Result -Name 'Aider config reads the canonical instructions with LF endings' -Ok ($aiderDrift.Count -eq 0) -Detail ($aiderDrift -join "`n")
+
     # Command bridges: Claude Code and .agents skills are generated from .opencode/commands.
     $bridgeOutput = & node (Join-Path $scripts 'sync-agent-commands.mjs') --check 2>&1 | Out-String
     Add-Result -Name 'command bridges match .opencode/commands' -Ok ($LASTEXITCODE -eq 0) -Detail $bridgeOutput
@@ -376,6 +393,12 @@ exit 0
     Add-Result -Name 'runtime verifier parses' -Ok ($LASTEXITCODE -eq 0) -Detail $runtimeOutput
     $runtimeOutput = & node $runtimeVerifier --help 2>&1 | Out-String
     Add-Result -Name 'runtime verifier prints usage' -Ok ($LASTEXITCODE -eq 0 -and $runtimeOutput -match '--deny') -Detail $runtimeOutput
+
+    $psLauncher = Join-Path $scripts 'run-ps.mjs'
+    $psOutput = & node --check $psLauncher 2>&1 | Out-String
+    Add-Result -Name 'PowerShell launcher parses' -Ok ($LASTEXITCODE -eq 0) -Detail $psOutput
+    $psOutput = & node $psLauncher --help 2>&1 | Out-String
+    Add-Result -Name 'PowerShell launcher prints usage' -Ok ($LASTEXITCODE -eq 0 -and $psOutput -match 'Usage') -Detail $psOutput
     $savedPassword = $env:APEX_TEST_PASSWORD
     $env:APEX_TEST_PASSWORD = $null
     $savedErrorAction = $ErrorActionPreference

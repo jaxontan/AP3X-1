@@ -75,16 +75,17 @@ PL/SQL mode also reads `skills/apex-domains/references/smartdb-plsql.md` for the
 | Claude Code / VS Code Claude | `CLAUDE.md`, `.claude/skills/` |
 | Antigravity | `AGENTS.md`, `.agents/rules/`, `.agents/skills/` |
 | DSH (DeepSeek Harness) | `AGENTS.md`, `.agents/skills/` |
+| Aider | `CONVENTIONS.md`, `.aider.conf.yml` |
 | Other `AGENTS.md`-aware extension | `AGENTS.md` |
 
-Workflow commands are written once in `.opencode/commands/apex.*.md` (OpenCode `/apex.plsql`). `node scripts/sync-agent-commands.mjs` generates the matching `apex-*` skills in `.claude/skills/` and `.agents/skills/` (`/apex-plsql` in Claude Code, Codex, Antigravity, and DSH). Edit the OpenCode source, never the generated copies; `scripts/test-harness.ps1` fails when they drift.
+Workflow commands are written once in `.opencode/commands/apex.*.md` (OpenCode `/apex.plsql`). `node scripts/sync-agent-commands.mjs` generates the matching `apex-*` skills in `.claude/skills/` and `.agents/skills/` (`/apex-plsql` in Claude Code, Codex, Antigravity, and DSH). Edit the OpenCode source, never the generated copies; `scripts/test-harness.ps1` fails when they drift. Aider has no skill discovery and no MCP client, so it gets the conventions file plus the deterministic `test-cmd` in `.aider.conf.yml`; it does not get `apex-*` bridges.
 
 Setup matrix and no-key paths: `docs/harnesses/README.md`.
 
 ## Model and API-key policy
 
 - Do not request, print, or store API keys. Do not use paid API models.
-- Prefer a free model in OpenCode, a local Ollama model in Codex/DSH, the Antigravity free tier, or an existing subscription login that requires no API key.
+- Prefer a free model in OpenCode, a local Ollama model in Codex/DSH/Aider, the Antigravity free tier, or an existing subscription login that requires no API key.
 - If a host needs authentication, use its account/OAuth login. Never convert a subscription into a metered API key.
 - `scripts/harness-doctor.ps1 -StrictNoKeys` fails when common paid-key environment variables are present.
 - The harness can improve routing and verification, but it cannot make a weak model produce production-grade APEXLang or PL/SQL. Deterministic validation remains the gate.

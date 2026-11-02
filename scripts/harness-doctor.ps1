@@ -66,6 +66,8 @@ $requiredFiles = @(
     'skills/apex-design-system/references/ui-ux-pro-max.md',
     'skills/apex-design-system/references/palette-bank.md',
     'CLAUDE.md',
+    'CONVENTIONS.md',
+    '.aider.conf.yml',
     '.claude/skills/oracle-apex/SKILL.md',
     '.agents/skills/oracle-apex.md',
     '.agents/rules/oracle-apex.md',
@@ -87,6 +89,7 @@ $requiredFiles = @(
     'scripts/bootstrap.sh',
     'scripts/verify-design-preview.mjs',
     'scripts/sqlcl-mcp.mjs',
+    'scripts/run-ps.mjs',
     'scripts/normalize-apx-tree.ps1',
     'scripts/validate-apex-app.ps1',
     'scripts/verify-apex-change.ps1',
@@ -135,6 +138,7 @@ Write-Host 'Harness adapters' -ForegroundColor Cyan
 $adapterChecks = @(
     [pscustomobject]@{ Host = 'Codex CLI';    File = 'AGENTS.md';                          Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
     [pscustomobject]@{ Host = 'Claude Code';  File = 'CLAUDE.md';                          Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
+    [pscustomobject]@{ Host = 'Aider';        File = 'CONVENTIONS.md';                      Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
     [pscustomobject]@{ Host = 'Claude skill'; File = '.claude/skills/oracle-apex/SKILL.md'; Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
     [pscustomobject]@{ Host = 'DSH rules';    File = '.agents/rules/oracle-apex.md';         Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
     [pscustomobject]@{ Host = 'DSH skill';    File = '.agents/skills/oracle-apex.md';        Patterns = @('skills/apex-design-system/SKILL.md', 'skills/apex-ui-redesign/SKILL.md') }
@@ -236,6 +240,12 @@ $optionalHarnesses = @(
         Version = $(if (Get-Command claude -ErrorAction SilentlyContinue) { claude --version } else { '' })
         Adapter = 'CLAUDE.md + .claude/skills'
     }
+    [pscustomobject]@{
+        Name    = 'Aider'
+        Path    = (Get-ToolPath 'aider')
+        Version = $(if (Get-Command aider -ErrorAction SilentlyContinue) { aider --version } else { '' })
+        Adapter = 'CONVENTIONS.md + .aider.conf.yml'
+    }
     $agyFallback = if ($isWindowsHost) {
         Join-Path $env:LOCALAPPDATA 'agy/bin/agy.exe'
     } else {
@@ -264,7 +274,7 @@ $optionalHarnesses = @(
         Name    = 'Ollama'
         Path    = (Get-ToolPath 'ollama')
         Version = $(if (Get-Command ollama -ErrorAction SilentlyContinue) { (ollama --version 2>&1 | Select-Object -First 1) } else { '' })
-        Adapter = 'local models for Codex/DSH'
+        Adapter = 'local models for Codex/DSH/Aider'
     }
 )
 
