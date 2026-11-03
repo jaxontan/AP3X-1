@@ -16,6 +16,7 @@
 // Theme CSS reads (skills/apex-design-system/assets/ut-css/<version>/consumed-vars.txt).
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import process from 'node:process';
 
 const DEFAULT_OUT = 'working/page-design/design/brand';
@@ -146,8 +147,11 @@ function ensureContrast(color, against, target) {
     return towards;
 }
 
+// On-colour for a fill: white or the darkest neutral available. On a dark design the ink is light,
+// so the dark candidate falls back to near-black instead of the ink.
 function bestOn(fill, ink) {
-    return contrast(fill, '#FFFFFF') >= contrast(fill, ink) ? '#FFFFFF' : ink;
+    const dark = lum(ink) < 0.2 ? ink : '#111111';
+    return contrast(fill, '#FFFFFF') >= contrast(fill, dark) ? '#FFFFFF' : dark;
 }
 
 function hoverOf(hex) {
@@ -184,6 +188,13 @@ function headingWeight(m) {
         return Math.max(Number(h.fontWeight) || 400, named);
     });
     return weights.length ? Math.max(...weights) : 700;
+}
+
+// Uppercase display headings are a strong brand signal (e.g. industrial and outdoor brands).
+function headingCase(m) {
+    const hs = m.headings || [];
+    const upper = hs.filter((h) => h.textTransform === 'uppercase').length;
+    return hs.length && upper * 2 >= hs.length ? 'uppercase' : 'none';
 }
 
 function kitFromReference(reference, refPath) {
@@ -226,7 +237,7 @@ function kitFromReference(reference, refPath) {
             border: normHex(roles.border),
             ...STATUS_DEFAULTS
         },
-        font: { family: font.family, reason: font.reason, referenceFamily: cleanFamily(m.typography?.families?.[0]?.value), headingWeight: Math.min(800, Math.max(600, headingWeight(m))) },
+        font: { family: font.family, reason: font.reason, referenceFamily: cleanFamily(m.typography?.families?.[0]?.value), headingWeight: Math.min(800, Math.max(600, headingWeight(m))), headingCase: headingCase(m) },
         shape: { radius, button: pill ? 'pill' : radius === 0 ? 'square' : 'rounded' },
         depth: { shadow: shadow ? 'soft' : 'flat', referenceShadow: shadow },
         header: { style: headerStyle, logo: headerStyle === 'light' ? 'primary' : 'inherit', tall: (m.header?.height || 0) >= 64 },
@@ -234,7 +245,7 @@ function kitFromReference(reference, refPath) {
         notes: [
             'Edit values here, then rebuild with: node scripts/build-brand-kit.mjs --kit <this file>',
             'colors.primary = brand/wayfinding colour (logo, selected nav, links, focus). colors.action = the hot/primary button fill.',
-            'header.style: light | brand | dark. nav.style: light | dark. shape.button: rounded | pill | square. depth.shadow: soft | flat.'
+            'header.style: light | brand | dark. nav.style: light | dark. shape.button: rounded | pill | square. depth.shadow: soft | flat. font.headingCase: none | uppercase. colors.accents: { name: hex } adds --brand-accent-<name> tokens.'
         ]
     };
 }
@@ -253,7 +264,7 @@ function kitFromDefaults() {
         nav: { style: 'light' },
         notes: [
             'Set colors.primary and colors.action from requirement.md, then rebuild with --kit.',
-            'header.style: light | brand | dark. nav.style: light | dark. shape.button: rounded | pill | square. depth.shadow: soft | flat.'
+            'header.style: light | brand | dark. nav.style: light | dark. shape.button: rounded | pill | square. depth.shadow: soft | flat. font.headingCase: none | uppercase. colors.accents: { name: hex } adds --brand-accent-<name> tokens.'
         ]
     };
 }
@@ -314,13 +325,15 @@ function derive(kit) {
         t[`${s}Text`] = ensureContrast(base, t[`${s}Shade`], 4.5);
     }
 
+    // The darkest neutral in the kit: the ink on a light design, the ground on a dark one.
+    const deep = lum(ink) < lum(ground) ? ink : ground;
     const header = kit.header?.style || 'light';
     if (header === 'brand') { t.headerBg = primary; t.headerText = t.onPrimary; t.logo = t.onPrimary; }
-    else if (header === 'dark') { t.headerBg = mix(ink, '#000000', 0.3); t.headerText = '#FFFFFF'; t.logo = '#FFFFFF'; }
+    else if (header === 'dark') { t.headerBg = mix(deep, '#000000', 0.3); t.headerText = '#FFFFFF'; t.logo = '#FFFFFF'; }
     else { t.headerBg = surface; t.headerText = ink; t.logo = kit.header?.logo === 'primary' ? t.primaryText : ink; }
 
     const nav = kit.nav?.style || 'light';
-    if (nav === 'dark') { t.navBg = mix(ink, '#000000', 0.2); t.navText = '#FFFFFF'; t.navSelected = mix(t.navBg, '#FFFFFF', 0.12); t.navSelectedText = '#FFFFFF'; t.navHover = mix(t.navBg, '#FFFFFF', 0.07); }
+    if (nav === 'dark') { t.navBg = mix(deep, '#000000', 0.2); t.navText = '#FFFFFF'; t.navSelected = mix(t.navBg, '#FFFFFF', 0.12); t.navSelectedText = '#FFFFFF'; t.navHover = mix(t.navBg, '#FFFFFF', 0.07); }
     else { t.navBg = surface; t.navText = ink; t.navHover = mix(surface, ink, 0.05); }
 
     const r = Math.max(0, Math.min(24, Number(kit.shape?.radius ?? 6)));
@@ -374,6 +387,12 @@ function selectorParts(selector) {
 }
 
 // Vita hard-codes nav colours per state; re-declare each selector with the brand nav tokens.
+// The theme style CSS (Vita) loads after brand.css; a ':root ' prefix adds one class of specificity
+// so the brand rule wins regardless of load order, without !important.
+function outrank(selector) {
+    return /^(:root|html)\b/.test(selector) ? selector : `:root ${selector}`;
+}
+
 function navRules(scoped) {
     const groups = { hover: [], selected: [], base: [] };
     for (const rule of scoped.filter((r) => r.family === 'treenav')) {
@@ -398,7 +417,7 @@ function navRules(scoped) {
             byShape.get(key).parts.push(r.part);
         }
         for (const g of byShape.values()) {
-            out.push(`${[...new Set(g.parts)].join(',\n')} {\n${g.props.map((p) => `  ${p}: ${values[kind][p]}${g.important};`).join('\n')}\n}`);
+            out.push(`${[...new Set(g.parts)].map(outrank).join(',\n')} {\n${g.props.map((p) => `  ${p}: ${values[kind][p]}${g.important};`).join('\n')}\n}`);
         }
     }
     return out.join('\n\n');
@@ -407,7 +426,7 @@ function navRules(scoped) {
 function primaryRules(scoped) {
     const out = [];
     for (const rule of scoped.filter((r) => r.family === 'hot-button')) {
-        const sel = rule.selector.split(',').join(',\n');
+        const sel = rule.selector.split(',').map((x) => outrank(x.trim())).join(',\n');
         if (/\.fa:after/.test(rule.selector)) {
             out.push(`${sel} {\n  background-color: var(--brand-action);\n}`);
         } else if (/noUI/.test(rule.selector)) {
@@ -440,7 +459,13 @@ function buildCss(kit, d, scoped, fontFiles) {
         ...['success', 'warning', 'danger', 'info'].flatMap((s) => [[`--brand-${s}`, t[s]], [`--brand-on-${s}`, t[`on${s[0].toUpperCase()}${s.slice(1)}`]], [`--brand-${s}-text`, t[`${s}Text`]], [`--brand-${s}-shade`, t[`${s}Shade`]]]),
         ['--brand-radius', shape.radius], ['--brand-radius-sm', shape.radiusSm], ['--brand-button-radius', shape.button],
         ['--brand-shadow', shape.shadow], ['--brand-header-shadow', shape.headerShadow],
-        ['--brand-font-ui', family], ['--brand-heading-weight', String(hw)]
+        ['--brand-font-ui', family], ['--brand-heading-weight', String(hw)],
+        // Optional accent palette (colors.accents: { "yellow": "#FFDC0E" }) for categories and
+        // expressive components; each accent gets a contrast-safe on-colour.
+        ...Object.entries(kit.colors?.accents || {}).filter(([n, v]) => /^[a-z][a-z0-9-]*$/.test(n) && /^#[0-9a-f]{6}$/i.test(v)).flatMap(([n, v]) => {
+            const on = bestOn(v, t.ink);
+            return [[`--brand-accent-${n}`, v.toUpperCase()], [`--brand-on-accent-${n}`, on]];
+        })
     ];
     const ut = [
         // Typography
@@ -500,13 +525,15 @@ function buildCss(kit, d, scoped, fontFiles) {
    Reference: ${kit.source?.reference || 'none'} */
 
 ${fontFaces(kit, fontFiles)}
-/* 1. Brand tokens: the only colour literals in the app. */
-:root {
+/* 1. Brand tokens: the only colour literals in the app.
+   :root:root outranks the theme style's :root, which APEX loads after this file. */
+:root:root {
 ${lines(tokens)}
 }
 
-/* 2. Universal Theme mapping. Every variable below is read by the APEX ${kit.version} theme CSS. */
-:root {
+/* 2. Universal Theme mapping. Every variable below is read by the APEX ${kit.version} theme CSS.
+   Doubled :root so the mapping wins over the theme style file regardless of load order. */
+:root:root {
 ${lines(ut)}
 }
 
@@ -522,13 +549,47 @@ ${navRules(scoped)}
   font-weight: var(--brand-heading-weight);
   letter-spacing: -0.01em;
 }
-
+${kit.font?.headingCase === 'uppercase' ? `
+/* 5b. Display headings in capitals, as the reference sets them (font.headingCase). */
+.t-BreadcrumbRegion-titleText,
+.t-HeroRegion-title,
+.t-Region-title,
+.t-Card-title {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+` : ''}
 /* 6. Motion respects the user. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
 `;
     return { css, utVars: ut.map(([k]) => k) };
+}
+
+// Optional app component classes (KPI tiles, pills, cards) live in <kit dir>/components.css and are
+// appended verbatim; colours there must be var(--brand-*) tokens. The signature line lets the
+// delivery gate detect any hand edit of the generated file.
+export const SIGNATURE_PREFIX = '/* brand-kit-signature: sha256:';
+function sign(css) {
+    const body = (css.endsWith('\n') ? css : `${css}\n`).replace(/\r/g, '');
+    return `${body}${SIGNATURE_PREFIX}${createHash('sha256').update(body, 'utf8').digest('hex')} */\n`;
+}
+
+// The kit must target the app's APEX version: theme CSS variables differ between 26.1 and 26.2.
+async function detectAppVersion() {
+    for (const file of ['working/app/.apex/apexlang.json', '.apex/apexlang.json']) {
+        try {
+            const m = /"(?:version|apexVersion)"\s*:\s*"(26\.[12])/.exec(await fs.readFile(file, 'utf8'));
+            if (m) return m[1];
+        } catch { /* next */ }
+    }
+    try {
+        const theme = await fs.readFile('working/app/shared-components/themes/universal-theme/theme.apx', 'utf8');
+        const m = /baseTheme:\s*ut-(26\.[12])/.exec(theme);
+        if (m) return m[1];
+    } catch { /* none */ }
+    return null;
 }
 
 async function readJson(file) {
@@ -573,6 +634,7 @@ async function main() {
     }
     applySets(kit, args.sets);
     if (args.version) kit.version = args.version;
+    else if (!args.kit) kit.version = (await detectAppVersion()) || kit.version;
     kit.version ||= '26.2';
 
     const assetDir = path.join(ROOT, 'skills', 'apex-design-system', 'assets', 'ut-css', kit.version);
@@ -590,7 +652,20 @@ async function main() {
     await fs.mkdir(path.join(outDir, 'css'), { recursive: true });
     await fs.mkdir(path.join(outDir, 'fonts'), { recursive: true });
     const fontFiles = await fontFilesIn(path.join(outDir, 'fonts'), kit.font?.family);
-    const { css, utVars } = buildCss(kit, derived, scoped, fontFiles);
+    const built = buildCss(kit, derived, scoped, fontFiles);
+    const { utVars } = built;
+    let componentsCss = '';
+    try {
+        componentsCss = (await fs.readFile(path.join(outDir, 'components.css'), 'utf8')).replace(/\r/g, '').trim();
+    } catch { /* optional */ }
+    const literal = componentsCss.split('\n').filter((l) => !/^\s*(\/\*|\*)/.test(l) && /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(l));
+    if (literal.length) {
+        process.stderr.write(`components.css may only use var(--brand-*) colours. Literal colours:\n${literal.map((l) => `  ${l.trim()}`).join('\n')}\n`);
+        process.exit(1);
+    }
+    const css = sign(componentsCss
+        ? `${built.css}\n/* 7. App components (from components.css in the kit folder; edit there and rebuild). */\n${componentsCss}\n`
+        : built.css);
 
     const unread = utVars.filter((v) => !consumed.has(v));
     if (unread.length) {
@@ -625,7 +700,8 @@ async function main() {
 
     const rel = (p) => path.relative(process.cwd(), p);
     process.stdout.write(`Brand kit written to ${rel(outDir)}\n`);
-    process.stdout.write(`- brand-kit.json, css/brand.css, kit-report.md\n`);
+    process.stdout.write(`- brand-kit.json, css/brand.css, kit-report.md${componentsCss ? ' (components.css appended)' : ''}\n`);
+    process.stdout.write('- Theme style must be Vita (theme.apx: currentThemeStyle: @/Vita): the kit is indexed against Vita.\n');
     process.stdout.write(`- primary ${derived.t.primary}, action ${derived.t.action} (label ${derived.t.onAction}), header ${kit.header?.style}, nav ${kit.nav?.style}, font ${kit.font?.family}\n`);
     const neededWeights = [...new Set([400, 500, 600, 700, Number(kit.font?.headingWeight || 700)])].sort();
     const missingWeights = neededWeights.filter((w) => !fontFiles.some((f) => f.weight === w));

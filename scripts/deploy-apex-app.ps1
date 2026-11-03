@@ -225,4 +225,9 @@ if ($text -match '\bFILE_IGNORED\b' -or $text -match 'APEXlang Compile Errors' -
 }
 
 Write-Host 'APEX import completed without ORA- errors.' -ForegroundColor Green
+# Record the deployment so the delivery gate can require a design score of the deployed page.
+$marker = Join-Path (Split-Path -Parent $resolved) 'last-deploy.json'
+$record = [ordered]@{ deployedAt = (Get-Date).ToUniversalTime().ToString('o'); appDirectory = (Split-Path -Leaf $resolved) } | ConvertTo-Json
+[System.IO.File]::WriteAllText($marker, $record, (New-Object System.Text.UTF8Encoding($false)))
+Write-Host "Next: score the deployed page: node scripts/score-design.mjs --url <app-url>/home --kit page-design/design/brand/brand-kit.json --user <user> --out design-preview/deployed/score"
 exit 0

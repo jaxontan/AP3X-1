@@ -34,6 +34,7 @@ list navigation-bar (
         }
         userDefinedAttributes {
             2: has-username
+            4: User menu
         }
     )
 

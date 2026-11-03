@@ -1,6 +1,7 @@
 # Design Craft: What Good Looks Like in an APEX App
 
-The scorecard tells you whether a design passes. This file tells you how to make it good. Read it
+The scorecard tells you whether a design passes. This file tells you how to make it good. It is the
+floor; `creative-direction.md` is the ceiling (concepts, signature moves, self-critique). Read it
 before every visual decision. It applies with or without a design reference.
 
 ## 1. The bar

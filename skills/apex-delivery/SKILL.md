@@ -180,7 +180,7 @@ When the app has a brand kit (`working/page-design/design/brand/brand-kit.json`)
 node scripts/score-design.mjs --url https://localhost:8443/ords/r/<workspace>/<alias>/home --kit working/page-design/design/brand/brand-kit.json --user EMP1 --insecure --out working/design-preview/deployed/score
 ```
 
-It must print `DESIGN SCORE PASS`. Implement the look exactly as the design handoff says: copy the kit's `css/brand.css` and `fonts/*.woff2` into `app/shared-components/static-files/` unchanged, register them in `static-files.apx` (`text/css`, `font/woff2`), and load `brand.css` app-wide. The delivery gate rejects a hand-edited `brand.css`.
+It must print `DESIGN SCORE PASS`. Implement the look exactly as the design handoff says: copy the kit's `css/brand.css` and `fonts/*.woff2` into `app/shared-components/static-files/` unchanged, register them in `static-files.apx` (`text/css`, `font/woff2`), and load `brand.css` app-wide. The delivery gate rejects a hand-edited `brand.css`. When the design came from a concept (`page-design/design/concepts/`), implement it with `skills/apex-design-system/references/creative-direction.md` section 8 (band in the Body slot, no band on dialogs, numbers from a PL/SQL package through Dynamic Content with `apex_escape`, item defaults so band and reports agree, `set define off` for SQLcl installs) and verify section 9 (live score per page, live screenshots compared with the concept).
 
 Report `PASS`, `PARTIAL`, or `FAIL` with evidence. Do not claim a UI check that was not performed. Prototype rendering does not prove the deployed APEX page renders the same way.
 

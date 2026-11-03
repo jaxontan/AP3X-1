@@ -350,6 +350,30 @@ else {
         if ((Read-Text $appApx) -match 'css/brand#MIN#\.css' -and -not (Test-Path -LiteralPath (Join-Path $appDir 'shared-components\static-files\css\brand.min.css'))) {
             Add-Failure 'design' 'application.apx loads brand#MIN#.css but brand.min.css does not exist; the page would request a missing file.'
         }
+        # The kit re-declares Vita's hard-coded selectors; any other theme style (Iris, Redwood) loads
+        # after brand.css and repaints header, nav, font, and buttons at runtime.
+        $themeApx = Get-ChildItem -LiteralPath (Join-Path $appDir 'shared-components\themes') -Recurse -File -Filter 'theme.apx' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($themeApx) {
+            $styleMatch = [regex]::Match((Read-Text $themeApx.FullName), '(?m)currentThemeStyle\s*:\s*(\S+)')
+            if ($styleMatch.Success -and $styleMatch.Groups[1].Value -notmatch '(?i)/vita$') {
+                Add-Failure 'design' "brand.css is built against the Vita theme style, but theme.apx sets currentThemeStyle: $($styleMatch.Groups[1].Value). That style loads after brand.css and overrides the header, nav, and font. Set currentThemeStyle: @/Vita."
+            }
+        }
+        # A generated brand.css ends with a signature over its own content; any hand edit breaks it.
+        # Only when the project has a brand kit; a minimal hand-written L1 brand.css has no kit to match.
+        $sigMatch = [regex]::Match($brandCss, '/\* brand-kit-signature: sha256:([0-9a-f]{64}) \*/\s*\z')
+        if (-not (Test-Path -LiteralPath (Join-Path $project 'page-design\design\brand\brand-kit.json'))) { }
+        elseif (-not $sigMatch.Success) {
+            Add-Failure 'design' 'brand.css has no brand-kit signature, so it was not produced by the current scripts/build-brand-kit.mjs. Put app classes in page-design/design/brand/components.css, rebuild the kit, and copy brand.css.'
+        }
+        else {
+            $signedBody = ($brandCss -replace "`r", '').Substring(0, ($brandCss -replace "`r", '').IndexOf('/* brand-kit-signature:'))
+            $sha = [System.Security.Cryptography.SHA256]::Create()
+            $actual = -join ($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($signedBody)) | ForEach-Object { $_.ToString('x2') })
+            if ($actual -ne $sigMatch.Groups[1].Value) {
+                Add-Failure 'design' 'brand.css was edited by hand after generation (signature mismatch). Move app classes to page-design/design/brand/components.css and rebuild with scripts/build-brand-kit.mjs.'
+            }
+        }
         $staticApx = Join-Path $appDir 'shared-components\static-files.apx'
         if (-not ((Test-Path -LiteralPath $staticApx) -and (Read-Text $staticApx) -match 'file\s+"css/brand\.css"')) {
             Add-Failure 'design' 'brand.css is not registered in shared-components/static-files.apx.'
@@ -418,8 +442,11 @@ else {
     }
 
     # 2c. brand-* classes: used => defined; defined => used.
-    $used = @([regex]::Matches($apxText, '(?<![-\w])brand-[a-z0-9][a-z0-9-]*') | ForEach-Object { $_.Value } | Sort-Object -Unique)
-    $defined = @([regex]::Matches($brandCss, '\.(brand-[a-z0-9][a-z0-9-]*)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+    # Markup can come from .apx or from PL/SQL that renders a region (Dynamic Content), so scan both.
+    $dbText = (($dbFiles | ForEach-Object { Read-Text $_.FullName }) -join "`n")
+    # A trailing '-' is a prefix built by string concatenation ('brand-pill--' || variant), not a class.
+    $used = @([regex]::Matches("$apxText`n$dbText", '(?<![-\w])brand-[a-z0-9][a-z0-9_-]*') | ForEach-Object { $_.Value } | Where-Object { $_ -notmatch '[-_]$' } | Sort-Object -Unique)
+    $defined = @([regex]::Matches($brandCss, '\.(brand-[a-z0-9][a-z0-9_-]*)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
     foreach ($class in $used) {
         if ($defined -notcontains $class) { Add-Failure 'design' "Class '$class' is used in .apx but not defined in brand.css." }
     }
@@ -486,6 +513,49 @@ else {
             if (-not $latest.pass) {
                 Add-Failure 'design' "The latest design score ($(Get-RelativePath $scores[0].FullName)) is $($latest.total)/100 and FAILS. Fix the listed checks and rescore."
             }
+        }
+    }
+
+    # 2c3b. The kit must come from a real capture of the reference it names. A kit whose source URL
+    # differs from the captured reference was hand-written, and its fidelity checks measure nothing.
+    $kitJsonPath = Join-Path $project 'page-design\design\brand\brand-kit.json'
+    $refJsonPath = Join-Path $project 'page-design\design\reference\reference.json'
+    if (Test-Path -LiteralPath $kitJsonPath) {
+        $kitJson = Get-Content -LiteralPath $kitJsonPath -Raw | ConvertFrom-Json
+        $kitRef = "$($kitJson.source.reference)"
+        if ($kitRef -match '^https?://') {
+            $norm = { param($u) ($u -replace '^https?://(www\.)?', '' -replace '/+$', '').ToLowerInvariant() }
+            if (-not (Test-Path -LiteralPath $refJsonPath)) {
+                Add-Failure 'design' "brand-kit.json names $kitRef as its reference but page-design/design/reference/reference.json does not exist. Run scripts/capture-design-reference.mjs --url $kitRef."
+            }
+            else {
+                $capturedUrl = "$((Get-Content -LiteralPath $refJsonPath -Raw | ConvertFrom-Json).url)"
+                if ((& $norm $capturedUrl) -ne (& $norm $kitRef)) {
+                    Add-Failure 'design' "brand-kit.json names $kitRef as its reference, but the captured reference is $capturedUrl. The kit was not built from a capture. Run scripts/capture-design-reference.mjs --url $kitRef, then scripts/build-brand-kit.mjs --reference."
+                }
+            }
+        }
+    }
+
+    # 2c4. A prototype score does not prove the deployed look. After a deployment of a branded app,
+    # require a passing score of the deployed page (independent of whether requirement.md is filled in).
+    $deployMarker = Join-Path $project 'last-deploy.json'
+    if ($hasBrandCss -and (Test-Path -LiteralPath (Join-Path $project 'page-design\design\brand\brand-kit.json')) -and (Test-Path -LiteralPath $deployMarker)) {
+        $allScores = @()
+        $previewRoot = Join-Path $project 'design-preview'
+        if (Test-Path -LiteralPath $previewRoot) {
+            $allScores = @(Get-ChildItem -LiteralPath $previewRoot -Recurse -File -Filter 'score.json' | Sort-Object LastWriteTime -Descending)
+        }
+        $deployedAt = (Get-Item -LiteralPath $deployMarker).LastWriteTime
+        $live = @($allScores | Where-Object { $_.LastWriteTime -ge $deployedAt } | ForEach-Object {
+                $s = Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json
+                if ($s.mode -eq 'live') { [pscustomobject]@{ File = $_.FullName; Score = $s } }
+            } | Select-Object -First 1)
+        if (-not $live.Count) {
+            Add-Failure 'design' 'The app was deployed (last-deploy.json) but the deployed page has no design score since then. Run scripts/score-design.mjs --url <app-url>/home --user <user> --kit page-design/design/brand/brand-kit.json; the prototype score does not prove the deployed look.'
+        }
+        elseif (-not $live[0].Score.pass) {
+            Add-Failure 'design' "The deployed page scores $($live[0].Score.total)/100 and FAILS ($(Get-RelativePath $live[0].File)). The prototype passed, so the gap is in the build: theme style, brand.css loading, or page structure."
         }
     }
 

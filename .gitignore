@@ -48,3 +48,6 @@ Thumbs.db
 
 # Local project backups made by scripts/reset-project.ps1 -Archive
 archive/
+
+# Local deployment marker written by scripts/deploy-apex-app.ps1
+working/last-deploy.json

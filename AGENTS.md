@@ -31,6 +31,7 @@ You are an Oracle APEX engineering agent. You design, generate, review, validate
 | What the harness guarantees and which gate enforces each guarantee | `docs/harness-standard.md` |
 | Custom brand look beyond stock Universal Theme (new or existing app) | `skills/apex-design-system/references/brand-layer.md` |
 | Design craft: what good looks like, levers that stop an APEX app looking default | `skills/apex-design-system/references/craft.md` |
+| Creative direction: brief, three divergent concepts, free page composition, self-critique, concept board | `skills/apex-design-system/references/creative-direction.md`, `scripts/render-design-concept.mjs` |
 | Design from a reference website (URL in `requirement.md` or the request) | `skills/apex-design-system/references/design-reference.md`, `scripts/capture-design-reference.mjs` |
 | Design pipeline: generated `brand.css`, prototype, numeric design score | `.opencode/agents/apex-designer.md`, `scripts/build-brand-kit.mjs`, `scripts/render-design-prototype.mjs`, `scripts/score-design.mjs` |
 | Direction-only style/palette bank | `skills/apex-design-system/references/ui-ux-pro-max.md`, `palette-bank.md` |

@@ -307,7 +307,9 @@ function score(kit, stock, m, mobile, axe, cover) {
         'Link css/brand.css (prototype) or set application css.fileUrls to #APP_FILES#css/brand.css?v=#APP_VERSION#.', true));
 
     // Fidelity to the brand kit (which carries the reference)
-    checks.push(check('F1', 'Primary action uses the kit action colour', 8, firstHot && deltaE(firstHot.bg, t.action) < 5,
+    // On a colour field the primary action is the inverse pill (on-primary fill), as on the reference.
+    const fieldInverse = kit.expression?.colourField === true && firstHot && deltaE(firstHot.bg, t.onPrimary) < 5;
+    checks.push(check('F1', 'Primary action uses the kit action colour', 8, firstHot && (deltaE(firstHot.bg, t.action) < 5 || fieldInverse),
         firstHot ? hex(firstHot.bg) : 'no hot button rendered', t.action, 'Use a hot button for the main action; keep brand.css section 3. Change colors.action in brand-kit.json if the target is wrong.'));
     checks.push(check('F2', 'Header matches the kit header style', 5, m.header && deltaE(m.header.bg, t.headerBg) < 5,
         m.header ? hex(m.header.bg) : 'no header', `${t.headerBg} (${kit.header?.style})`, 'Set header.style in brand-kit.json (light | brand | dark) and rebuild.'));
@@ -321,7 +323,7 @@ function score(kit, stock, m, mobile, axe, cover) {
     const measuredRadius = m.region?.radius ?? m.card?.radius ?? 0;
     checks.push(check('F5', 'Corner radius matches the kit', 4, Math.abs(measuredRadius - targetRadius) <= 2,
         `${measuredRadius}px`, `${targetRadius}px`, 'Set shape.radius in brand-kit.json and rebuild.'));
-    const hasShadow = (m.region?.shadow && m.region.shadow !== 'none') || (m.card?.shadow && m.card.shadow !== 'none');
+    const hasShadow = Boolean((m.region?.shadow && m.region.shadow !== 'none') || (m.card?.shadow && m.card.shadow !== 'none'));
     const wantShadow = (kit.depth?.shadow || 'soft') === 'soft';
     checks.push(check('F6', 'Depth language matches the kit', 3, hasShadow === wantShadow,
         hasShadow ? 'shadowed surfaces' : 'flat surfaces', wantShadow ? 'soft shadows' : 'flat', 'Set depth.shadow (soft | flat) in brand-kit.json and rebuild.'));
@@ -343,9 +345,13 @@ function score(kit, stock, m, mobile, axe, cover) {
     checks.push(check('C2', 'Spacing sits on a 4px grid', 4, onGrid >= 0.8, `${Math.round(onGrid * 100)}%`, '>= 80%',
         'Use Universal Theme spacing template options; avoid custom padding values that are not multiples of 4.'));
     const [primaryCover, actionCover] = cover;
-    const brandCover = primaryCover + actionCover;
-    checks.push(check('C3', 'Brand colour is present but not overused (first viewport)', 4, brandCover >= 0.003 && brandCover <= 0.25,
-        `${(brandCover * 100).toFixed(1)}%`, '0.3% - 25%', brandCover > 0.25 ? 'Brand colour is painting large surfaces; keep it for header/nav, the main action, and status.' : 'Brand colour is missing; check brand.css loads and the primary action is a hot button.'));
+    // When primary and action are the same colour the same pixels match both; count them once.
+    const brandCover = deltaE(t.primary, t.action) < 5 ? Math.max(primaryCover, actionCover) : primaryCover + actionCover;
+    // expression.colourField: the concept deliberately paints a band of brand colour (a poster move).
+    const field = kit.expression?.colourField === true;
+    const coverMax = field ? 0.7 : 0.25;
+    checks.push(check('C3', 'Brand colour is present but not overused (first viewport)', 4, brandCover >= 0.003 && brandCover <= coverMax,
+        `${(brandCover * 100).toFixed(1)}%`, `0.3% - ${Math.round(coverMax * 100)}%${field ? ' (colour field)' : ''}`, brandCover > 0.25 ? 'Brand colour is painting large surfaces; keep it for header/nav, the main action, and status.' : 'Brand colour is missing; check brand.css loads and the primary action is a hot button.'));
     const hotColours = new Set(m.hot.map((b) => hex(b.bg)));
     checks.push(check('C4', 'One primary-action colour', 3, hotColours.size === 1, [...hotColours].join(', ') || 'none', '1',
         'Use the hot button only for the main action on each screen; all hot buttons share the action colour.'));
@@ -434,9 +440,18 @@ async function main() {
         for (const vp of VIEWPORTS) {
             const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, reducedMotion: 'reduce', ignoreHTTPSErrors: args.insecure });
             const page = await context.newPage();
-            if (args.user) await apexLogin(page, target, args.user, process.env[args.passwordEnv]);
-            await page.goto(target, { waitUntil: 'load', timeout: 45000 });
+            let visit = target;
+            if (args.user) {
+                await apexLogin(page, target, args.user, process.env[args.passwordEnv]);
+                // APEX keeps the session in the URL; re-opening the bare URL lands on the login page again.
+                const session = new URL(page.url()).searchParams.get('session');
+                if (session && !/[?&]session=/.test(target)) visit = `${target}${target.includes('?') ? '&' : '?'}session=${session}`;
+            }
+            await page.goto(visit, { waitUntil: 'load', timeout: 45000 });
             await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+            if (args.url && !/\/login\b/i.test(target) && await page.locator('input[type="password"]').count() > 0) {
+                throw new Error(`Landed on a login page instead of ${target}. Pass --user (password in ${args.passwordEnv}) so the real page is scored.`);
+            }
             await page.evaluate(async () => { if (document.fonts) await document.fonts.ready; });
             await page.screenshot({ path: path.join(outDir, `design-${vp.name}.png`), fullPage: true });
             await page.screenshot({ path: path.join(outDir, `design-${vp.name}-fold.png`) });
@@ -488,7 +503,7 @@ async function main() {
         report ? '' : '\nkit-report.md was not found next to the kit.',
         ''
     ].join('\n');
-    await fs.writeFile(path.join(outDir, 'score.json'), `${JSON.stringify({ total: result.total, pass: result.pass, checks: result.checks, measured: results, axe }, null, 2)}\n`, 'utf8');
+    await fs.writeFile(path.join(outDir, 'score.json'), `${JSON.stringify({ mode: args.url ? 'live' : 'prototype', target, total: result.total, pass: result.pass, checks: result.checks, measured: results, axe }, null, 2)}\n`, 'utf8');
     await fs.writeFile(path.join(outDir, 'score.md'), md, 'utf8');
 
     process.stdout.write(`Design score: ${result.total}/100 (${rel(path.join(outDir, 'score.md'))})\n`);

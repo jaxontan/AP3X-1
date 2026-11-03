@@ -436,13 +436,37 @@ exit 0
             @{ Script = 'render-design-prototype.mjs'; Usage = '--brand' },
             @{ Script = 'score-design.mjs'; Usage = '--kit' },
             @{ Script = 'fetch-open-font.mjs'; Usage = '--family' },
-            @{ Script = 'refresh-ut-css-vars.mjs'; Usage = 'ut-css' })) {
+            @{ Script = 'refresh-ut-css-vars.mjs'; Usage = 'ut-css' },
+            @{ Script = 'render-design-concept.mjs'; Usage = '--concept' })) {
         $toolPath = Join-Path $scripts $tool.Script
         $toolOutput = & node --check $toolPath 2>&1 | Out-String
         $parsed = $LASTEXITCODE -eq 0
         $toolOutput += & node $toolPath --help 2>&1 | Out-String
         Add-Result -Name "$($tool.Script) parses and prints usage" -Ok ($parsed -and $LASTEXITCODE -eq 0 -and $toolOutput -match [regex]::Escape($tool.Usage)) -Detail $toolOutput
     }
+    # Concept renderer guardrails: free composition, but no inline style, no undefined or unmapped
+    # brand classes, and never the reference brand's name.
+    $conceptRenderer = (Join-Path $scripts 'render-design-concept.mjs').Replace('\', '/')
+    $lintScript = @"
+import { lintFragment, forbiddenWordsFrom, critiqueProblems, axesOf } from 'file:///$conceptRenderer';
+const words = forbiddenWordsFrom('**Forbidden words:** acme, widget');
+const ctx = { definedClasses: new Set(['brand-band']), mappedClasses: new Set(['brand-band']), brandWords: words };
+const fm = '<!-- page: {"title": "T", "data": "sample"} -->';
+const good = lintFragment(fm + '<section class="brand-band"><h1 class="t-Region-title">Order #10482</h1><button class="t-Button" type="button"><span class="t-Button-label">Go</span></button></section>', ctx);
+const bad = lintFragment('<!-- page: {"title": "T"} --><div class="brand-ghost" style="color:red"><p>Acme widget</p><button type="button"></button></div>', ctx);
+const realNoSource = lintFragment('<!-- page: {"title": "T", "data": "real"} --><p>x</p>', ctx);
+const noCritique = critiqueProblems('## Critique\n\n_(written after rendering)_\n');
+const oneRound = critiqueProblems('## Critique\n### Round 1\n- fixed\n', []);
+const unanswered = critiqueProblems('## Critique\n### Round 1\n- a\n### Round 2\n- b\n', ['home: no hero']);
+const ok = critiqueProblems('## Critique\n### Round 1\n- a\n### Round 2\n- remaining tell accepted: why\n', ['home: no hero']);
+const axes = axesOf('**Axes:** composition = poster bands; colour = one field; chrome = top navigation.');
+console.log(JSON.stringify({ good: good.length, bad, realNoSource, noCritique: noCritique.length, oneRound: oneRound.length, unanswered: unanswered.length, ok: ok.length, axes }));
+"@
+    $lintOut = $lintScript | & node --input-type=module - 2>&1 | Out-String
+    $lintOk = $lintOut -match '"good":0' -and $lintOut -match 'inline style' -and $lintOut -match 'not defined in components.css' -and $lintOut -match 'Forbidden word' -and $lintOut -match 'no text and no aria-label' -and $lintOut -match 'Front matter must say'
+    $lintOk = $lintOk -and $lintOut -match 'dataSource' -and $lintOut -match '"noCritique":[12]' -and $lintOut -match '"oneRound":1' -and $lintOut -match '"unanswered":1' -and $lintOut -match '"ok":0' -and $lintOut -match '"chrome":"top navigation"'
+    Add-Result -Name 'concept renderer blocks inline style, undefined classes, forbidden words, unnamed buttons, undeclared data, and unfinished critiques' -Ok $lintOk -Detail $lintOut
+
     foreach ($ver in '26.1', '26.2') {
         $index = Join-Path $Root "skills\apex-design-system\assets\ut-css\$ver"
         $indexOk = (Test-Path -LiteralPath (Join-Path $index 'consumed-vars.txt')) -and (Test-Path -LiteralPath (Join-Path $index 'stock.json')) -and (Test-Path -LiteralPath (Join-Path $index 'scoped-rules.json'))
