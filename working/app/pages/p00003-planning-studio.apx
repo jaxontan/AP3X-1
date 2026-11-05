@@ -36,125 +36,6 @@ page 3 (
         }
     )
 
-    region citations-report (
-        name: Research sources
-        type: classicReport
-        source {
-            location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select finding_id,
-                       topic,
-                       claim_text,
-                       source_url,
-                       publisher,
-                       confidence_score,
-                       initcap(replace(review_status, '_', ' ')) as review_status
-                from fc_research_findings
-                where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
-                order by finding_id asc
-                ```
-        }
-        layout {
-            sequence: 15
-            parentRegion: @planning-tabs
-            slot: tabs
-        }
-        appearance {
-            template: @/standard
-            templateOptions: [
-                #DEFAULT#
-                t-Region--noPadding
-            ]
-        }
-        reportLayout {
-            numberOfRows: 10
-        }
-        componentAppearance {
-            template: @/standard
-            templateOptions: [
-                #DEFAULT#
-                t-Report--stretch
-                t-Report--rowHighlight
-            ]
-        }
-        pagination {
-            type: nextAndPreviousLinks
-        }
-
-        column CLAIM_TEXT (
-            derivedColumn: N
-            heading {
-                heading: Corporate Strategic Mandate / Claim
-            }
-            layout {
-                sequence: 3
-            }
-        )
-
-        column CONFIDENCE_SCORE (
-            derivedColumn: N
-            heading {
-                heading: Confidence (%)
-            }
-            layout {
-                sequence: 6
-            }
-        )
-
-        column FINDING_ID (
-            derivedColumn: N
-            heading {
-                heading: ID
-            }
-            layout {
-                sequence: 1
-            }
-        )
-
-        column PUBLISHER (
-            derivedColumn: N
-            heading {
-                heading: Publisher / Engine
-            }
-            layout {
-                sequence: 5
-            }
-        )
-
-        column REVIEW_STATUS (
-            derivedColumn: N
-            heading {
-                heading: Status
-            }
-            layout {
-                sequence: 7
-            }
-        )
-
-        column SOURCE_URL (
-            derivedColumn: N
-            heading {
-                heading: Citation Source URL
-            }
-            layout {
-                sequence: 4
-            }
-        )
-
-        column TOPIC (
-            derivedColumn: N
-            heading {
-                heading: Topic
-            }
-            layout {
-                sequence: 2
-            }
-        )
-
-    )
-
     region concepts-report (
         name: Concept options
         type: cards
@@ -357,25 +238,12 @@ page 3 (
     )
 
     region gate1-pending-banner (
-        name: Gate 1 Pending Status
+        name: GATE 1 PLANNING STATUS: IN REVIEW (PENDING MICHELLE SIGN-OFF)
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-clock-o" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 1 PLANNING STATUS: IN REVIEW (PENDING MICHELLE SIGN-OFF)</h2>
-                            <div class="t-Alert-body">Select a concept, check the team handover tasks, then click <strong>Approve Gate 1 and hand over</strong>.</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 1</span>
-                        </div>
-                    </div>
-                </div>
+                Select a concept, check the team handover tasks, then approve Gate 1 to dispatch handover packages. <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 1</span>
                 ```
         }
         layout {
@@ -383,8 +251,13 @@ page 3 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--warning
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -393,25 +266,12 @@ page 3 (
     )
 
     region gate1-status-banner (
-        name: Gate 1 Approval Status
+        name: GATE 1 PLANNING STATUS: SIGNED OFF & APPROVED
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 1 PLANNING STATUS: SIGNED OFF &amp; APPROVED</h2>
-                            <div class="t-Alert-body">Signed off by Michelle (Planning Lead). Handover packages dispatched to Design Studio (Adi) &amp; Operations (Wei Lin).</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--success t-Badge--large">STAGE 2: DESIGN READY</span>
-                        </div>
-                    </div>
-                </div>
+                Signed off by Michelle (Planning Lead). Handover packages dispatched to Design Studio (Adi) &amp; Operations (Wei Lin). <span class="t-Badge t-Badge--success t-Badge--large">STAGE 2: DESIGN READY</span>
                 ```
         }
         layout {
@@ -419,8 +279,13 @@ page 3 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--success
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression

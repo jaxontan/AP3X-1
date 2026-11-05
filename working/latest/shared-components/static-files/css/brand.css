@@ -427,6 +427,13 @@
 .t-Body-contentInner .t-Alert--page .t-Alert-icon .t-Icon {
   color: currentColor;
 }
+.t-Body-contentInner .t-Alert--page .t-Alert-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
 
 /* Tabs (region display selector): one tidy row that scrolls, not a two-row wall. */
 .apex-rds-container .apex-rds {
