@@ -350,25 +350,12 @@ page 2 (
     )
 
     region gate0-confirmed-banner (
-        name: Gate 0 Confirmed Status
+        name: GATE 0 STATUS: CONFIRMED & VERIFIED
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 0 STATUS: CONFIRMED &amp; VERIFIED</h2>
-                            <div class="t-Alert-body">Intake criteria verified by Michelle (Planning Lead). Brief parameters and statutory venue constraints locked.</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--success t-Badge--large">GATE 0 CONFIRMED</span>
-                        </div>
-                    </div>
-                </div>
+                Intake criteria verified by Michelle (Planning Lead). Brief parameters and statutory venue constraints locked. <span class="t-Badge t-Badge--success t-Badge--large">GATE 0 CONFIRMED</span>
                 ```
         }
         layout {
@@ -376,8 +363,13 @@ page 2 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--success
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -386,25 +378,12 @@ page 2 (
     )
 
     region gate0-pending-banner (
-        name: Gate 0 Pending Status
+        name: GATE 0 STATUS: PENDING VERIFICATION
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-exclamation-triangle" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 0 STATUS: PENDING VERIFICATION</h2>
-                            <div class="t-Alert-body">Check the brief requirements and planning risks below, then click <strong>Confirm brief (Gate 0)</strong>.</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 0</span>
-                        </div>
-                    </div>
-                </div>
+                Check the brief requirements and planning risks below, then click <strong>Confirm brief (Gate 0)</strong>. <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 0</span>
                 ```
         }
         layout {
@@ -412,8 +391,13 @@ page 2 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--warning
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -1381,8 +1365,8 @@ page 2 (
         buttonName: CONFIRM_GATE0_INTAKE
         label: Confirm brief (Gate 0)
         layout {
-            sequence: 50
-            region: @tender-form
+            sequence: 10
+            region: @gate0-pending-banner
             slot: next
         }
         appearance {
@@ -1407,7 +1391,7 @@ page 2 (
         buttonName: CREATE_TENDER
         label: Create tender
         layout {
-            sequence: 20
+            sequence: 15
             region: @tender-form
             slot: next
         }
@@ -1430,7 +1414,7 @@ page 2 (
         buttonName: LOAD_TENDER
         label: Load tender
         layout {
-            sequence: 25
+            sequence: 20
             region: @tender-form
             slot: next
         }
@@ -1468,10 +1452,10 @@ page 2 (
 
     button process-addendum (
         buttonName: PROCESS_ADDENDUM
-        label: Add addendum
+        label: Process addendum
         layout {
-            sequence: 45
-            region: @tender-form
+            sequence: 10
+            region: @brief-upload-section
             slot: next
         }
         appearance {
@@ -1522,6 +1506,7 @@ page 2 (
         }
         appearance {
             buttonTemplate: @/text-with-icon
+            hot: true
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
