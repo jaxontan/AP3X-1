@@ -436,6 +436,46 @@
             aiStatus: "✨ AI-Enabled",
             aiDetail: "Synthesizes trade-specific RFQ documents with fabrication tolerances, material specifications, and delivery milestones."
         },
+        "vendor-quotes": {
+            title: "Vendor Quotations & Benchmark Awarding",
+            module: "Page 5 • Operations & Costing",
+            icon: "fa-balance-scale",
+            isAi: false,
+            purpose: "Reconciles returned subcontractor bids against Flash Concepts historical SharePoint pricing libraries, compares price variance, and records award justifications before locking preferred costs into the tender.",
+            currentEngine: "Relational quote benchmarking and award locking (FC_COSTING_API.SELECT_QUOTATION).",
+            aiStatus: "ℹ️ Rule-Based Engine (AI Planned)",
+            aiDetail: "Currently compares quoted amounts against historic median prices. Planned AI: Predictive Subcontractor Pricing Engine to flag abnormal vendor surcharges, evaluate supplier reliability scores, and negotiate benchmark rate adjustments."
+        },
+        "statutory-compliance": {
+            title: "Statutory Compliance & PE/LEW Safety Rules",
+            module: "Page 5 • Operations & Costing",
+            icon: "fa-shield",
+            isAi: false,
+            purpose: "Audits physical event dimensions against Singapore statutory laws: auto-injects BCA Professional Engineer (PE) certification ($2,800) for structures >4.0m, EMA Licensed Electrical Worker (LEW) certification ($1,500) for loads >32A, and validates SCDF 3.0m fire egress aisles.",
+            currentEngine: "Deterministic statutory rule evaluation (FC_COSTING_API.EVALUATE_COMPLIANCE_AND_FEES).",
+            aiStatus: "ℹ️ Rule-Based Engine (AI Planned)",
+            aiDetail: "Currently evaluates deterministic statutory threshold triggers. Planned AI: Autonomous Regulatory Code Agent to cross-reference multi-jurisdiction building codes (Singapore BCA/SCDF, Malaysia BOMBA, Indonesia SNI) and auto-draft permit applications."
+        },
+        "client-invoicing": {
+            title: "Commercial Margin & Pro-Forma Invoicing",
+            module: "Page 5 • Operations & Costing",
+            icon: "fa-file-text-o",
+            isAi: false,
+            purpose: "Enforces audited margin arithmetic (Margin % = (Price - Cost) / Price), applies contingency reserves, and generates the official client pro-forma invoice with Singapore 9% GST and the standard 50% / 40% / 10% milestone payment schedule.",
+            currentEngine: "Audited PL/SQL arithmetic engine (FC_COSTING_API.CALCULATE_BOQ_TOTALS, GENERATE_CLIENT_INVOICE).",
+            aiStatus: "ℹ️ Rule-Based Engine (AI Planned)",
+            aiDetail: "Currently executes deterministic financial calculations and milestone generation. Planned AI: Dynamic Margin Optimization Agent to recommend optimal win-probability markups based on client budget elasticity and competitor bidding history."
+        },
+        "operations-brief": {
+            title: "Operations Brief & Gate 2 Handoff",
+            module: "Page 5 • Operations & Costing",
+            icon: "fa-clipboard",
+            isAi: false,
+            purpose: "Presents the structural assumptions, venue teardown windows, and rigging constraints handed over from 3D Spatial Design (Adi Nugroho) following Gate 2 sign-off.",
+            currentEngine: "Structured relational task matrix (FC_HANDOVER_ITEMS).",
+            aiStatus: "ℹ️ Rule-Based Engine (AI Planned)",
+            aiDetail: "Currently tracks relational handover tasks. Planned AI: Automated Risk Assessment Agent to flag schedule clashes between venue move-in windows and complex fabrication assembly times."
+        },
         "copy-quality-review": {
             title: "Proposal Copy & Quality Audit",
             module: "Page 6 • Review & Submission",
@@ -569,6 +609,7 @@
             var text = (link.textContent || '').trim().toLowerCase();
             var key = null;
 
+            // Page 4: Design & Spatial
             if (text.indexOf('slide deck') !== -1 || text.indexOf('slide draft') !== -1) {
                 key = 'slide-decks';
             } else if (text.indexOf('fit and clearance') !== -1 || text.indexOf('fit & clearance') !== -1) {
@@ -577,6 +618,36 @@
                 key = 'drawing-packages';
             } else if (text.indexOf('design brief') !== -1) {
                 key = 'design-brief';
+            }
+            // Page 5: Operations & Costing
+            else if (text.indexOf('bill of quantities') !== -1 || text.indexOf('boq') !== -1) {
+                key = 'boq-decoding';
+            } else if (text.indexOf('quote request') !== -1 || text.indexOf('rfq') !== -1) {
+                key = 'bespoke-rfqs';
+            } else if (text.indexOf('quote') !== -1 || text.indexOf('quotation') !== -1) {
+                key = 'vendor-quotes';
+            } else if (text.indexOf('compliance') !== -1 || text.indexOf('permit') !== -1) {
+                key = 'statutory-compliance';
+            } else if (text.indexOf('payment schedule') !== -1 || text.indexOf('invoice') !== -1) {
+                key = 'client-invoicing';
+            } else if (text.indexOf('operations brief') !== -1) {
+                key = 'operations-brief';
+            }
+            // Page 2: Tender Intake
+            else if (text.indexOf('brief requirement') !== -1 || text.indexOf('upload brief') !== -1) {
+                key = 'brief-upload';
+            } else if (text.indexOf('client research') !== -1 || text.indexOf('research source') !== -1) {
+                key = 'client-deep-search';
+            }
+            // Page 3: Planning Studio
+            else if (text.indexOf('concept option') !== -1 || text.indexOf('concept ideation') !== -1) {
+                key = 'concept-ideation';
+            }
+            // Page 6: Review & Final Release
+            else if (text.indexOf('proposal copy') !== -1 || text.indexOf('quality checklist') !== -1) {
+                key = 'copy-quality-review';
+            } else if (text.indexOf('presentation pack') !== -1 || text.indexOf('export presentation') !== -1) {
+                key = 'export-pack';
             }
 
             if (key && window.FC_FEATURE_INFO[key]) {
@@ -618,8 +689,16 @@
                 key = 'concept-ideation';
             } else if (text.indexOf('bill of quantities') !== -1 || text.indexOf('spatial-to-boq') !== -1) {
                 key = 'boq-decoding';
-            } else if (text.indexOf('bespoke rfq') !== -1) {
+            } else if (text.indexOf('vendor quote requests') !== -1 || text.indexOf('bespoke rfq') !== -1) {
                 key = 'bespoke-rfqs';
+            } else if (text.indexOf('vendor quotes received') !== -1 || text.indexOf('returned quotations') !== -1) {
+                key = 'vendor-quotes';
+            } else if (text.indexOf('compliance and permits') !== -1 || text.indexOf('statutory compliance') !== -1) {
+                key = 'statutory-compliance';
+            } else if (text.indexOf('payment schedule') !== -1 || text.indexOf('costing controls') !== -1) {
+                key = 'client-invoicing';
+            } else if (text.indexOf('operations brief') !== -1) {
+                key = 'operations-brief';
             } else if (text.indexOf('presentation pack') !== -1 || text.indexOf('export presentation') !== -1) {
                 key = 'export-pack';
             }
