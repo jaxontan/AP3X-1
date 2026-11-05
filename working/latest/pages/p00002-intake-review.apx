@@ -25,6 +25,14 @@ page 2 (
             }
             $('#P2_CUSTOMER_CHOICE').on('change', syncCustomerMode);
             syncCustomerMode();
+            $(document).on('click', '.fc-chip', function(e) {
+                e.preventDefault();
+                var q = $(this).attr('data-query');
+                if (q) {
+                    apex.item('P2_RESEARCH_QUERY').setValue(q);
+                    apex.item('P2_RESEARCH_QUERY').setFocus();
+                }
+            });
             ```
     }
     security {
@@ -574,12 +582,23 @@ page 2 (
             sqlQuery:
                 ```sql
                 select finding_id,
-                       topic,
+                       initcap(replace(topic, '_', ' ')) as topic,
                        claim_text,
-                       source_url,
+                       case
+                         when source_url is not null then '<a href="' || apex_escape.html_attribute(source_url) || '" target="_blank" rel="noopener noreferrer" class="t-Badge t-Badge--subtle"><span class="fa fa-external-link" aria-hidden="true"></span> ' || coalesce(publisher, 'Source') || '</a>'
+                         else coalesce(publisher, '-')
+                       end as source_url,
                        publisher,
-                       confidence_score,
-                       initcap(replace(review_status, '_', ' ')) as review_status
+                       case
+                         when confidence_score >= 90 then '<span class="t-Badge t-Badge--success">' || confidence_score || '% High</span>'
+                         when confidence_score >= 70 then '<span class="t-Badge t-Badge--info">' || confidence_score || '% Medium</span>'
+                         else '<span class="t-Badge t-Badge--warning">' || confidence_score || '% Low</span>'
+                       end as confidence_score,
+                       case
+                         when upper(review_status) = 'APPROVED' then '<span class="t-Badge t-Badge--success"><span class="fa fa-check" aria-hidden="true"></span> Approved</span>'
+                         when upper(review_status) = 'REJECTED' then '<span class="t-Badge t-Badge--danger"><span class="fa fa-times" aria-hidden="true"></span> Rejected</span>'
+                         else '<span class="t-Badge t-Badge--warning"><span class="fa fa-clock-o" aria-hidden="true"></span> Pending</span>'
+                       end as review_status
                 from fc_research_findings
                 where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
                 order by finding_id asc
@@ -627,6 +646,9 @@ page 2 (
             layout {
                 sequence: 6
             }
+            security {
+                escapeSpecialChars: false
+            }
         )
 
         column FINDING_ID (
@@ -657,6 +679,9 @@ page 2 (
             layout {
                 sequence: 7
             }
+            security {
+                escapeSpecialChars: false
+            }
         )
 
         column SOURCE_URL (
@@ -666,6 +691,9 @@ page 2 (
             }
             layout {
                 sequence: 4
+            }
+            security {
+                escapeSpecialChars: false
             }
         )
 
@@ -805,14 +833,14 @@ page 2 (
     pageItem P2_ACTION_FINDING_ID (
         type: selectList
         label {
-            label: Research finding to review
+            label: Select citation to review
             alignment: left
         }
         lov {
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select substr(topic || ': ' || claim_text, 1, 120) || ' (' || initcap(replace(review_status, '_', ' ')) || ')' d, finding_id v
+                select substr(topic || ': ' || claim_text, 1, 95) || ' [' || initcap(replace(review_status, '_', ' ')) || ']' d, finding_id v
                   from fc_research_findings
                  where tender_id = :P2_TENDER_ID
                  order by finding_id
@@ -828,10 +856,31 @@ page 2 (
             region: @ai-research-section
             slot: regionBody
             alignment: left
+            startNewRow: true
+            columnSpan: 12
         }
         appearance {
             template: @/optional-floating
             templateOptions: #DEFAULT#
+        }
+        advanced {
+            preText:
+                ```html
+                <div class="fc-review-header">
+                    <div class="fc-phase-header">
+                        <span class="fc-phase-num fc-phase-num-verify">2</span>
+                        <span class="fc-phase-title">Verify Generated Citations</span>
+                        <span class="t-Badge t-Badge--info fc-phase-pill">Human Verification</span>
+                    </div>
+                    <div class="fc-phase-caption">
+                        Review findings retrieved by AI and verify before locking into the proposal:
+                    </div>
+                </div>
+                ```
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and exists (select 1 from fc_research_findings where tender_id = to_number(:P2_TENDER_ID))
         }
     )
 
@@ -1171,6 +1220,25 @@ page 2 (
             template: @/optional-floating
             templateOptions: #DEFAULT#
         }
+        advanced {
+            preText:
+                ```html
+                <div class="fc-phase-header">
+                    <span class="fc-phase-num">1</span>
+                    <span class="fc-phase-title">AI Client Deep-Search</span>
+                </div>
+                ```
+            postText:
+                ```html
+                <div class="fc-prompt-chips">
+                    <span class="fc-chip-label">Quick prompts:</span>
+                    <button type="button" class="fc-chip" data-query="Recent ESG sustainability targets and net-zero commitments">🌱 Net-Zero / ESG</button>
+                    <button type="button" class="fc-chip" data-query="Executive leadership priorities and corporate strategy announcements">🏢 Corporate Strategy</button>
+                    <button type="button" class="fc-chip" data-query="MAS regulatory compliance standards and governance history">⚖️ Compliance &amp; Safety</button>
+                    <button type="button" class="fc-chip" data-query="Digital transformation and spatial technology roadmap">💡 Tech Roadmap</button>
+                </div>
+                ```
+        }
     )
 
     pageItem P2_SAMPLE_DOC_NAME (
@@ -1212,6 +1280,12 @@ page 2 (
         appearance {
             template: @/optional-floating
             templateOptions: #DEFAULT#
+        }
+        advanced {
+            postText:
+                ```html
+                <div class="fc-search-hint"><span class="fa fa-magic" aria-hidden="true"></span> Citations generated from search will appear below for one-click approval before Gate 0 sign-off.</div>
+                ```
         }
     )
 
@@ -1347,9 +1421,12 @@ page 2 (
             sequence: 50
             region: @ai-research-section
             slot: regionBody
+            startNewRow: true
+            columnSpan: 6
         }
         appearance {
             buttonTemplate: @/text-with-icon
+            cssClasses: fc-btn-approve
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
@@ -1358,6 +1435,10 @@ page 2 (
         }
         security {
             authorizationScheme: @planner-role
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and exists (select 1 from fc_research_findings where tender_id = to_number(:P2_TENDER_ID))
         }
     )
 
@@ -1482,9 +1563,12 @@ page 2 (
             sequence: 60
             region: @ai-research-section
             slot: regionBody
+            startNewRow: false
+            columnSpan: 6
         }
         appearance {
             buttonTemplate: @/text-with-icon
+            cssClasses: fc-btn-reject
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
@@ -1493,6 +1577,10 @@ page 2 (
         }
         security {
             authorizationScheme: @planner-role
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and exists (select 1 from fc_research_findings where tender_id = to_number(:P2_TENDER_ID))
         }
     )
 

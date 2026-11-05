@@ -103,6 +103,10 @@
   --brand-radius: 8px;
   --brand-radius-sm: 6px;
   --brand-button-radius: 6.4px;
+  --brand-button-secondary-bg: #EAEFEA;
+  --brand-button-secondary-hover: #DCE5DC;
+  --brand-button-secondary-border: #CCD6CD;
+  --brand-button-secondary-text: #1C231F;
   --brand-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 6px 18px rgb(0 0 0 / 0.07);
   --brand-header-shadow: none;
   --brand-font-ui: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -547,6 +551,147 @@
 :root .t-Button--hot:not(.t-Button--simple):not(.t-Button--link):not(.t-Button--noUI):active,
 :root .a-Button--hot:not(.t-Button--simple):not(.t-Button--link):not(.a-Button--noUI):active {
   filter: brightness(0.96);
+}
+
+/* Secondary / standard buttons: tactile soft grey background with crisp contrast */
+:root .t-Button:not(.t-Button--hot):not(.t-Button--simple):not(.t-Button--link):not(.t-Button--noUI),
+:root .a-Button:not(.a-Button--hot):not(.t-Button--simple):not(.t-Button--link):not(.a-Button--noUI) {
+  background-color: var(--brand-button-secondary-bg);
+  border-color: var(--brand-button-secondary-border);
+  color: var(--brand-button-secondary-text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+:root .t-Button:not(.t-Button--hot):not(.t-Button--simple):not(.t-Button--link):not(.t-Button--noUI):hover,
+:root .a-Button:not(.a-Button--hot):not(.t-Button--simple):not(.t-Button--link):not(.a-Button--noUI):hover {
+  background-color: var(--brand-button-secondary-hover);
+  border-color: var(--brand-button-secondary-border);
+  color: var(--brand-ink);
+}
+
+/* AI Research Prompt Chips */
+.fc-prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+.fc-chip-label {
+  font-size: 11px;
+  color: var(--brand-muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+.fc-chip {
+  background-color: var(--brand-button-secondary-bg);
+  border: 1px solid var(--brand-button-secondary-border);
+  color: var(--brand-button-secondary-text);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+.fc-chip:hover {
+  background-color: var(--brand-button-secondary-hover);
+  border-color: var(--brand-action);
+  color: var(--brand-ink);
+}
+
+/* Client Research Two-Phase Workflow */
+.fc-phase-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.fc-phase-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background-color: var(--brand-primary);
+  color: var(--brand-on-primary);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.fc-phase-num-verify {
+  background-color: var(--brand-action);
+}
+
+.fc-phase-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--brand-ink);
+  text-transform: uppercase;
+}
+
+.fc-phase-pill {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.fc-search-hint {
+  font-size: 11px;
+  color: var(--brand-muted);
+  margin-top: 8px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fc-review-header {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px dashed var(--brand-border-strong);
+  margin-bottom: 12px;
+}
+
+.fc-phase-caption {
+  font-size: 12px;
+  color: var(--brand-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Approve & Reject action buttons */
+.fc-btn-approve {
+  background-color: var(--brand-success-shade) !important;
+  border-color: var(--brand-primary) !important;
+  color: var(--brand-success-text) !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease !important;
+}
+
+.fc-btn-approve:hover {
+  background-color: var(--brand-primary) !important;
+  color: var(--brand-on-primary) !important;
+}
+
+.fc-btn-reject {
+  background-color: var(--brand-danger-shade) !important;
+  border-color: var(--brand-danger) !important;
+  color: var(--brand-danger-text) !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease !important;
+}
+
+.fc-btn-reject:hover {
+  background-color: var(--brand-danger) !important;
+  color: var(--brand-on-danger) !important;
 }
 
 /* Report headers in ink, not link colour. */
