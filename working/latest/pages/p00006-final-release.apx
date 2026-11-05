@@ -56,18 +56,15 @@ page 6 (
             type: sqlQuery
             sqlQuery:
                 ```sql
-                select translation_id,
-                       section_title,
-                       source_lang,
-                       target_lang,
-                       source_text,
-                       translated_text,
+                select section_title,
+                       source_text as editorial_copy,
+                       translated_text as quality_audit_notes,
                        terminology_check,
                        initcap(replace(approval_status, '_', ' ')) as approval_status,
-                       reviewed_by
+                       nvl(reviewed_by, 'Copy Editor') as reviewed_by
                 from fc_translations
                 where tender_id = to_number(:P6_TENDER_ID)
-                order by translation_id asc
+                order by trans_id asc
                 ```
         }
         layout {
@@ -99,7 +96,27 @@ page 6 (
                 heading: Quality Sign-Off
             }
             layout {
-                sequence: 8
+                sequence: 5
+            }
+        )
+
+        column EDITORIAL_COPY (
+            derivedColumn: N
+            heading {
+                heading: Proposal Copy & Narrative
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column QUALITY_AUDIT_NOTES (
+            derivedColumn: N
+            heading {
+                heading: Quality Audit & Fact Check
+            }
+            layout {
+                sequence: 3
             }
         )
 
@@ -109,7 +126,7 @@ page 6 (
                 heading: Reviewer
             }
             layout {
-                sequence: 9
+                sequence: 6
             }
         )
 
@@ -123,63 +140,13 @@ page 6 (
             }
         )
 
-        column SOURCE_LANG (
-            derivedColumn: N
-            heading {
-                heading: Source
-            }
-            layout {
-                sequence: 3
-            }
-        )
-
-        column SOURCE_TEXT (
-            derivedColumn: N
-            heading {
-                heading: Editorial Copy & Narrative
-            }
-            layout {
-                sequence: 5
-            }
-        )
-
-        column TARGET_LANG (
-            derivedColumn: N
-            heading {
-                heading: Target
-            }
-            layout {
-                sequence: 4
-            }
-        )
-
         column TERMINOLOGY_CHECK (
             derivedColumn: N
             heading {
-                heading: Brand & Style Audit
+                heading: Brand Compliance
             }
             layout {
-                sequence: 7
-            }
-        )
-
-        column TRANSLATED_TEXT (
-            derivedColumn: N
-            heading {
-                heading: Localized / Secondary Copy
-            }
-            layout {
-                sequence: 6
-            }
-        )
-
-        column TRANSLATION_ID (
-            derivedColumn: N
-            heading {
-                heading: ID
-            }
-            layout {
-                sequence: 2
+                sequence: 4
             }
         )
 
