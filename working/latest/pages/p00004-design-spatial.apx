@@ -172,7 +172,7 @@ page 4 (
                 ```
         }
         layout {
-            sequence: 40
+            sequence: 30
             parentRegion: @design-tabs
             slot: tabs
         }
@@ -336,6 +336,19 @@ page 4 (
         }
     )
 
+    region pitch-deck-tab (
+        name: Slide decks & drafts
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
     region html-ppt-browser (
         name: Deck preview
         type: dynamicContent
@@ -349,8 +362,8 @@ page 4 (
         }
         layout {
             sequence: 10
-            parentRegion: @design-tabs
-            slot: tabs
+            parentRegion: @pitch-deck-tab
+            slot: subRegions
         }
         appearance {
             template: @/standard
@@ -383,8 +396,8 @@ page 4 (
         }
         layout {
             sequence: 20
-            parentRegion: @design-tabs
-            slot: tabs
+            parentRegion: @pitch-deck-tab
+            slot: subRegions
         }
         appearance {
             template: @/standard
@@ -515,7 +528,7 @@ page 4 (
                 ```
         }
         layout {
-            sequence: 30
+            sequence: 20
             parentRegion: @design-tabs
             slot: tabs
         }
