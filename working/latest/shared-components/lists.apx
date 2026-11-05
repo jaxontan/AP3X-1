@@ -1,6 +1,26 @@
 list navigation-bar (
     name: Navigation Bar
 
+    entry language-switch (
+        label: 🌐 Bahasa / English
+        icon {
+            imageIconCssClasses: fa-globe
+            altAttribute: Switch Language
+        }
+        layout {
+            sequence: 4
+        }
+        link {
+            target: {
+                type: url
+                url: javascript:fcToggleLanguage();
+            }
+        }
+        userDefinedAttributes {
+            1: fc-lang-btn
+        }
+    )
+
     entry --- (
         label: ---
         layout {
