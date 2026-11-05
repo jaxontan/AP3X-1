@@ -741,8 +741,11 @@ page 4 (
             columnSpan: 12
         }
         appearance {
-            template: @/optional-floating
+            template: @/required-floating
             templateOptions: #DEFAULT#
+        }
+        validation {
+            valueRequired: true
         }
     )
 
@@ -1057,6 +1060,25 @@ page 4 (
         }
         behavior {
             showProcessing: true
+        }
+    )
+
+    validation val-drawing-file-required (
+        name: Drawing Package File Required
+        execution {
+            sequence: 10
+        }
+        validation {
+            type: itemIsNotNull
+            item: P4_DRAWING_FILE
+        }
+        error {
+            errorMessage: Please select or drop a drawing package file (.dwg, .dxf, .pdf, .zip) before uploading.
+            associatedItem: @P4_DRAWING_FILE
+            displayLocation: inlineWithFieldAndInNotification
+        }
+        serverSideCondition {
+            whenButtonPressed: @upload-package
         }
     )
 
@@ -1447,16 +1469,21 @@ page 4 (
                     l_pkg_id number;
                     l_title varchar2(250) := :P4_PKG_TITLE;
                 begin
-                    if :P4_DRAWING_FILE is not null then
-                        begin
-                            select filename into l_title
-                              from apex_application_temp_files
-                             where name = :P4_DRAWING_FILE;
-                        exception
-                            when others then null;
-                        end;
+                    if :P4_DRAWING_FILE is null then
+                        raise_application_error(-20001, 'Please select or drop a drawing package file (.dwg, .dxf, .pdf, .zip) before registering.');
                     end if;
-                    l_title := coalesce(l_title, :P4_PKG_TITLE, 'NYP_InnovSphere_Stage_and_Pods_3D.dwg');
+
+                    begin
+                        select filename into l_title
+                          from apex_application_temp_files
+                         where name = :P4_DRAWING_FILE;
+                    exception
+                        when others then null;
+                    end;
+                    l_title := coalesce(l_title, :P4_PKG_TITLE);
+                    if l_title is null then
+                        raise_application_error(-20001, 'Unable to determine drawing filename. Please upload a valid file.');
+                    end if;
 
                     fc_design_api.upload_drawing_package(
                         p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
