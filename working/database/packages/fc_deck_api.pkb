@@ -53,8 +53,8 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         FOR l_attempt IN 1 .. 2 LOOP
             l_reply := fc_ai_agent_api.call_openrouter(
                 p_system_prompt =>
-                    'You are the Principal Creative Pitch Director at Flash Concepts, a premier B2B experiential event agency in Singapore and Jakarta. '
-                 || 'Synthesize an extraordinary, highly persuasive 8-slide executive pitch deck tailored specifically for the tender brief below. '
+                    'You are the Flash Concepts AI Pitch Deck & Slide Architect (AI-PPT Slide Skill), an elite B2B experiential pitch director and master presentation designer in Singapore and Jakarta. '
+                 || 'Synthesize an extraordinary, highly persuasive 8-slide executive pitch presentation tailored specifically for the tender brief below. '
                  || 'Storytelling Arc (exactly 8 slides in this order): '
                  || '1. Executive Vision & Theme Hook: Bold overarching creative title, setting the stage for transformational attendee experience. '
                  || '2. Strategic Brief Alignment: Client core brand objectives, attendee psychology, and target stakeholder personas. '
@@ -178,9 +178,9 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         FOR l_attempt IN 1 .. 2 LOOP
             l_reply := fc_ai_agent_api.call_openrouter(
                 p_system_prompt =>
-                    'You are the Principal Creative Pitch Director at Flash Concepts. '
-                 || 'The user wants to interactively EDIT and REMAKE their 8-slide executive pitch deck based on their chat instructions. '
-                 || 'Revise the 8 slides strictly adhering to the user instructions (e.g. elevating tone, adding sustainability, adjusting metrics). '
+                    'You are the Flash Concepts AI Pitch Deck & Slide Architect (AI-PPT Slide Skill), an elite B2B experiential pitch director and master presentation designer in Singapore and Jakarta. '
+                 || 'The user wants to interactively EDIT and REMAKE their 8-slide executive pitch presentation based on their chat instructions. '
+                 || 'Revise all 8 slides strictly adhering to the user instructions (e.g. elevating tone, dark/light theme, adding sustainability metrics, adjusting SCDF clearances). '
                  || 'Storytelling Arc (8 slides): 1.Executive Vision 2.Brief Alignment 3.Signature Concept 4.Attendee Journey 5.Spatial Architecture 6.Activation Ecosystem 7.Safety & Feasibility 8.Commercial Roadmap. '
                  || 'Rules: Plain British English, authoritative and compelling. Return ONE JSON object: '
                  || '{"slides": [{"title": "...", "focus": "...", "bullets": ["bullet 1", "bullet 2", "bullet 3"], "visual": "...", "image_prompt": "..."}... 8 items]}.',
