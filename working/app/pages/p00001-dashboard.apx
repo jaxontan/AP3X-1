@@ -88,6 +88,7 @@ page 1 (
             }
             
             let fcViewMode = "grid";
+            let fcTreeSearchFilter = "";
             
             function fcToggleTreeNode(path) {
               fcExpandedPaths[path] = !fcExpandedPaths[path];
@@ -131,10 +132,16 @@ page 1 (
             
                   var mData = yData[m];
                   for (var p in mData) {
+                    var prj = mData[p];
+                    if (fcTreeSearchFilter) {
+                      var matchText = (p + " " + (prj.title || "") + " " + (prj.client || "") + " " + (prj.name || "")).toLowerCase();
+                      if (matchText.indexOf(fcTreeSearchFilter) === -1) {
+                        continue;
+                      }
+                    }
                     var pPath = mPath + "/" + p;
                     var pExp = !!fcExpandedPaths[pPath];
                     var pAct = curStr === pPath;
-                    var prj = mData[p];
                     var pIcon = prj.status === "DEAL_CLOSED" ? "fa-check-circle fc-tree-icon-won" : "fa-cube fc-tree-icon-project";
                     html += "<div class=\"fc-tree-node\">" +
                       "<div class=\"fc-tree-row " + (pAct ? "fc-tree-row-active" : "") + "\" data-fc-path=\"" + pPath + "\">" +
@@ -624,6 +631,41 @@ page 1 (
                 fcFilterSearch(e.target.value);
               });
             }
+            var treeSearchInput = document.getElementById("fc-tree-search-input");
+            var treeSearchClear = document.getElementById("fc-tree-search-clear");
+            if (treeSearchInput) {
+              treeSearchInput.addEventListener("input", function(e) {
+                fcTreeSearchFilter = (e.target.value || "").toLowerCase().trim();
+                if (treeSearchClear) {
+                  treeSearchClear.style.display = fcTreeSearchFilter ? "block" : "none";
+                }
+                if (fcTreeSearchFilter) {
+                  for (var y in FC_DATA) {
+                    for (var m in FC_DATA[y]) {
+                      for (var p in FC_DATA[y][m]) {
+                        var prj = FC_DATA[y][m][p];
+                        if ((p + " " + (prj.title || "") + " " + (prj.client || "") + " " + (prj.name || "")).toLowerCase().indexOf(fcTreeSearchFilter) !== -1) {
+                          fcExpandedPaths[y] = true;
+                          fcExpandedPaths[y + "/" + m] = true;
+                        }
+                      }
+                    }
+                  }
+                }
+                fcRenderSidebarTree();
+              });
+            }
+            if (treeSearchClear) {
+              treeSearchClear.addEventListener("click", function() {
+                if (treeSearchInput) {
+                  treeSearchInput.value = "";
+                  fcTreeSearchFilter = "";
+                  treeSearchClear.style.display = "none";
+                  fcRenderSidebarTree();
+                  treeSearchInput.focus();
+                }
+              });
+            }
             ```
     }
     security {
@@ -716,6 +758,11 @@ page 1 (
                       </div>
                       <div class="fc-sidebar-section">
                         <div class="fc-sidebar-heading">Project Hierarchy</div>
+                        <div class="fc-tree-search-box">
+                          <span class="fa fa-search fc-tree-search-icon"></span>
+                          <input type="text" id="fc-tree-search-input" placeholder="Search a project..." class="fc-tree-search-input" autocomplete="off" />
+                          <button type="button" id="fc-tree-search-clear" class="fc-tree-search-clear" style="display:none;" title="Clear filter">&times;</button>
+                        </div>
                         <div id="fc-project-tree" class="fc-project-tree">
                           <!-- Populated by JavaScript fcRenderSidebarTree with interactive carets for expandable and spacers for non-expandable -->
                         </div>

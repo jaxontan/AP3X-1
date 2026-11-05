@@ -1,7 +1,7 @@
 page 6 (
     name: Proposal Quality & Release Hub
     alias: FINAL-RELEASE
-    title: Proposal Release - Quality, Translation & Gates 4 & 5
+    title: Proposal Copy, Quality & Final Release Hub
     appearance {
         pageTemplate: @/standard
         templateOptions: #DEFAULT#
@@ -36,7 +36,7 @@ page 6 (
     )
 
     region release-form (
-        name: Release
+        name: Gate 4 (Copy & Quality Sign-Off) and Gate 5 (Final Release)
         type: staticContent
         layout {
             sequence: 20
@@ -49,7 +49,7 @@ page 6 (
     )
 
     region translations-report (
-        name: Bahasa Indonesia translation
+        name: Proposal copy & quality checklist
         type: classicReport
         source {
             location: localDatabase
@@ -96,10 +96,20 @@ page 6 (
         column APPROVAL_STATUS (
             derivedColumn: N
             heading {
-                heading: Status
+                heading: Quality Sign-Off
             }
             layout {
                 sequence: 8
+            }
+        )
+
+        column REVIEWED_BY (
+            derivedColumn: N
+            heading {
+                heading: Reviewer
+            }
+            layout {
+                sequence: 9
             }
         )
 
@@ -126,7 +136,7 @@ page 6 (
         column SOURCE_TEXT (
             derivedColumn: N
             heading {
-                heading: Original English
+                heading: Editorial Copy & Narrative
             }
             layout {
                 sequence: 5
@@ -146,7 +156,7 @@ page 6 (
         column TERMINOLOGY_CHECK (
             derivedColumn: N
             heading {
-                heading: Terminology
+                heading: Brand & Style Audit
             }
             layout {
                 sequence: 7
@@ -156,7 +166,7 @@ page 6 (
         column TRANSLATED_TEXT (
             derivedColumn: N
             heading {
-                heading: Bahasa Indonesia
+                heading: Localized / Secondary Copy
             }
             layout {
                 sequence: 6
@@ -178,7 +188,7 @@ page 6 (
     pageItem P6_GATE4_COMMENTS (
         type: textarea
         label {
-            label: Gate 4 comments (copy and translation)
+            label: Gate 4 copy & quality review comments
             alignment: left
         }
         layout {
@@ -244,7 +254,7 @@ page 6 (
 
     button approve-gate4 (
         buttonName: APPROVE_GATE4
-        label: Approve Gate 4 (quality and translation)
+        label: Approve Gate 4 (Copy & Quality)
         layout {
             sequence: 10
             region: @release-form
@@ -263,7 +273,7 @@ page 6 (
             requiresConfirmation: true
         }
         confirmation {
-            message: Approve Gate 4 and verify fact-checked bilingual proposal documents?
+            message: Approve Gate 4 and sign off on all proposal copy, branding alignment, and quality standards?
             style: information
         }
         security {
@@ -271,11 +281,11 @@ page 6 (
         }
     )
 
-    button reject-gate5 (
-        buttonName: REJECT_GATE5
-        label: Reject Final Release
+    button reject-gate4 (
+        buttonName: REJECT_GATE4
+        label: Return for Copy Edits
         layout {
-            sequence: 30
+            sequence: 15
             region: @release-form
             slot: next
         }
@@ -285,17 +295,17 @@ page 6 (
                 #DEFAULT#
                 t-Button--iconLeft
             ]
-            icon: fa-times
+            icon: fa-undo
         }
         behavior {
             requiresConfirmation: true
         }
         confirmation {
-            message: Reject release and flag blocking proposal issues?
+            message: Return proposal for copy and quality revisions?
             style: warning
         }
         security {
-            authorizationScheme: @leadership-role
+            authorizationScheme: @copy-role
         }
     )
 
@@ -328,9 +338,37 @@ page 6 (
         }
     )
 
+    button reject-gate5 (
+        buttonName: REJECT_GATE5
+        label: Reject Final Release
+        layout {
+            sequence: 30
+            region: @release-form
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Reject release and flag blocking proposal issues?
+            style: warning
+        }
+        security {
+            authorizationScheme: @leadership-role
+        }
+    )
+
     button translate-tender (
         buttonName: TRANSLATE_TENDER
-        label: Translate to Bahasa Indonesia
+        label: Run copy & quality audit
         layout {
             sequence: 10
             region: @translations-report
@@ -342,7 +380,7 @@ page 6 (
                 #DEFAULT#
                 t-Button--iconLeft
             ]
-            icon: fa-language
+            icon: fa-check-square-o
         }
         behavior {
             showProcessing: true
@@ -400,7 +438,7 @@ page 6 (
                         p_comments => :P6_GATE4_COMMENTS
                     );
                     l_ok := fc_workflow_api.is_gate_approved(p_tender_id => to_number(:P6_TENDER_ID), p_gate_number => 4);
-                    apex_application.g_print_success_message := 'Gate 4 approved by ' || initcap(:APP_USER) || '. The proposal is ready for leadership release.';
+                    apex_application.g_print_success_message := 'Gate 4 (Copy & Quality) approved by ' || initcap(:APP_USER) || '. The proposal is ready for leadership release.';
                 end;
                 ```
         }
@@ -413,6 +451,39 @@ page 6 (
         serverSideCondition {
             type: request=Value
             value: APPROVE_GATE4
+        }
+        security {
+            authorizationScheme: @copy-role
+        }
+    )
+
+    process proc-reject-gate4 (
+        name: Execute Reject Gate 4 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if trim(:P6_GATE4_COMMENTS) is null then
+                    raise_application_error(-20004, 'Comments are mandatory when returning a proposal for copy and quality edits.');
+                end if;
+                fc_workflow_api.reject_gate(
+                    p_tender_id => to_number(:P6_TENDER_ID),
+                    p_gate_number => 4,
+                    p_user_name => :APP_USER,
+                    p_comments => :P6_GATE4_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Proposal returned for copy and quality revisions by ' || initcap(:APP_USER) || '. Comments recorded in audit trail.';
+                ```
+        }
+        execution {
+            sequence: 15
+        }
+        advanced {
+            executionMappingIdentifier: 40919941928205888
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REJECT_GATE4
         }
         security {
             authorizationScheme: @copy-role
@@ -479,7 +550,7 @@ page 6 (
     )
 
     process proc-translate-tender (
-        name: Execute Bilingual Translation API
+        name: Execute Copy and Quality Audit API
         type: executeCode
         source {
             plsqlCode:
@@ -488,7 +559,7 @@ page 6 (
                     p_tender_id => to_number(:P6_TENDER_ID),
                     p_user_name => :APP_USER
                 );
-                apex_application.g_print_success_message := 'Bahasa Indonesia draft ready below. A translation reviewer must check it before Gate 4.';
+                apex_application.g_print_success_message := 'Copy & quality audit complete. All proposal sections reviewed against style benchmarks.';
                 ```
         }
         execution {
