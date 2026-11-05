@@ -14,22 +14,6 @@ page 8 (
         formAutoComplete: false
     }
 
-    region admin-buttons (
-        name: Security Actions
-        type: staticContent
-        layout {
-            sequence: 30
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
-        }
-        security {
-            authorizationScheme: @admin-role
-        }
-    )
-
     region admin-controller (
         name: Roles and delegation
         type: staticContent
@@ -39,22 +23,6 @@ page 8 (
         }
         appearance {
             template: @/standard
-            templateOptions: #DEFAULT#
-        }
-        security {
-            authorizationScheme: @admin-role
-        }
-    )
-
-    region ai-buttons (
-        name: AI Gateway Actions
-        type: staticContent
-        layout {
-            sequence: 38
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
             templateOptions: #DEFAULT#
         }
         security {
@@ -388,7 +356,7 @@ page 8 (
         label: Assign role
         layout {
             sequence: 10
-            region: @admin-buttons
+            region: @admin-controller
             slot: next
         }
         appearance {
@@ -407,7 +375,7 @@ page 8 (
         label: Save AI settings
         layout {
             sequence: 20
-            region: @ai-buttons
+            region: @ai-gateway
             slot: next
         }
         appearance {
@@ -426,7 +394,7 @@ page 8 (
         label: Save delegation
         layout {
             sequence: 20
-            region: @admin-buttons
+            region: @admin-controller
             slot: next
         }
         appearance {
@@ -444,7 +412,7 @@ page 8 (
         label: Test AI connection
         layout {
             sequence: 10
-            region: @ai-buttons
+            region: @ai-gateway
             slot: next
         }
         appearance {

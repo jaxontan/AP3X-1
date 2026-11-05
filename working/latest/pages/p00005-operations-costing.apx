@@ -343,19 +343,6 @@ page 5 (
 
     )
 
-    region costing-buttons (
-        name: Step 3 Operations Actions & Budget Gate
-        type: staticContent
-        layout {
-            sequence: 30
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
-        }
-    )
-
     region costing-form (
         name: Costing controls
         type: staticContent
@@ -370,25 +357,12 @@ page 5 (
     )
 
     region gate3-pending-banner (
-        name: Gate 3 Pending Status
+        name: GATE 3 OPERATIONS BUDGET: IN REVIEW (PENDING WEI LIN SIGN-OFF)
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-clock-o" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 3 OPERATIONS BUDGET: IN REVIEW (PENDING WEI LIN SIGN-OFF)</h2>
-                            <div class="t-Alert-body">Check the bill of quantities, compliance and payment schedule, then click <strong>Approve Gate 3 budget</strong>.</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 3</span>
-                        </div>
-                    </div>
-                </div>
+                Check the bill of quantities, compliance and payment schedule, then approve Gate 3 budget. <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 3</span>
                 ```
         }
         layout {
@@ -396,8 +370,13 @@ page 5 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--warning
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -406,25 +385,12 @@ page 5 (
     )
 
     region gate3-status-banner (
-        name: Gate 3 Approved Status
+        name: GATE 3 OPERATIONS BUDGET: SIGNED OFF & APPROVED
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 3 OPERATIONS BUDGET: SIGNED OFF &amp; APPROVED</h2>
-                            <div class="t-Alert-body">Granular BOQ verified, PE/LEW statutory fees injected, and client pro-forma invoice generated. Dispatched to Copy &amp; Localisation.</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--success t-Badge--large">STAGE 4: COPY REVIEW READY</span>
-                        </div>
-                    </div>
-                </div>
+                Granular BOQ verified, PE/LEW statutory fees injected, and client pro-forma invoice generated. Dispatched to Copy &amp; Localisation. <span class="t-Badge t-Badge--success t-Badge--large">STAGE 4: COPY REVIEW READY</span>
                 ```
         }
         layout {
@@ -432,8 +398,13 @@ page 5 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--success
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -1281,8 +1252,8 @@ page 5 (
         buttonName: APPROVE_GATE3
         label: Approve Gate 3 budget
         layout {
-            sequence: 50
-            region: @costing-buttons
+            sequence: 10
+            region: @gate3-pending-banner
             slot: next
         }
         appearance {
@@ -1310,8 +1281,8 @@ page 5 (
         buttonName: AWARD_QUOTE
         label: Award quote
         layout {
-            sequence: 35
-            region: @costing-buttons
+            sequence: 10
+            region: @returned-quotations-report
             slot: next
         }
         appearance {
@@ -1338,8 +1309,8 @@ page 5 (
         buttonName: BIND_BOM_IMAGE
         label: Attach drawing to item
         layout {
-            sequence: 42
-            region: @costing-buttons
+            sequence: 40
+            region: @boq-report
             slot: next
         }
         appearance {
@@ -1356,8 +1327,8 @@ page 5 (
         buttonName: CALC_BOQ
         label: Recalculate totals
         layout {
-            sequence: 40
-            region: @costing-buttons
+            sequence: 20
+            region: @boq-report
             slot: next
         }
         appearance {
@@ -1375,7 +1346,7 @@ page 5 (
         label: Build BOQ from drawings
         layout {
             sequence: 10
-            region: @costing-buttons
+            region: @boq-report
             slot: next
         }
         appearance {
@@ -1392,8 +1363,8 @@ page 5 (
         buttonName: DISPATCH_RFQ
         label: Mark RFQ as sent
         layout {
-            sequence: 25
-            region: @costing-buttons
+            sequence: 20
+            region: @rfqs-report
             slot: next
         }
         appearance {
@@ -1417,8 +1388,8 @@ page 5 (
         buttonName: EVALUATE_COMPLIANCE
         label: Check compliance
         layout {
-            sequence: 30
-            region: @costing-buttons
+            sequence: 10
+            region: @compliance-findings-report
             slot: next
         }
         appearance {
@@ -1435,8 +1406,8 @@ page 5 (
         buttonName: GENERATE_INVOICE
         label: Draft payment schedule
         layout {
-            sequence: 44
-            region: @costing-buttons
+            sequence: 10
+            region: @invoices-report
             slot: next
         }
         appearance {
@@ -1453,8 +1424,8 @@ page 5 (
         buttonName: GENERATE_RFQS
         label: Draft vendor RFQs
         layout {
-            sequence: 20
-            region: @costing-buttons
+            sequence: 10
+            region: @rfqs-report
             slot: next
         }
         appearance {
@@ -1471,8 +1442,8 @@ page 5 (
         buttonName: LOAD_TENDER
         label: Load tender
         layout {
-            sequence: 5
-            region: @costing-buttons
+            sequence: 10
+            region: @costing-form
             slot: next
         }
         appearance {
@@ -1489,8 +1460,8 @@ page 5 (
         buttonName: RECONCILE_BOQ
         label: Apply addendum to BOQ
         layout {
-            sequence: 45
-            region: @costing-buttons
+            sequence: 30
+            region: @boq-report
             slot: next
         }
         appearance {
@@ -1507,8 +1478,8 @@ page 5 (
         buttonName: REISSUE_DELTA_RFQ
         label: Re-issue changed RFQs
         layout {
-            sequence: 46
-            region: @costing-buttons
+            sequence: 30
+            region: @rfqs-report
             slot: next
         }
         appearance {
@@ -1525,8 +1496,8 @@ page 5 (
         buttonName: REJECT_GATE3
         label: Reject Gate 3
         layout {
-            sequence: 60
-            region: @costing-buttons
+            sequence: 20
+            region: @gate3-pending-banner
             slot: next
         }
         appearance {

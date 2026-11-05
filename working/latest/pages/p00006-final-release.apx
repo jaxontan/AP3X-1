@@ -35,19 +35,6 @@ page 6 (
         }
     )
 
-    region release-buttons (
-        name: Quality Sign-off & Final Release
-        type: staticContent
-        layout {
-            sequence: 30
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
-        }
-    )
-
     region release-form (
         name: Release
         type: staticContent
@@ -260,11 +247,12 @@ page 6 (
         label: Approve Gate 4 (quality and translation)
         layout {
             sequence: 10
-            region: @release-buttons
+            region: @release-form
             slot: next
         }
         appearance {
             buttonTemplate: @/text-with-icon
+            hot: true
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
@@ -288,7 +276,7 @@ page 6 (
         label: Reject Final Release
         layout {
             sequence: 30
-            region: @release-buttons
+            region: @release-form
             slot: next
         }
         appearance {
@@ -316,7 +304,7 @@ page 6 (
         label: Release proposal (Gate 5)
         layout {
             sequence: 20
-            region: @release-buttons
+            region: @release-form
             slot: next
         }
         appearance {
@@ -344,8 +332,8 @@ page 6 (
         buttonName: TRANSLATE_TENDER
         label: Translate to Bahasa Indonesia
         layout {
-            sequence: 40
-            region: @release-buttons
+            sequence: 10
+            region: @translations-report
             slot: next
         }
         appearance {

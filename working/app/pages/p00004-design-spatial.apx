@@ -35,19 +35,6 @@ page 4 (
         }
     )
 
-    region design-buttons (
-        name: Step 2 Design Studio Actions
-        type: staticContent
-        layout {
-            sequence: 30
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
-        }
-    )
-
     region design-handover-report (
         name: Design brief
         type: classicReport
@@ -294,25 +281,12 @@ page 4 (
     )
 
     region gate2-pending-banner (
-        name: Gate 2 Pending Status
+        name: GATE 2 DESIGN STATUS: IN REVIEW (PENDING ADI SIGN-OFF)
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-clock-o" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 2 DESIGN STATUS: IN REVIEW (PENDING ADI SIGN-OFF)</h2>
-                            <div class="t-Alert-body">Check the fit and clearance results and the slide drafts, then click <strong>Approve Gate 2</strong>.</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 2</span>
-                        </div>
-                    </div>
-                </div>
+                Check the fit and clearance results and the slide drafts, then approve Gate 2 to proceed to Operations. <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 2</span>
                 ```
         }
         layout {
@@ -320,8 +294,13 @@ page 4 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--warning
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -330,25 +309,12 @@ page 4 (
     )
 
     region gate2-status-banner (
-        name: Gate 2 Approved Status
+        name: GATE 2 DESIGN STATUS: SIGNED OFF & APPROVED
         type: staticContent
         source {
             htmlCode:
                 ```html
-                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
-                    <div class="t-Alert-wrap">
-                        <div class="t-Alert-icon">
-                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
-                        </div>
-                        <div class="t-Alert-content">
-                            <h2 class="t-Alert-title">GATE 2 DESIGN STATUS: SIGNED OFF &amp; APPROVED</h2>
-                            <div class="t-Alert-body">3D spatial dimensions and slide deck drafts confirmed. Dispatched to Operations Studio (Wei Lin).</div>
-                        </div>
-                        <div class="t-Alert-buttons">
-                            <span class="t-Badge t-Badge--success t-Badge--large">STAGE 3: OPERATIONS READY</span>
-                        </div>
-                    </div>
-                </div>
+                3D spatial dimensions and slide deck drafts confirmed. Dispatched to Operations Studio (Wei Lin). <span class="t-Badge t-Badge--success t-Badge--large">STAGE 3: OPERATIONS READY</span>
                 ```
         }
         layout {
@@ -356,8 +322,13 @@ page 4 (
             slot: body
         }
         appearance {
-            template: @/blank-with-attributes
-            templateOptions: #DEFAULT#
+            template: @/alert
+            templateOptions: [
+                #DEFAULT#
+                t-Alert--success
+                t-Alert--horizontal
+                t-Alert--defaultIcons
+            ]
         }
         serverSideCondition {
             type: expression
@@ -841,8 +812,8 @@ page 4 (
         buttonName: APPROVE_GATE2
         label: Approve Gate 2
         layout {
-            sequence: 40
-            region: @design-buttons
+            sequence: 10
+            region: @gate2-pending-banner
             slot: next
         }
         appearance {
@@ -870,8 +841,8 @@ page 4 (
         buttonName: RESOLVE_COLLISION
         label: Fix height clash
         layout {
-            sequence: 32
-            region: @design-buttons
+            sequence: 20
+            region: @structures-report
             slot: next
         }
         appearance {
@@ -893,7 +864,7 @@ page 4 (
         label: Draft slides
         layout {
             sequence: 10
-            region: @design-buttons
+            region: @slide-decks-report
             slot: next
         }
         appearance {
@@ -910,8 +881,8 @@ page 4 (
         buttonName: LOAD_TENDER
         label: Load tender
         layout {
-            sequence: 5
-            region: @design-buttons
+            sequence: 10
+            region: @spatial-form
             slot: next
         }
         appearance {
@@ -928,8 +899,8 @@ page 4 (
         buttonName: PROCESS_ADDENDUM
         label: Add addendum
         layout {
-            sequence: 35
-            region: @design-buttons
+            sequence: 20
+            region: @drawing-packages-report
             slot: next
         }
         appearance {
@@ -953,8 +924,8 @@ page 4 (
         buttonName: REJECT_GATE2
         label: Reject Gate 2
         layout {
-            sequence: 50
-            region: @design-buttons
+            sequence: 20
+            region: @gate2-pending-banner
             slot: next
         }
         appearance {
@@ -981,8 +952,8 @@ page 4 (
         buttonName: RUN_SPATIAL_ENGINE
         label: Run fit check
         layout {
-            sequence: 20
-            region: @design-buttons
+            sequence: 10
+            region: @structures-report
             slot: next
         }
         appearance {
@@ -999,8 +970,8 @@ page 4 (
         buttonName: UPLOAD_PACKAGE
         label: Register drawings
         layout {
-            sequence: 30
-            region: @design-buttons
+            sequence: 10
+            region: @drawing-packages-report
             slot: next
         }
         appearance {
