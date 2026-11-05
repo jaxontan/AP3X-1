@@ -35,7 +35,7 @@ page 2 (
         name: 3. Client research
         type: staticContent
         layout {
-            sequence: 41
+            sequence: 30
             slot: body
             startNewRow: false
             columnSpan: 6
@@ -76,7 +76,7 @@ page 2 (
         name: 2. Upload client brief
         type: staticContent
         layout {
-            sequence: 40
+            sequence: 30
             slot: body
             columnSpan: 6
         }
@@ -244,7 +244,7 @@ page 2 (
                 ```
         }
         layout {
-            sequence: 20
+            sequence: 10
             parentRegion: @intake-intel-tabs
             slot: tabs
         }
@@ -336,7 +336,7 @@ page 2 (
         name: Gate 0 Verification Actions
         type: staticContent
         layout {
-            sequence: 44
+            sequence: 41
             slot: body
         }
         appearance {
@@ -372,7 +372,7 @@ page 2 (
                 ```
         }
         layout {
-            sequence: 41
+            sequence: 11
             slot: body
         }
         appearance {
@@ -408,7 +408,7 @@ page 2 (
                 ```
         }
         layout {
-            sequence: 42
+            sequence: 12
             slot: body
         }
         appearance {
@@ -422,15 +422,18 @@ page 2 (
     )
 
     region gate0-verification-panel (
-        name: 4. Review and confirm (Gate 0)
+        name: 4. Manual requirement & risk corrections
         type: staticContent
         layout {
-            sequence: 43
+            sequence: 40
             slot: body
         }
         appearance {
-            template: @/standard
-            templateOptions: #DEFAULT#
+            template: @/collapsible
+            templateOptions: [
+                #DEFAULT#
+                is-collapsed
+            ]
         }
         serverSideCondition {
             type: expression
@@ -442,7 +445,7 @@ page 2 (
         name: Tender Dossier & AI Intelligence Hub
         type: staticContent
         layout {
-            sequence: 45
+            sequence: 35
             slot: body
         }
         appearance {
@@ -599,7 +602,7 @@ page 2 (
                 ```
         }
         layout {
-            sequence: 40
+            sequence: 20
             parentRegion: @intake-intel-tabs
             slot: tabs
         }
@@ -694,19 +697,6 @@ page 2 (
 
     )
 
-    region tender-buttons (
-        name: Tender Actions
-        type: staticContent
-        layout {
-            sequence: 30
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
-        }
-    )
-
     region tender-form (
         name: 1. Tender details
         type: staticContent
@@ -740,7 +730,7 @@ page 2 (
                 ```
         }
         layout {
-            sequence: 10
+            sequence: 40
             parentRegion: @intake-intel-tabs
             slot: tabs
         }
@@ -1391,8 +1381,8 @@ page 2 (
         buttonName: CONFIRM_GATE0_INTAKE
         label: Confirm brief (Gate 0)
         layout {
-            sequence: 30
-            region: @gate0-buttons
+            sequence: 50
+            region: @tender-form
             slot: next
         }
         appearance {
@@ -1407,14 +1397,18 @@ page 2 (
         security {
             authorizationScheme: @planner-role
         }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and not fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
     )
 
     button create-tender (
         buttonName: CREATE_TENDER
         label: Create tender
         layout {
-            sequence: 10
-            region: @tender-buttons
+            sequence: 20
+            region: @tender-form
             slot: next
         }
         appearance {
@@ -1436,8 +1430,8 @@ page 2 (
         buttonName: LOAD_TENDER
         label: Load tender
         layout {
-            sequence: 15
-            region: @tender-buttons
+            sequence: 25
+            region: @tender-form
             slot: next
         }
         appearance {
@@ -1454,8 +1448,8 @@ page 2 (
         buttonName: NEW_TENDER
         label: New tender
         layout {
-            sequence: 5
-            region: @tender-buttons
+            sequence: 10
+            region: @tender-form
             slot: next
         }
         appearance {
@@ -1476,8 +1470,8 @@ page 2 (
         buttonName: PROCESS_ADDENDUM
         label: Add addendum
         layout {
-            sequence: 35
-            region: @tender-buttons
+            sequence: 45
+            region: @tender-form
             slot: next
         }
         appearance {
@@ -1579,8 +1573,8 @@ page 2 (
         buttonName: SAVE_TENDER
         label: Save details
         layout {
-            sequence: 20
-            region: @tender-buttons
+            sequence: 30
+            region: @tender-form
             slot: next
         }
         appearance {

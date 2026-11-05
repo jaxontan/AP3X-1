@@ -288,11 +288,26 @@ page 9 (
                        tender_code,
                        client_name,
                        project_title,
-                       office,
+                       case
+                         when office = 'JKT' then '<span class="t-Badge t-Badge--danger">JKT</span>'
+                         else '<span class="t-Badge t-Badge--subtle">SG</span>'
+                       end as office,
                        initcap(replace(current_stage, '_', ' ')) as current_stage,
                        initcap(replace(status, '_', ' ')) as status,
-                       to_char(submission_deadline, 'DD Mon YYYY') as submission_deadline,
-                       initcap(replace(deal_progression, '_', ' ')) as deal_progression,
+                       case
+                         when trunc(submission_deadline) < trunc(current_date) then
+                           '<span class="u-color-9-text">' || to_char(submission_deadline, 'DD Mon YYYY') || '</span> <span class="t-Badge t-Badge--subtle">(Expired)</span>'
+                         else
+                           '<span class="u-bold">' || to_char(submission_deadline, 'DD Mon YYYY') || '</span>'
+                       end as submission_deadline,
+                       case
+                         when upper(deal_progression) in ('DEAL_CLOSED', 'CLOSED_WON', 'WON') then
+                           '<span class="t-Badge t-Badge--success"><span class="fa fa-check" aria-hidden="true"></span> Deal Closed</span>'
+                         when upper(deal_progression) in ('DEAL_LOST', 'FAILED', 'LOST') then
+                           '<span class="t-Badge t-Badge--danger"><span class="fa fa-times" aria-hidden="true"></span> Failed</span>'
+                         else
+                           '<span class="t-Badge t-Badge--warning">' || initcap(replace(deal_progression, '_', ' ')) || '</span>'
+                       end as deal_progression,
                        nvl2(deal_value, primary_currency || ' ' || to_char(deal_value, 'FM999G999G999G990'), '-') as deal_value,
                        nvl2(total_cost, primary_currency || ' ' || to_char(total_cost, 'FM999G999G999G990'), '-') as total_cost,
                        nvl2(total_price, primary_currency || ' ' || to_char(total_price, 'FM999G999G999G990'), '-') as total_price,
@@ -377,6 +392,9 @@ page 9 (
             layout {
                 sequence: 5
             }
+            security {
+                escapeSpecialChars: false
+            }
             source {
                 dataType: STRING
             }
@@ -416,6 +434,9 @@ page 9 (
             layout {
                 sequence: 8
             }
+            security {
+                escapeSpecialChars: false
+            }
             source {
                 dataType: STRING
             }
@@ -428,6 +449,9 @@ page 9 (
             }
             layout {
                 sequence: 9
+            }
+            security {
+                escapeSpecialChars: false
             }
             source {
                 dataType: STRING
