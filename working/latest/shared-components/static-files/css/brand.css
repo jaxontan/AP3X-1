@@ -694,6 +694,72 @@
   color: var(--brand-on-danger) !important;
 }
 
+/* Inline editable table inputs and select dropdowns */
+.fc-table-input {
+  width: 100%;
+  max-width: 320px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--brand-ink);
+  background-color: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius-sm);
+  transition: all 0.15s ease;
+}
+
+.fc-table-input:hover {
+  border-color: var(--brand-border-strong);
+}
+
+.fc-table-input:focus {
+  outline: none;
+  border-color: var(--brand-action);
+  box-shadow: 0 0 0 2px var(--brand-pale);
+  background-color: var(--brand-surface);
+}
+
+.fc-table-select {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--brand-ink);
+  background-color: var(--brand-button-secondary-bg);
+  border: 1px solid var(--brand-button-secondary-border);
+  border-radius: var(--brand-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fc-table-select:hover {
+  border-color: var(--brand-action);
+  background-color: var(--brand-button-secondary-hover);
+}
+
+.fc-table-select:focus {
+  outline: none;
+  border-color: var(--brand-action);
+  box-shadow: 0 0 0 2px var(--brand-pale);
+}
+
+.fc-table-select option[value="CONFIRMED"],
+.fc-table-select option[value="APPROVED"] {
+  color: var(--brand-success-text);
+  font-weight: 600;
+}
+
+.fc-table-select option[value="REJECTED"],
+.fc-table-select option[value="FLAGGED"] {
+  color: var(--brand-danger-text);
+  font-weight: 600;
+}
+
+.fc-table-select option[value="PENDING"] {
+  color: var(--brand-warning-text);
+  font-weight: 600;
+}
+
 /* Report headers in ink, not link colour. */
 .a-IRR-headerLink,
 .t-Report-colHead,

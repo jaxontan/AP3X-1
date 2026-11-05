@@ -33,6 +33,48 @@ page 2 (
                     apex.item('P2_RESEARCH_QUERY').setFocus();
                 }
             });
+            $(document).on('change', '.fc-confirm-input', function() {
+                var $inp = $(this);
+                var fid = $inp.attr('data-id');
+                var val = $inp.val();
+                apex.server.process('UPDATE_INTAKE_FIELD', {
+                    x01: fid,
+                    x02: val
+                }, {
+                    success: function() {
+                        apex.message.showPageSuccess('Confirmed value updated.');
+                        setTimeout(function() { apex.message.hidePageSuccess(); }, 2000);
+                    }
+                });
+            });
+            $(document).on('change', '.fc-status-select', function() {
+                var $sel = $(this);
+                var fid = $sel.attr('data-id');
+                var st = $sel.val();
+                apex.server.process('UPDATE_INTAKE_FIELD', {
+                    x01: fid,
+                    x03: st
+                }, {
+                    success: function() {
+                        apex.message.showPageSuccess('Requirement status updated to ' + st + '.');
+                        setTimeout(function() { apex.message.hidePageSuccess(); }, 2000);
+                    }
+                });
+            });
+            $(document).on('change', '.fc-finding-status-select', function() {
+                var $sel = $(this);
+                var fid = $sel.attr('data-id');
+                var st = $sel.val();
+                apex.server.process('UPDATE_FINDING_STATUS', {
+                    x01: fid,
+                    x02: st
+                }, {
+                    success: function() {
+                        apex.message.showPageSuccess('Citation #' + fid + ' status updated to ' + st + '.');
+                        setTimeout(function() { apex.message.hidePageSuccess(); }, 2000);
+                    }
+                });
+            });
             ```
     }
     security {
@@ -244,8 +286,12 @@ page 2 (
                        initcap(replace(field_category, '_', ' ')) as field_category,
                        field_label,
                        extracted_value,
-                       confirmed_value,
-                       initcap(replace(review_status, '_', ' ')) as review_status
+                       '<input type="text" class="fc-table-input fc-confirm-input" data-id="' || field_id || '" value="' || apex_escape.html_attribute(coalesce(confirmed_value, extracted_value)) || '" aria-label="Edit confirmed value" />' as confirmed_value,
+                       '<select class="fc-table-select fc-status-select" data-id="' || field_id || '" aria-label="Requirement status">
+                          <option value="CONFIRMED"' || case when upper(review_status) = 'CONFIRMED' then ' selected' end || '>Confirmed</option>
+                          <option value="EDITED"' || case when upper(review_status) = 'EDITED' then ' selected' end || '>Edited</option>
+                          <option value="PENDING"' || case when upper(review_status) = 'PENDING' then ' selected' end || '>Pending</option>
+                        </select>' as review_status
                 from fc_intake_fields
                 where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
                 order by field_id asc
@@ -285,6 +331,9 @@ page 2 (
             }
             layout {
                 sequence: 5
+            }
+            security {
+                escapeSpecialChars: false
             }
         )
 
@@ -335,6 +384,9 @@ page 2 (
             }
             layout {
                 sequence: 6
+            }
+            security {
+                escapeSpecialChars: false
             }
         )
 
@@ -594,11 +646,11 @@ page 2 (
                          when confidence_score >= 70 then '<span class="t-Badge t-Badge--info">' || confidence_score || '% Medium</span>'
                          else '<span class="t-Badge t-Badge--warning">' || confidence_score || '% Low</span>'
                        end as confidence_score,
-                       case
-                         when upper(review_status) = 'APPROVED' then '<span class="t-Badge t-Badge--success"><span class="fa fa-check" aria-hidden="true"></span> Approved</span>'
-                         when upper(review_status) = 'REJECTED' then '<span class="t-Badge t-Badge--danger"><span class="fa fa-times" aria-hidden="true"></span> Rejected</span>'
-                         else '<span class="t-Badge t-Badge--warning"><span class="fa fa-clock-o" aria-hidden="true"></span> Pending</span>'
-                       end as review_status
+                       '<select class="fc-table-select fc-finding-status-select" data-id="' || finding_id || '" aria-label="Review status">
+                          <option value="APPROVED"' || case when upper(review_status) = 'APPROVED' then ' selected' end || '>Approved</option>
+                          <option value="REJECTED"' || case when upper(review_status) = 'REJECTED' then ' selected' end || '>Rejected</option>
+                          <option value="PENDING"' || case when upper(review_status) = 'PENDING' then ' selected' end || '>Pending</option>
+                        </select>' as review_status
                 from fc_research_findings
                 where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
                 order by finding_id asc
@@ -828,60 +880,6 @@ page 2 (
             }
         )
 
-    )
-
-    pageItem P2_ACTION_FINDING_ID (
-        type: selectList
-        label {
-            label: Select citation to review
-            alignment: left
-        }
-        lov {
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select substr(topic || ': ' || claim_text, 1, 95) || ' [' || initcap(replace(review_status, '_', ' ')) || ']' d, finding_id v
-                  from fc_research_findings
-                 where tender_id = :P2_TENDER_ID
-                 order by finding_id
-                ```
-            displayExtraValues: false
-            nullDisplayValue: - Choose a finding -
-        }
-        cascadingLov {
-            parentItems: P2_TENDER_ID
-        }
-        layout {
-            sequence: 40
-            region: @ai-research-section
-            slot: regionBody
-            alignment: left
-            startNewRow: true
-            columnSpan: 12
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-        advanced {
-            preText:
-                ```html
-                <div class="fc-review-header">
-                    <div class="fc-phase-header">
-                        <span class="fc-phase-num fc-phase-num-verify">2</span>
-                        <span class="fc-phase-title">Verify Generated Citations</span>
-                        <span class="t-Badge t-Badge--info fc-phase-pill">Human Verification</span>
-                    </div>
-                    <div class="fc-phase-caption">
-                        Review findings retrieved by AI and verify before locking into the proposal:
-                    </div>
-                </div>
-                ```
-        }
-        serverSideCondition {
-            type: expression
-            plsqlExpression: :P2_TENDER_ID is not null and exists (select 1 from fc_research_findings where tender_id = to_number(:P2_TENDER_ID))
-        }
     )
 
     pageItem P2_BRIEF_FILE (
@@ -1284,7 +1282,7 @@ page 2 (
         advanced {
             postText:
                 ```html
-                <div class="fc-search-hint"><span class="fa fa-magic" aria-hidden="true"></span> Citations generated from search will appear below for one-click approval before Gate 0 sign-off.</div>
+                <div class="fc-search-hint"><span class="fa fa-info-circle" aria-hidden="true"></span> Retrieved citations appear in the <strong>Research sources</strong> tab below with one-click status review.</div>
                 ```
         }
     )
@@ -1414,34 +1412,6 @@ page 2 (
         }
     )
 
-    button approve-citation (
-        buttonName: APPROVE_CITATION
-        label: Approve Citation
-        layout {
-            sequence: 50
-            region: @ai-research-section
-            slot: regionBody
-            startNewRow: true
-            columnSpan: 6
-        }
-        appearance {
-            buttonTemplate: @/text-with-icon
-            cssClasses: fc-btn-approve
-            templateOptions: [
-                #DEFAULT#
-                t-Button--iconLeft
-            ]
-            icon: fa-check
-        }
-        security {
-            authorizationScheme: @planner-role
-        }
-        serverSideCondition {
-            type: expression
-            plsqlExpression: :P2_TENDER_ID is not null and exists (select 1 from fc_research_findings where tender_id = to_number(:P2_TENDER_ID))
-        }
-    )
-
     button confirm-gate0-intake-btn (
         buttonName: CONFIRM_GATE0_INTAKE
         label: Confirm brief (Gate 0)
@@ -1553,34 +1523,6 @@ page 2 (
         confirmation {
             message: Process formal tender addendum? This will mark downstream drawings SUPERSEDED and BOQ items STALE (BR-06 cascade).
             style: warning
-        }
-    )
-
-    button reject-citation (
-        buttonName: REJECT_CITATION
-        label: Reject Citation
-        layout {
-            sequence: 60
-            region: @ai-research-section
-            slot: regionBody
-            startNewRow: false
-            columnSpan: 6
-        }
-        appearance {
-            buttonTemplate: @/text-with-icon
-            cssClasses: fc-btn-reject
-            templateOptions: [
-                #DEFAULT#
-                t-Button--iconLeft
-            ]
-            icon: fa-times
-        }
-        security {
-            authorizationScheme: @planner-role
-        }
-        serverSideCondition {
-            type: expression
-            plsqlExpression: :P2_TENDER_ID is not null and exists (select 1 from fc_research_findings where tender_id = to_number(:P2_TENDER_ID))
         }
     )
 
@@ -1930,36 +1872,78 @@ page 2 (
         }
     )
 
-    process review-citation (
-        name: Review AI Research Citation
+    process update-intake-field (
+        name: UPDATE_INTAKE_FIELD
         type: executeCode
-        source {
-            plsqlCode:
-                ```plsql
-                if :REQUEST = 'APPROVE_CITATION' then
-                    fc_planning_api.review_finding(
-                        p_finding_id => to_number(:P2_ACTION_FINDING_ID),
-                        p_status     => 'APPROVED',
-                        p_user_name  => :APP_USER
-                    );
-                elsif :REQUEST = 'REJECT_CITATION' then
-                    fc_planning_api.review_finding(
-                        p_finding_id => to_number(:P2_ACTION_FINDING_ID),
-                        p_status     => 'REJECTED',
-                        p_user_name  => :APP_USER
-                    );
-                end if;
-                ```
-        }
         execution {
             sequence: 40
+            point: ajaxCallback
         }
-        advanced {
-            executionMappingIdentifier: 40901004833205852
+        source {
+            location: localDatabase
+            plsqlCode:
+                ```plsql
+                declare
+                    l_id     number := to_number(apex_application.g_x01);
+                    l_val    varchar2(4000) := apex_application.g_x02;
+                    l_status varchar2(50) := upper(apex_application.g_x03);
+                begin
+                    if l_id is not null then
+                        if l_val is not null then
+                            update fc_intake_fields
+                               set confirmed_value = l_val,
+                                   review_status   = coalesce(l_status, 'CONFIRMED'),
+                                   reviewed_by     = :APP_USER,
+                                   reviewed_at     = localtimestamp
+                             where field_id = l_id;
+                        elsif l_status is not null then
+                            update fc_intake_fields
+                               set review_status   = l_status,
+                                   reviewed_by     = :APP_USER,
+                                   reviewed_at     = localtimestamp
+                             where field_id = l_id;
+                        end if;
+                        commit;
+                    end if;
+                    apex_json.open_object;
+                    apex_json.write('status', 'success');
+                    apex_json.close_object;
+                end;
+                ```
         }
-        serverSideCondition {
-            type: requestIsContainedInValue
-            value: APPROVE_CITATION:REJECT_CITATION
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process update-finding-status (
+        name: UPDATE_FINDING_STATUS
+        type: executeCode
+        execution {
+            sequence: 50
+            point: ajaxCallback
+        }
+        source {
+            location: localDatabase
+            plsqlCode:
+                ```plsql
+                declare
+                    l_finding_id number := to_number(apex_application.g_x01);
+                    l_status     varchar2(50) := upper(apex_application.g_x02);
+                begin
+                    if l_finding_id is not null and l_status in ('APPROVED', 'REJECTED', 'PENDING') then
+                        fc_planning_api.review_finding(
+                            p_finding_id => l_finding_id,
+                            p_status     => l_status,
+                            p_user_name  => :APP_USER
+                        );
+                        commit;
+                    end if;
+                    apex_json.open_object;
+                    apex_json.write('status', 'success');
+                    apex_json.close_object;
+                end;
+                ```
         }
         security {
             authorizationScheme: @planner-role
