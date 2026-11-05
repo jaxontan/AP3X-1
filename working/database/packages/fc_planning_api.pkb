@@ -516,6 +516,141 @@ CREATE OR REPLACE PACKAGE BODY fc_planning_api AS
         );
     END select_concept;
 
+    PROCEDURE reprompt_concept(
+        p_tender_id      IN NUMBER,
+        p_concept_id     IN NUMBER,
+        p_instruction    IN VARCHAR2,
+        p_user_name      IN VARCHAR2
+    ) IS
+        l_client        VARCHAR2(100);
+        l_title         VARCHAR2(200);
+        l_curr_opt      VARCHAR2(10);
+        l_curr_title    VARCHAR2(150);
+        l_curr_narr     VARCHAR2(4000);
+        l_curr_spatial  VARCHAR2(2000);
+        l_curr_flow     VARCHAR2(4000);
+        l_reply         CLOB;
+        l_json          CLOB;
+        l_new_title     VARCHAR2(150);
+        l_new_narrative VARCHAR2(4000);
+        l_new_fit       VARCHAR2(4000);
+        l_new_flow      VARCHAR2(4000);
+        l_new_spatial   VARCHAR2(2000);
+        l_new_fringe    VARCHAR2(2000);
+        l_new_prompt    VARCHAR2(1000);
+        l_parsed        BOOLEAN := FALSE;
+    BEGIN
+        SELECT client_name, project_title
+          INTO l_client, l_title
+          FROM fc_tenders
+         WHERE tender_id = p_tender_id;
+
+        SELECT option_code, concept_title, narrative, spatial_notes, event_flow
+          INTO l_curr_opt, l_curr_title, l_curr_narr, l_curr_spatial, l_curr_flow
+          FROM fc_concept_options
+         WHERE concept_id = p_concept_id;
+
+        -- Attempt LLM call via fc_ai_agent_api
+        BEGIN
+            l_reply := fc_ai_agent_api.call_openrouter(
+                p_system_prompt => 'You are a senior event planner and pitch strategist at Flash Concepts. You are refining and reprompting a specific creative proposal concept per the planner''s instructions. Return a JSON object with keys: title, narrative, brief_fit, event_flow, spatial_notes, fringe_activities, image_prompt.',
+                p_user_prompt   => 'Client: ' || l_client || CHR(10)
+                                || 'Tender: ' || l_title || CHR(10)
+                                || 'Current Concept (' || l_curr_opt || '): ' || l_curr_title || CHR(10)
+                                || 'Current Narrative: ' || l_curr_narr || CHR(10)
+                                || 'Planner Reprompt Instructions: ' || p_instruction || CHR(10)
+                                || 'Rewrite this concept incorporating the instructions.',
+                p_temperature   => 0.7,
+                p_max_tokens    => 2000,
+                p_tender_id     => p_tender_id,
+                p_agent         => 'CONCEPT_REPROMPT',
+                p_json_mode     => 'Y'
+            );
+            l_json := fc_ai_agent_api.extract_json(l_reply);
+            IF l_json IS NOT NULL THEN
+                FOR r IN (
+                    SELECT jt.*
+                      FROM json_table(l_json, '$'
+                             COLUMNS (title       VARCHAR2(400)  PATH '$.title',
+                                      narrative   VARCHAR2(4000) PATH '$.narrative',
+                                      brief_fit   VARCHAR2(4000) PATH '$.brief_fit',
+                                      event_flow  VARCHAR2(4000) PATH '$.event_flow',
+                                      spatial     VARCHAR2(4000) PATH '$.spatial_notes',
+                                      fringe      VARCHAR2(4000) PATH '$.fringe_activities',
+                                      img_prompt  VARCHAR2(1000) PATH '$.image_prompt')) jt
+                     WHERE jt.title IS NOT NULL AND jt.narrative IS NOT NULL
+                ) LOOP
+                    l_new_title     := SUBSTR(r.title, 1, 150);
+                    l_new_narrative := r.narrative;
+                    l_new_fit       := r.brief_fit;
+                    l_new_flow      := r.event_flow;
+                    l_new_spatial   := SUBSTR(r.spatial, 1, 2000);
+                    l_new_fringe    := SUBSTR(r.fringe, 1, 2000);
+                    l_new_prompt    := SUBSTR(r.img_prompt, 1, 1000);
+                    l_parsed        := TRUE;
+                END LOOP;
+            END IF;
+        EXCEPTION
+            WHEN OTHERS THEN
+                l_parsed := FALSE;
+        END;
+
+        IF NOT l_parsed THEN
+            -- Fallback refinement incorporating user prompt
+            l_new_title     := SUBSTR(l_curr_title || ' (Refined)', 1, 150);
+            l_new_narrative := SUBSTR(l_curr_narr || CHR(10) || CHR(10) || '[Planner Direction: ' || p_instruction || ']', 1, 4000);
+            l_new_spatial   := SUBSTR(NVL(l_curr_spatial, '') || ' Adjusted per reprompt: ' || p_instruction, 1, 2000);
+            l_new_flow      := l_curr_flow;
+            l_new_fit       := 'Refined to address: ' || p_instruction;
+        END IF;
+
+        UPDATE fc_concept_options
+           SET concept_title     = NVL(l_new_title, concept_title),
+               narrative         = NVL(l_new_narrative, narrative),
+               brief_fit         = NVL(l_new_fit, brief_fit),
+               event_flow        = NVL(l_new_flow, event_flow),
+               spatial_notes     = NVL(l_new_spatial, spatial_notes),
+               fringe_activities = NVL(l_new_fringe, fringe_activities),
+               image_prompt      = NVL(l_new_prompt, image_prompt),
+               generated_by      = 'AI'
+         WHERE concept_id = p_concept_id;
+
+        fc_audit_api.log_event(
+            p_tender_id, p_user_name, 'REPROMPT_CONCEPT', 'FC_CONCEPT_OPTIONS',
+            'Concept ' || l_curr_opt || ' reprompted with user instructions: ' || SUBSTR(p_instruction, 1, 200)
+        );
+    END reprompt_concept;
+
+    PROCEDURE update_concept(
+        p_concept_id     IN NUMBER,
+        p_concept_title  IN VARCHAR2,
+        p_narrative      IN VARCHAR2,
+        p_spatial_notes  IN VARCHAR2,
+        p_event_flow     IN VARCHAR2,
+        p_user_name      IN VARCHAR2
+    ) IS
+        l_tender_id NUMBER;
+        l_opt       VARCHAR2(10);
+    BEGIN
+        SELECT tender_id, option_code
+          INTO l_tender_id, l_opt
+          FROM fc_concept_options
+         WHERE concept_id = p_concept_id;
+
+        UPDATE fc_concept_options
+           SET concept_title = SUBSTR(p_concept_title, 1, 150),
+               narrative     = p_narrative,
+               spatial_notes = SUBSTR(p_spatial_notes, 1, 2000),
+               event_flow    = p_event_flow,
+               generated_by  = 'MANUAL_EDIT'
+         WHERE concept_id = p_concept_id;
+
+        fc_audit_api.log_event(
+            l_tender_id, p_user_name, 'UPDATE_CONCEPT', 'FC_CONCEPT_OPTIONS',
+            'Concept ' || l_opt || ' manually edited by ' || p_user_name
+        );
+    END update_concept;
+
     -- Template handover, used when the AI is unavailable.
     PROCEDURE generate_handover_template(
         p_tender_id      IN NUMBER,

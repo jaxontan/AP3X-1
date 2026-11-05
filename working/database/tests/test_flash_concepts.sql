@@ -56,6 +56,8 @@ BEGIN
     fc_planning_api.confirm_intake(1, 'MICHELLE');
     fc_planning_api.review_finding(1, 'APPROVED', 'MICHELLE');
     fc_planning_api.select_concept(1, 1, 'MICHELLE');
+    fc_planning_api.reprompt_concept(1, 1, 'Incorporate biophilic timber elements', 'MICHELLE');
+    fc_planning_api.update_concept(1, 'Horizon: The Experience Journey (Updated)', 'Refined narrative text', 'Spatial clearance 5m', 'Run of show opening at 9am', 'MICHELLE');
     fc_planning_api.generate_handover(1, 'MICHELLE');
     assert_true(TRUE, 'fc_planning_api subprograms executed successfully');
 

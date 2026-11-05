@@ -1704,6 +1704,12 @@ page 2 (
                     apex_json.open_object;
                     apex_json.write('status', 'success');
                     apex_json.close_object;
+                exception
+                    when others then
+                        apex_json.open_object;
+                        apex_json.write('status', 'error');
+                        apex_json.write('message', sqlerrm);
+                        apex_json.close_object;
                 end;
                 ```
         }
@@ -1738,6 +1744,12 @@ page 2 (
                     apex_json.open_object;
                     apex_json.write('status', 'success');
                     apex_json.close_object;
+                exception
+                    when others then
+                        apex_json.open_object;
+                        apex_json.write('status', 'error');
+                        apex_json.write('message', sqlerrm);
+                        apex_json.close_object;
                 end;
                 ```
         }
@@ -1778,6 +1790,12 @@ page 2 (
                     apex_json.open_object;
                     apex_json.write('status', 'success');
                     apex_json.close_object;
+                exception
+                    when others then
+                        apex_json.open_object;
+                        apex_json.write('status', 'error');
+                        apex_json.write('message', sqlerrm);
+                        apex_json.close_object;
                 end;
                 ```
         }

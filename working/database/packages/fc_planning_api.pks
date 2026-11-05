@@ -66,6 +66,23 @@ CREATE OR REPLACE PACKAGE fc_planning_api AS
         p_user_name      IN VARCHAR2
     );
 
+    -- Concept Reprompt & Direct Edit (Planning Studio)
+    PROCEDURE reprompt_concept(
+        p_tender_id      IN NUMBER,
+        p_concept_id     IN NUMBER,
+        p_instruction    IN VARCHAR2,
+        p_user_name      IN VARCHAR2
+    );
+
+    PROCEDURE update_concept(
+        p_concept_id     IN NUMBER,
+        p_concept_title  IN VARCHAR2,
+        p_narrative      IN VARCHAR2,
+        p_spatial_notes  IN VARCHAR2,
+        p_event_flow     IN VARCHAR2,
+        p_user_name      IN VARCHAR2
+    );
+
     -- Automated Downstream Handover Distribution (Supports Bilingual EN / ID)
     PROCEDURE generate_handover(
         p_tender_id      IN NUMBER,

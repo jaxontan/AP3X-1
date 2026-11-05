@@ -14,19 +14,6 @@ page 3 (
         formAutoComplete: false
     }
 
-    region ai-research-section (
-        name: Client research
-        type: staticContent
-        layout {
-            sequence: 25
-            slot: body
-        }
-        appearance {
-            template: @/standard
-            templateOptions: #DEFAULT#
-        }
-    )
-
     region breadcrumb (
         name: Breadcrumb
         type: breadcrumb
@@ -188,7 +175,10 @@ page 3 (
                        fringe_activities,
                        is_selected,
                        case when is_selected = 'Y' then 'Selected concept' else 'Option ' || option_code end as selection_label,
-                       case when generated_by = 'AI' then 'AI draft' else 'Template' end as source_label
+                       case when generated_by = 'AI' then 'AI draft' else 'Template' end as source_label,
+                       case when is_selected = 'Y' then 'Selected as Hero' else 'Select as Hero' end as select_btn_label,
+                       case when is_selected = 'Y' then 't-Button--success' else 't-Button--hot' end as select_btn_class,
+                       case when is_selected = 'Y' then 'disabled' else '' end as select_btn_disabled
                 from fc_concept_options
                 where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
                 order by option_code asc
@@ -227,7 +217,7 @@ page 3 (
         }
         secondaryBody {
             advancedFormatting: true
-            htmlExpression: <p class="fc-concept-label">Run of show</p><p class="fc-concept-text fc-concept-pre">&EVENT_FLOW.</p><p class="fc-concept-label">Fringe activities</p><p class="fc-concept-text fc-concept-pre">&FRINGE_ACTIVITIES.</p>{if IMAGE_PROMPT/}<p class="fc-concept-label">Visual brief for the design team</p><p class="fc-concept-text fc-concept-visual">&IMAGE_PROMPT.</p>{endif/}
+            htmlExpression: <p class="fc-concept-label">Run of show</p><p class="fc-concept-text fc-concept-pre">&EVENT_FLOW.</p><p class="fc-concept-label">Fringe activities</p><p class="fc-concept-text fc-concept-pre">&FRINGE_ACTIVITIES.</p>{if IMAGE_PROMPT/}<p class="fc-concept-label">Visual brief for the design team</p><p class="fc-concept-text fc-concept-visual">&IMAGE_PROMPT.</p>{endif/}<div class="fc-concept-card-actions"><button type="button" class="t-Button t-Button--small fc-btn-hero &SELECT_BTN_CLASS." onclick="selectConceptCard(&CONCEPT_ID., '&OPTION_CODE.');" &SELECT_BTN_DISABLED.><span class="fa fa-check-circle" aria-hidden="true"></span> <span class="t-Button-label">&SELECT_BTN_LABEL.</span></button><button type="button" class="t-Button t-Button--small fc-btn-edit-concept" onclick="openConceptEditModal(&CONCEPT_ID., '&OPTION_CODE.');"><span class="fa fa-pencil" aria-hidden="true"></span> <span class="t-Button-label">Edit Concept / Reprompt</span></button></div>
         }
         media {
             source: urlColumn
@@ -593,16 +583,23 @@ page 3 (
         }
     )
 
-    region studio-buttons (
-        name: Step 1 Planning Actions & Gate 1
+    region reprompt-concept-modal (
+        name: Edit Concept & Creative Reprompt
         type: staticContent
         layout {
-            sequence: 30
+            sequence: 45
             slot: body
         }
         appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--accent1
+            ]
+            cssClasses: fc-reprompt-modal-panel
+        }
+        advanced {
+            htmlDomId: fc-concept-modal-region
         }
     )
 
@@ -700,51 +697,6 @@ page 3 (
         }
     )
 
-    pageItem P3_RESEARCH_QUERY (
-        type: textField
-        label {
-            label: What do you want to know about the client?
-            alignment: left
-        }
-        layout {
-            sequence: 10
-            region: @ai-research-section
-            slot: regionBody
-            alignment: left
-            columnSpan: 6
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P3_SEARCH_ENGINE (
-        type: selectList
-        label {
-            label: Research focus
-            alignment: left
-        }
-        lov {
-            type: sharedComponent
-            lov: @search-engine-lov
-            displayExtraValues: false
-            displayNullValue: false
-        }
-        layout {
-            sequence: 20
-            region: @ai-research-section
-            slot: regionBody
-            alignment: left
-            startNewRow: false
-            columnSpan: 4
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
     pageItem P3_TENDER_ID (
         type: selectList
         label {
@@ -773,12 +725,136 @@ page 3 (
         }
     )
 
+    pageItem P3_EDIT_CONCEPT_ID (
+        type: hidden
+        layout {
+            sequence: 1
+            region: @reprompt-concept-modal
+            slot: regionBody
+        }
+    )
+
+    pageItem P3_EDIT_OPTION_CODE (
+        type: displayOnly
+        label {
+            label: Editing Concept Option
+            alignment: left
+        }
+        layout {
+            sequence: 5
+            region: @reprompt-concept-modal
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_REPROMPT_INSTRUCTION (
+        type: textarea
+        label {
+            label: AI Reprompt Instructions
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @reprompt-concept-modal
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_EDIT_TITLE (
+        type: textField
+        label {
+            label: Concept Title
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @reprompt-concept-modal
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_EDIT_NARRATIVE (
+        type: textarea
+        label {
+            label: Creative Narrative Framing
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @reprompt-concept-modal
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_EDIT_SPATIAL (
+        type: textarea
+        label {
+            label: Space & Clearance Guidelines
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @reprompt-concept-modal
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_EDIT_EVENT_FLOW (
+        type: textarea
+        label {
+            label: Run of Show / Event Flow
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @reprompt-concept-modal
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
     button approve-gate1 (
         buttonName: APPROVE_GATE1
         label: Approve Gate 1 and hand over
         layout {
-            sequence: 40
-            region: @studio-buttons
+            sequence: 10
+            region: @gate1-pending-banner
             slot: next
         }
         appearance {
@@ -804,14 +880,15 @@ page 3 (
 
     button generate-concepts (
         buttonName: GENERATE_CONCEPTS
-        label: Generate concepts
+        label: Generate AI concepts
         layout {
             sequence: 10
-            region: @studio-buttons
+            region: @concepts-report
             slot: next
         }
         appearance {
             buttonTemplate: @/text-with-icon
+            hot: true
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
@@ -827,12 +904,13 @@ page 3 (
         buttonName: GENERATE_HANDOVER
         label: Build handover
         layout {
-            sequence: 30
-            region: @studio-buttons
+            sequence: 10
+            region: @handover-report
             slot: next
         }
         appearance {
             buttonTemplate: @/text-with-icon
+            hot: true
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
@@ -848,8 +926,8 @@ page 3 (
         buttonName: REJECT_GATE1
         label: Reject Gate 1
         layout {
-            sequence: 50
-            region: @studio-buttons
+            sequence: 20
+            region: @gate1-pending-banner
             slot: next
         }
         appearance {
@@ -872,15 +950,35 @@ page 3 (
         }
     )
 
-    button run-deep-research (
-        buttonName: RUN_DEEP_RESEARCH
-        label: Research client
+    button reprompt-ai-btn (
+        buttonName: REPROMPT_AI
+        label: Reprompt with AI
         layout {
-            sequence: 30
-            region: @ai-research-section
-            slot: regionBody
-            startNewRow: false
-            columnSpan: 2
+            sequence: 10
+            region: @reprompt-concept-modal
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-magic
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    button save-concept-btn (
+        buttonName: SAVE_CONCEPT
+        label: Save Changes
+        layout {
+            sequence: 20
+            region: @reprompt-concept-modal
+            slot: next
         }
         appearance {
             buttonTemplate: @/text-with-icon
@@ -888,19 +986,40 @@ page 3 (
                 #DEFAULT#
                 t-Button--iconLeft
             ]
-            icon: fa-search
+            icon: fa-check
         }
         behavior {
             showProcessing: true
         }
     )
 
+    button close-modal-btn (
+        buttonName: CANCEL_EDIT
+        label: Close
+        layout {
+            sequence: 30
+            region: @reprompt-concept-modal
+            slot: previous
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        advanced {
+            customAttributes: onclick="closeConceptEditModal(); return false;"
+        }
+    )
+
     button select-concept (
         buttonName: SELECT_CONCEPT
-        label: Select concept
+        label: Select Winning Concept
         layout {
-            sequence: 20
-            region: @studio-buttons
+            sequence: 40
+            region: @tender-selector
             slot: next
         }
         appearance {
@@ -1080,33 +1199,6 @@ page 3 (
         }
     )
 
-    process proc-run-deep-research (
-        name: Execute Supervised AI Research Search
-        type: executeCode
-        source {
-            plsqlCode:
-                ```plsql
-                fc_planning_api.run_client_research(
-                    p_tender_id     => nvl(to_number(:P3_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
-                    p_query         => :P3_RESEARCH_QUERY,
-                    p_search_engine => :P3_SEARCH_ENGINE,
-                    p_user_name     => :APP_USER
-                );
-                apex_application.g_print_success_message := 'AI research notes added (not web-verified). Approve or reject each one on the Intake page; only approved notes are used for concepts.';
-                ```
-        }
-        execution {
-            sequence: 4
-        }
-        advanced {
-            executionMappingIdentifier: 40970857051173905
-        }
-        serverSideCondition {
-            type: request=Value
-            value: RUN_DEEP_RESEARCH
-        }
-    )
-
     process proc-select-concept (
         name: Call Select Concept API
         type: executeCode
@@ -1130,6 +1222,99 @@ page 3 (
         serverSideCondition {
             type: request=Value
             value: SELECT_CONCEPT
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process proc-reprompt-concept (
+        name: Execute Concept AI Reprompt
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.reprompt_concept(
+                    p_tender_id   => to_number(:P3_TENDER_ID),
+                    p_concept_id  => to_number(:P3_EDIT_CONCEPT_ID),
+                    p_instruction => :P3_REPROMPT_INSTRUCTION,
+                    p_user_name   => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Concept Option ' || :P3_EDIT_OPTION_CODE || ' reprompted successfully with your creative direction.';
+                ```
+        }
+        execution {
+            sequence: 15
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REPROMPT_AI
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process proc-update-concept (
+        name: Update Concept Manual Details
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.update_concept(
+                    p_concept_id    => to_number(:P3_EDIT_CONCEPT_ID),
+                    p_concept_title => :P3_EDIT_TITLE,
+                    p_narrative     => :P3_EDIT_NARRATIVE,
+                    p_spatial_notes => :P3_EDIT_SPATIAL,
+                    p_event_flow    => :P3_EDIT_EVENT_FLOW,
+                    p_user_name     => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Concept Option ' || :P3_EDIT_OPTION_CODE || ' details updated successfully.';
+                ```
+        }
+        execution {
+            sequence: 16
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_CONCEPT
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process ajax-get-concept-details (
+        name: Fetch Concept Option Details
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_concept fc_concept_options%rowtype;
+                begin
+                    select * into l_concept
+                      from fc_concept_options
+                     where concept_id = to_number(apex_application.g_x01);
+                    apex_json.open_object;
+                    apex_json.write('concept_id', l_concept.concept_id);
+                    apex_json.write('option_code', l_concept.option_code);
+                    apex_json.write('title', l_concept.concept_title);
+                    apex_json.write('narrative', l_concept.narrative);
+                    apex_json.write('spatial', l_concept.spatial_notes);
+                    apex_json.write('event_flow', l_concept.event_flow);
+                    apex_json.close_object;
+                exception
+                    when no_data_found then
+                        apex_json.open_object;
+                        apex_json.write('error', 'Concept not found');
+                        apex_json.close_object;
+                end;
+                ```
+        }
+        execution {
+            sequence: 50
+            point: ajaxCallback
         }
         security {
             authorizationScheme: @planner-role

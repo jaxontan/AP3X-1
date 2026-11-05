@@ -120,9 +120,43 @@
         "Event Year": "Tahun Acara",
         "Venue": "Lokasi Acara",
 
-        // Page 3 & Stages
-        "Generate Concepts": "Buat Konsep",
-        "Generate AI Concepts": "Buat Konsep Berbasis AI",
+        // Page 3 & Planning Studio
+        "Concept options": "Pilihan Konsep",
+        "Generate concepts": "Buat Konsep",
+        "Generate AI concepts": "Buat Konsep Berbasis AI",
+        "Build handover": "Bangun Serah Terima",
+        "Approve Gate 1 and hand over": "Setujui Gerbang 1 & Serahkan",
+        "Reject Gate 1": "Tolak Gerbang 1",
+        "Edit Concept / Reprompt": "Ubah Konsep / Perintah Ulang",
+        "Reprompt with AI": "Perintah Ulang dengan AI",
+        "Save Changes": "Simpan Perubahan",
+        "Cancel": "Batal",
+        "Close": "Tutup",
+        "Select as Hero": "Pilih sebagai Hero",
+        "Selected as Hero": "Terpilih sebagai Hero",
+        "Select Winning Concept": "Pilih Konsep Pemenang",
+        "Edit Concept & Creative Reprompt": "Ubah Konsep & Perintah Ulang Kreatif",
+        "Editing Concept Option": "Mengubah Pilihan Konsep",
+        "AI Reprompt Instructions": "Instruksi Perintah Ulang AI",
+        "Concept Title": "Judul Konsep",
+        "Creative Narrative Framing": "Kerangka Narasi Kreatif",
+        "Space & Clearance Guidelines": "Panduan Ruang & Jarak Bebas",
+        "Run of Show / Event Flow": "Alur Acara / Susunan Acara",
+        "Why it fits the brief": "Kesesuaian dengan brief",
+        "Space and clearance": "Ruang dan jarak bebas",
+        "Run of show": "Alur acara",
+        "Fringe activities": "Aktivitas pendukung",
+        "Visual brief for the design team": "Brief visual untuk tim desain",
+        "GATE 1 PLANNING STATUS: IN REVIEW (PENDING MICHELLE SIGN-OFF)": "STATUS GERBANG 1: DALAM TINJAUAN (MENUNGGU PERSETUJUAN MICHELLE)",
+        "GATE 1 PLANNING STATUS: SIGNED OFF & APPROVED": "STATUS GERBANG 1: TELAH DISETUJUI",
+        "PENDING GATE 1": "MENUNGGU GERBANG 1",
+        "STAGE 2: DESIGN READY": "TAHAP 2: SIAP DESAIN",
+        "Team handover tasks": "Tugas Serah Terima Tim",
+        "Venue and safety flags": "Indikator Lokasi & Keselamatan",
+        "Tender and concept": "Tender dan Konsep",
+        "Concept to select": "Konsep yang Dipilih",
+        "Gate 1 comments": "Komentar Gerbang 1",
+        "Handover language": "Bahasa Serah Terima",
         "Concept Ideation": "Pengembangan Konsep",
         "Selected Concept": "Konsep Terpilih",
         "Narrative & USPs": "Naratif & Keunggulan",
@@ -261,4 +295,52 @@
             }, 100);
         });
     }
+
+    // 6. Planning Studio (Page 3) Concept Modal & Selection Helpers
+    window.openConceptEditModal = function(conceptId, optionCode) {
+        if (typeof apex !== 'undefined' && apex.server) {
+            apex.server.process('Fetch Concept Option Details', {
+                x01: conceptId
+            }, {
+                success: function(data) {
+                    if (data && !data.error) {
+                        if (apex.item('P3_EDIT_CONCEPT_ID')) apex.item('P3_EDIT_CONCEPT_ID').setValue(data.concept_id);
+                        if (apex.item('P3_EDIT_OPTION_CODE')) apex.item('P3_EDIT_OPTION_CODE').setValue('Option ' + data.option_code + ': ' + data.title);
+                        if (apex.item('P3_EDIT_TITLE')) apex.item('P3_EDIT_TITLE').setValue(data.title || '');
+                        if (apex.item('P3_EDIT_NARRATIVE')) apex.item('P3_EDIT_NARRATIVE').setValue(data.narrative || '');
+                        if (apex.item('P3_EDIT_SPATIAL')) apex.item('P3_EDIT_SPATIAL').setValue(data.spatial || '');
+                        if (apex.item('P3_EDIT_EVENT_FLOW')) apex.item('P3_EDIT_EVENT_FLOW').setValue(data.event_flow || '');
+                        if (apex.item('P3_REPROMPT_INSTRUCTION')) apex.item('P3_REPROMPT_INSTRUCTION').setValue('');
+
+                        var modalEl = document.getElementById('fc-concept-modal-region');
+                        if (modalEl) {
+                            modalEl.style.display = 'block';
+                            modalEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else if (data && data.error) {
+                        apex.message.showErrors([{ type: 'error', location: 'page', message: data.error }]);
+                    }
+                },
+                error: function(err) {
+                    console.error('Failed to load concept details', err);
+                }
+            });
+        }
+    };
+
+    window.closeConceptEditModal = function() {
+        var modalEl = document.getElementById('fc-concept-modal-region');
+        if (modalEl) {
+            modalEl.style.display = 'none';
+        }
+    };
+
+    window.selectConceptCard = function(conceptId, optionCode) {
+        if (typeof apex !== 'undefined') {
+            if (apex.item('P3_CONCEPT_ID')) {
+                apex.item('P3_CONCEPT_ID').setValue(conceptId);
+            }
+            apex.submit('SELECT_CONCEPT');
+        }
+    };
 })();
