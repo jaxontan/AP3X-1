@@ -2567,6 +2567,32 @@
 }
 .fc-slide--title .fc-slide-visual { color: #BFBFBF; }
 
+/* Dark Obsidian Theme Overrides for Slide Breakdown Cards */
+.fc-slide--dark {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+.fc-slide--dark .fc-slide-title {
+  color: #ffffff !important;
+}
+.fc-slide--dark .fc-slide-focus {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-left: 3px solid #38bdf8 !important;
+  color: #38bdf8 !important;
+  padding: 6px 12px;
+  border-radius: 0 4px 4px 0;
+}
+.fc-slide--dark .fc-slide-bullets {
+  color: #cbd5e1 !important;
+}
+.fc-slide--dark .fc-slide-bullets li::marker {
+  color: #38bdf8 !important;
+}
+.fc-slide--dark .fc-slide-visual {
+  color: #94a3b8 !important;
+}
+
 /* Top Header Language Switcher */
 .fc-lang-btn,
 .t-NavigationBar-item a[href*="fcToggleLanguage"] {

@@ -149,6 +149,8 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         l_lower      VARCHAR2(4000);
         l_total      NUMBER := 0;
     BEGIN
+        l_lower := LOWER(NVL(p_chat_prompt, ''));
+
         IF TRIM(p_chat_prompt) IS NULL THEN
             draft_slides(p_tender_id, p_user_name, x_message);
             RETURN;
@@ -226,7 +228,10 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
                     key_bullet_points, visual_placeholder_desc, image_prompt, is_customized
                 ) VALUES (
                     p_tender_id, l_cnt, SUBSTR(s.title, 1, 200),
-                    NVL(REGEXP_SUBSTR(c_layouts, '[^,]+', 1, l_cnt), 'SPLIT_STORY'),
+                    CASE WHEN INSTR(l_lower, 'dark') > 0 OR INSTR(l_lower, 'black') > 0 OR INSTR(l_lower, 'night') > 0 OR INSTR(l_lower, 'obsidian') > 0
+                         THEN 'DARK_THEME'
+                         ELSE NVL(REGEXP_SUBSTR(c_layouts, '[^,]+', 1, l_cnt), 'SPLIT_STORY')
+                    END,
                     SUBSTR(s.focus, 1, 500), l_bullets, SUBSTR(s.visual, 1, 2000),
                     NVL(SUBSTR(s.image_prompt, 1, 2000), SUBSTR(s.visual, 1, 2000)), 'Y'
                 );
@@ -278,11 +283,112 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
                                         || '• Zero hidden statutory fee surprises (BCA PE and EMA LEW fully included in base price)' || CHR(10)
                                         || '• Proven 3.8x B2B lead generation conversion rate compared to conventional static roadshows'
                  WHERE tender_id = p_tender_id AND slide_num = 8;
+            ELSIF INSTR(l_lower, 'dark') > 0 OR INSTR(l_lower, 'black') > 0 OR INSTR(l_lower, 'night') > 0 OR INSTR(l_lower, 'obsidian') > 0 THEN
+                -- Set all slides to DARK_THEME layout and dark keynote narrative
+                UPDATE fc_pitch_slides
+                   SET layout_type = 'DARK_THEME'
+                 WHERE tender_id = p_tender_id;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Executive Vision & Obsidian Dark Theme Staging',
+                       narrative_focus = 'Immersive Dark Obsidian Aesthetic: High-contrast luminescent cyan, gold, and stage LED accents engineered for C-suite keynote impact.',
+                       key_bullet_points = '• Premium dark-mode visual hierarchy reducing ambient eye fatigue and emphasizing stage LED focus' || CHR(10)
+                                        || '• Deep obsidian proscenium architecture with edge-lit luminescent ribbon contours' || CHR(10)
+                                        || '• High-contrast typography and statutory certifications engineered for C-suite clarity',
+                       visual_placeholder_desc = 'Dark obsidian stage auditorium with luminescent cyan perimeter wash and dramatic overhead spotlighting'
+                 WHERE tender_id = p_tender_id AND slide_num = 1;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Strategic Brief Alignment & Dark Keynote Persona',
+                       narrative_focus = 'Keynote Immersion Persona: Orchestrating an elite, low-light auditorium ambience tailored for Fortune 500 decision-makers.',
+                       key_bullet_points = '• Contrast-driven focus funneling 100% attendee attention to keynote speaker and product reveals' || CHR(10)
+                                        || '• High-lux P2.6 LED video walls delivering vibrant HDR clarity against midnight acoustic staging' || CHR(10)
+                                        || '• Seamless VIP executive lounge integration with ambient under-counter architectural glow',
+                       visual_placeholder_desc = 'Midnight-toned executive boardroom and VIP networking lounge with amber accent lighting'
+                 WHERE tender_id = p_tender_id AND slide_num = 2;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Signature Concept: Luminescent Circuit Core',
+                       narrative_focus = 'Luminescent Spatial Identity: Dynamic neon cyan and emerald light ribbons echoing Singapore smart-hub innovation.',
+                       key_bullet_points = '• Central hexagonal plenary stage enveloped in reactive floor-to-ceiling LED ribbon pylons' || CHR(10)
+                                        || '• Midnight acoustic velour drapes eliminating stray ambient reflections across the 800-seat hall' || CHR(10)
+                                        || '• 92% circular modular trussing engineered for rapid low-waste overnight assembly',
+                       visual_placeholder_desc = '3D architectural render of hexagonal dark proscenium stage with glowing neon light ribbons'
+                 WHERE tender_id = p_tender_id AND slide_num = 3;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Curated Low-Light Attendee Journey & Immersion',
+                       narrative_focus = 'Experiential Contrast Mapping: Guiding VIPs through a sensory-rich dim ambient entrance into a high-lux reveal chamber.',
+                       key_bullet_points = '• Low-glare illuminated directional floor runners guiding movement without overhead light bleed' || CHR(10)
+                                        || '• Integrated RFID smart badges triggering personalized holographic welcome beacons' || CHR(10)
+                                        || '• Acoustically isolated demo pods for high-confidentiality executive briefings',
+                       visual_placeholder_desc = 'Low-light entrance tunnel with dynamic LED light strips leading to the main plenary'
+                 WHERE tender_id = p_tender_id AND slide_num = 4;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Spatial Architecture & Luminescent Curved LED Rig',
+                       narrative_focus = 'Dynamic Contrast Staging: 12.0m curved P2.6 LED proscenium set against a midnight black acoustic backdrop.',
+                       key_bullet_points = '• High-contrast black-level calibration for ultra-deep cinematic visual presentation' || CHR(10)
+                                        || '• Overhead rigged ribbon truss with directional spotlighting and zero glare bounce' || CHR(10)
+                                        || '• Singapore SCDF 3.0m emergency egress safety corridors clearly illuminated with low-level LED pathfinding',
+                       visual_placeholder_desc = 'Curved 12m LED video wall rigging with dark stage proscenium and illuminated egress floor strips'
+                 WHERE tender_id = p_tender_id AND slide_num = 5;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Interactive Activation Ecosystem & Glow Demo Pods',
+                       narrative_focus = 'Luminescent Interactive Pods: Tactile interactive demo stations with edge-lit acrylics and integrated touchscreens.',
+                       key_bullet_points = '• 4x modular breakout pods equipped with ultra-responsive 65-inch 4K capacitive displays' || CHR(10)
+                                        || '• Integrated directional sound showers preventing audio bleed across adjacent demo zones' || CHR(10)
+                                        || '• Cloud-synced telemetry analytics tracking attendee dwell times and engagement metrics',
+                       visual_placeholder_desc = 'High-tech interactive kiosk stations with edge-lit acrylic frames and glowing pedestal bases'
+                 WHERE tender_id = p_tender_id AND slide_num = 6;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Operational Feasibility, SCDF Egress & Safety Luminescence',
+                       narrative_focus = 'Statutory Rigor & Safety Luminescence: PE certified trussing with illuminated SCDF emergency pathways.',
+                       key_bullet_points = '• Professional Engineer (PE) structural calculation endorsement for dark overhead rigging' || CHR(10)
+                                        || '• Licensed Electrical Worker (LEW) turn-on certification for multi-phase LED power delivery' || CHR(10)
+                                        || '• Continuous photoluminescent exit signage and 3.0m fire egress lanes compliant with SCDF Fire Code',
+                       visual_placeholder_desc = 'Singapore SCDF approved dark venue layout showing green photoluminescent egress markers'
+                 WHERE tender_id = p_tender_id AND slide_num = 7;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Commercial Roadmap, Milestones & Turnkey Delivery',
+                       narrative_focus = 'Milestone Precision & Transparency: Turnkey delivery governance with zero hidden production costs.',
+                       key_bullet_points = '• Structured milestone progress: 50% upon pitch confirmation, 40% onsite build, 10% post-strike handover' || CHR(10)
+                                        || '• Guaranteed Singapore BCA / EMA / SCDF statutory compliance package bundled in base tender' || CHR(10)
+                                        || '• 24/7 dedicated show-call team and technical standby throughout the entire event duration',
+                       visual_placeholder_desc = 'Gantt timeline chart showing 12-week design, engineering, fabrication and rehearsal phases'
+                 WHERE tender_id = p_tender_id AND slide_num = 8;
+            ELSIF INSTR(l_lower, 'light') > 0 OR INSTR(l_lower, 'white') > 0 THEN
+                UPDATE fc_pitch_slides
+                   SET layout_type = 'SPLIT_STORY'
+                 WHERE tender_id = p_tender_id;
             ELSE
                 UPDATE fc_pitch_slides
                    SET narrative_focus = SUBSTR('[AI Copilot Directives: ' || p_chat_prompt || '] ' || narrative_focus, 1, 500)
                  WHERE tender_id = p_tender_id AND slide_num = 1;
             END IF;
+        END IF;
+
+        -- Ensure layout_type reflects dark or light mode directive
+        IF INSTR(l_lower, 'dark') > 0 OR INSTR(l_lower, 'black') > 0 OR INSTR(l_lower, 'night') > 0 OR INSTR(l_lower, 'obsidian') > 0 THEN
+            UPDATE fc_pitch_slides
+               SET layout_type = 'DARK_THEME'
+             WHERE tender_id = p_tender_id;
+        ELSIF INSTR(l_lower, 'light') > 0 OR INSTR(l_lower, 'white') > 0 THEN
+            UPDATE fc_pitch_slides
+               SET layout_type = CASE slide_num
+                                     WHEN 1 THEN 'HERO_TITLE'
+                                     WHEN 2 THEN 'SPLIT_STORY'
+                                     WHEN 3 THEN 'CANVAS_3D'
+                                     WHEN 4 THEN 'TIMELINE_FLOW'
+                                     WHEN 5 THEN 'FLOORPLAN_MAP'
+                                     WHEN 6 THEN 'GRID_ACTIVATIONS'
+                                     WHEN 7 THEN 'METRICS_CARDS'
+                                     ELSE 'SUMMARY_TABLE'
+                                 END
+             WHERE tender_id = p_tender_id;
         END IF;
 
         fc_audit_api.log_event(p_tender_id, p_user_name, 'AI_DECK_REPROMPT', 'FC_PITCH_SLIDES',
@@ -358,6 +464,7 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         l_paras  CLOB;
         l_dark   BOOLEAN;
         l_fg     VARCHAR2(6);
+        l_dark_count PLS_INTEGER := 0;
 
         PROCEDURE add(p_name IN VARCHAR2, p_xml IN CLOB) IS
         BEGIN
@@ -370,6 +477,11 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         IF l_total = 0 THEN
             raise_application_error(-20041, 'Draft the slides first, then export.');
         END IF;
+
+        SELECT COUNT(*) INTO l_dark_count
+          FROM fc_pitch_slides
+         WHERE tender_id = p_tender_id
+           AND (layout_type = 'DARK_THEME' OR INSTR(LOWER(narrative_focus), 'dark') > 0);
 
         l_types := c_hdr || '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
                 || '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
@@ -385,7 +497,7 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         FOR s IN (SELECT slide_num, slide_title, narrative_focus, key_bullet_points, visual_placeholder_desc
                     FROM fc_pitch_slides WHERE tender_id = p_tender_id ORDER BY slide_num) LOOP
             l_n := l_n + 1;
-            l_dark := (l_n = 1);          -- title slide on the brand black
+            l_dark := (l_dark_count > 0 OR l_n = 1);          -- all dark if dark theme requested, or title slide on brand black
             l_fg := CASE WHEN l_dark THEN 'FFFFFF' ELSE '121212' END;
 
             l_paras := NULL;
@@ -393,29 +505,29 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
                         FROM TABLE(apex_string.split(s.key_bullet_points, CHR(10)))
                        WHERE TRIM(COLUMN_VALUE) IS NOT NULL) LOOP
                 l_paras := l_paras || '<a:p><a:pPr marL="342900" indent="-342900"><a:spcBef><a:spcPts val="900"/></a:spcBef>'
-                        || '<a:buClr><a:srgbClr val="3BE891"/></a:buClr><a:buFont typeface="Arial"/><a:buChar char="&#8226;"/></a:pPr>'
+                        || '<a:buClr><a:srgbClr val="' || CASE WHEN l_dark THEN '38BDF8' ELSE '3BE891' END || '"/></a:buClr><a:buFont typeface="Arial"/><a:buChar char="&#8226;"/></a:pPr>'
                         || run(b.t, 2000, l_fg) || '</a:p>';
             END LOOP;
 
             l_slide := c_hdr || '<p:sld ' || c_ns || '><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="'
-                    || CASE WHEN l_dark THEN '121212' ELSE 'FFFFFF' END || '"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>' || c_tree
+                    || CASE WHEN l_dark THEN '0F172A' ELSE 'FFFFFF' END || '"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree>' || c_tree
                     || bar(2, 609600, 548640, 1371600, 73152)
-                    || box(3, 'Title', 609600, 685800, 10972800, CASE WHEN l_dark THEN 2286000 ELSE 1005840 END,
-                           '<a:p>' || run(CASE WHEN l_dark THEN l_title ELSE s.slide_title END, CASE WHEN l_dark THEN 4000 ELSE 3000 END, l_fg, TRUE) || '</a:p>', 'b')
-                    || box(4, 'Focus', 609600, CASE WHEN l_dark THEN 3063240 ELSE 1737360 END, 10972800, 640080,
-                           '<a:p>' || run(CASE WHEN l_dark AND s.slide_title <> l_title THEN s.slide_title || '. ' END || s.narrative_focus, 1600,
-                                          CASE WHEN l_dark THEN '3BE891' ELSE '026BD3' END) || '</a:p>');
+                    || box(3, 'Title', 609600, 685800, 10972800, CASE WHEN l_n = 1 THEN 2286000 ELSE 1005840 END,
+                           '<a:p>' || run(CASE WHEN l_n = 1 THEN l_title ELSE s.slide_title END, CASE WHEN l_n = 1 THEN 4000 ELSE 3000 END, l_fg, TRUE) || '</a:p>', 'b')
+                    || box(4, 'Focus', 609600, CASE WHEN l_n = 1 THEN 3063240 ELSE 1737360 END, 10972800, 640080,
+                           '<a:p>' || run(CASE WHEN l_n = 1 AND s.slide_title <> l_title THEN s.slide_title || '. ' END || s.narrative_focus, 1600,
+                                          CASE WHEN l_dark THEN '38BDF8' ELSE '026BD3' END) || '</a:p>');
             IF l_paras IS NOT NULL THEN
-                l_slide := l_slide || box(5, 'Bullets', 609600, CASE WHEN l_dark THEN 3794760 ELSE 2468880 END, 10972800,
-                                          CASE WHEN l_dark THEN 1828800 ELSE 2926080 END, l_paras);
+                l_slide := l_slide || box(5, 'Bullets', 609600, CASE WHEN l_n = 1 THEN 3794760 ELSE 2468880 END, 10972800,
+                                          CASE WHEN l_n = 1 THEN 1828800 ELSE 2926080 END, l_paras);
             END IF;
-            IF s.visual_placeholder_desc IS NOT NULL AND NOT l_dark THEN
+            IF s.visual_placeholder_desc IS NOT NULL THEN
                 l_slide := l_slide || box(6, 'Visual brief', 609600, 5486400, 10972800, 548640,
-                    '<a:p>' || run('Visual: ' || SUBSTR(s.visual_placeholder_desc, 1, 300), 1100, '7F7F7F', FALSE, TRUE) || '</a:p>');
+                    '<a:p>' || run('Visual: ' || SUBSTR(s.visual_placeholder_desc, 1, 300), 1100, CASE WHEN l_dark THEN '94A3B8' ELSE '7F7F7F' END, FALSE, TRUE) || '</a:p>');
             END IF;
             l_slide := l_slide || box(7, 'Footer', 609600, 6217920, 10972800, 320040,
-                    '<a:p><a:pPr algn="r"/>' || run(l_code || '  ?  ' || l_client || '  ?  ' || l_n || ' / ' || l_total, 1000,
-                                                     CASE WHEN l_dark THEN 'BFBFBF' ELSE '7F7F7F' END) || '</a:p>')
+                    '<a:p><a:pPr algn="r"/>' || run(l_code || '  ·  ' || l_client || '  ·  ' || l_n || ' / ' || l_total, 1000,
+                                                     CASE WHEN l_dark THEN '64748B' ELSE '7F7F7F' END) || '</a:p>')
                     || '</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
 
             add('ppt/slides/slide' || l_n || '.xml', l_slide);
@@ -800,13 +912,15 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
     END build_pdf;
 
     FUNCTION render_preview(p_tender_id IN NUMBER) RETURN CLOB IS
-        l_html      CLOB;
-        l_srcdoc    CLOB;
-        l_total     PLS_INTEGER;
-        l_code      VARCHAR2(50) := 'FC-TENDER';
-        l_client    VARCHAR2(150) := 'Client';
-        l_title     VARCHAR2(250) := 'Executive Pitch Deck';
-        l_idx       PLS_INTEGER := 0;
+        l_html       CLOB;
+        l_srcdoc     CLOB;
+        l_total      PLS_INTEGER;
+        l_code       VARCHAR2(50) := 'FC-TENDER';
+        l_client     VARCHAR2(150) := 'Client';
+        l_title      VARCHAR2(250) := 'Executive Pitch Deck';
+        l_idx        PLS_INTEGER := 0;
+        l_dark_count PLS_INTEGER := 0;
+        l_render_url VARCHAR2(500);
 
         PROCEDURE append_doc(p_str IN VARCHAR2) IS
         BEGIN
@@ -836,39 +950,65 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
             WHEN OTHERS THEN NULL;
         END;
 
+        SELECT COUNT(*) INTO l_dark_count
+          FROM fc_pitch_slides
+         WHERE tender_id = p_tender_id
+           AND (layout_type = 'DARK_THEME' OR INSTR(LOWER(narrative_focus), 'dark') > 0);
+
         -- 1. Construct embedded HTML-PPT viewport srcdoc
         DBMS_LOB.CREATETEMPORARY(l_srcdoc, TRUE);
         append_doc('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' || CHR(10)
             || '<meta name="viewport" content="width=device-width, initial-scale=1">' || CHR(10)
             || '<style>' || CHR(10)
             || '* { box-sizing: border-box; margin: 0; padding: 0; }' || CHR(10)
-            || 'body { background: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }' || CHR(10)
-            || '.deck-nav { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }' || CHR(10)
+            || 'body { background: #f8fafc; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 18px; min-height: 100vh; display: flex; flex-direction: column; transition: background 0.25s, color 0.25s; }' || CHR(10)
+            || '.deck-nav { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s; }' || CHR(10)
             || '.deck-title { font-weight: 700; color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px; }' || CHR(10)
             || '.deck-ctrls { display: flex; align-items: center; gap: 8px; }' || CHR(10)
             || '.ctrl-btn { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; transition: all 0.15s; }' || CHR(10)
             || '.ctrl-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #94a3b8; }' || CHR(10)
+            || '.ctrl-btn-theme { background: #0f172a; color: #38bdf8; border-color: #334155; }' || CHR(10)
+            || '.ctrl-btn-theme:hover { background: #1e293b; color: #7dd3fc; }' || CHR(10)
             || '.slide-counter { font-size: 13px; color: #64748b; font-variant-numeric: tabular-nums; margin: 0 6px; font-weight: 600; }' || CHR(10)
             || '.slide-viewport { flex: 1; display: flex; justify-content: center; align-items: center; }' || CHR(10)
-            || '.v-slide { width: 100%; max-width: 900px; aspect-ratio: 16 / 9; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px 36px; display: none; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.06); position: relative; overflow: hidden; }' || CHR(10)
+            || '.v-slide { width: 100%; max-width: 900px; aspect-ratio: 16 / 9; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px 34px; display: none; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.06); position: relative; overflow: hidden; transition: background 0.25s, border-color 0.25s; }' || CHR(10)
             || '.v-slide.active { display: flex; }' || CHR(10)
             || '.v-slide::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #0284c7, #10b981); }' || CHR(10)
-            || '.v-slide-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }' || CHR(10)
-            || '.v-focus { font-size: 13px; color: #0369a1; background: #f0f9ff; border-left: 3px solid #0284c7; padding: 8px 14px; border-radius: 0 6px 6px 0; margin-bottom: 14px; line-height: 1.4; }' || CHR(10)
+            || '.v-slide-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }' || CHR(10)
+            || '.v-focus { font-size: 13px; color: #0369a1; background: #f0f9ff; border-left: 3px solid #0284c7; padding: 8px 14px; border-radius: 0 6px 6px 0; margin-bottom: 12px; line-height: 1.4; }' || CHR(10)
             || '.v-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; flex: 1; align-items: center; }' || CHR(10)
             || '@media(max-width: 720px) { .v-grid { grid-template-columns: 1fr; } }' || CHR(10)
             || '.v-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }' || CHR(10)
             || '.v-bullets li { position: relative; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #334155; }' || CHR(10)
             || '.v-bullets li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: #0284c7; }' || CHR(10)
             || '.v-render-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }' || CHR(10)
-            || '.v-render-img { width: 100%; height: 160px; object-fit: cover; display: block; background: #f1f5f9; }' || CHR(10)
+            || '.v-render-img { width: 100%; height: 160px; object-fit: cover; display: block; background: #0f172a; }' || CHR(10)
             || '.v-render-caption { padding: 8px 12px; background: #ffffff; font-size: 11px; color: #64748b; line-height: 1.4; border-top: 1px solid #e2e8f0; }' || CHR(10)
             || '.v-render-caption strong { color: #d97706; display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }' || CHR(10)
             || '.v-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; }' || CHR(10)
-            || '</style></head><body>' || CHR(10)
+            || 'body.theme-dark { background: #090d16; color: #f8fafc; }' || CHR(10)
+            || 'body.theme-dark .deck-nav { background: #0f172a; border-color: #1e293b; color: #f8fafc; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }' || CHR(10)
+            || 'body.theme-dark .deck-title { color: #f8fafc; }' || CHR(10)
+            || 'body.theme-dark .ctrl-btn { background: #1e293b; border-color: #334155; color: #e2e8f0; }' || CHR(10)
+            || 'body.theme-dark .ctrl-btn:hover { background: #334155; color: #ffffff; }' || CHR(10)
+            || 'body.theme-dark .ctrl-btn-theme { background: #38bdf8; color: #090d16; border-color: #38bdf8; font-weight: 700; }' || CHR(10)
+            || 'body.theme-dark .ctrl-btn-theme:hover { background: #7dd3fc; }' || CHR(10)
+            || 'body.theme-dark .slide-counter { color: #94a3b8; }' || CHR(10)
+            || 'body.theme-dark .v-slide { background: #0f172a; border-color: #1e293b; box-shadow: 0 12px 36px rgba(0,0,0,0.6); }' || CHR(10)
+            || 'body.theme-dark .v-slide::before { background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399); }' || CHR(10)
+            || 'body.theme-dark .v-slide-title { color: #ffffff; }' || CHR(10)
+            || 'body.theme-dark .v-focus { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: #38bdf8; }' || CHR(10)
+            || 'body.theme-dark .v-bullets li { color: #cbd5e1; }' || CHR(10)
+            || 'body.theme-dark .v-bullets li::before { background: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }' || CHR(10)
+            || 'body.theme-dark .v-render-box { background: #020617; border-color: #1e293b; }' || CHR(10)
+            || 'body.theme-dark .v-render-caption { background: #0b0f19; border-color: #1e293b; color: #94a3b8; }' || CHR(10)
+            || 'body.theme-dark .v-render-caption strong { color: #38bdf8; }' || CHR(10)
+            || 'body.theme-dark .v-footer { border-color: #1e293b; color: #64748b; }' || CHR(10)
+            || '</style></head><body' || CASE WHEN l_dark_count > 0 THEN ' class="theme-dark"' END || '>' || CHR(10)
             || '<div class="deck-nav">' || CHR(10)
             || '  <div class="deck-title">&#128250; ' || apex_escape.html(l_code) || ' · ' || apex_escape.html(l_client) || '</div>' || CHR(10)
             || '  <div class="deck-ctrls">' || CHR(10)
+            || '    <button class="ctrl-btn ctrl-btn-theme" id="themeToggleBtn" onclick="toggleDeckTheme()">' || CASE WHEN l_dark_count > 0 THEN '&#9728; Light Mode' ELSE '&#127769; Dark Mode' END || '</button>' || CHR(10)
             || '    <button class="ctrl-btn" onclick="prevSlide()">&#9664; Prev</button>' || CHR(10)
             || '    <span class="slide-counter" id="vCounter">1 / ' || l_total || '</span>' || CHR(10)
             || '    <button class="ctrl-btn" onclick="nextSlide()">Next &#9654;</button>' || CHR(10)
@@ -880,6 +1020,18 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         FOR s IN (SELECT slide_num, slide_title, layout_type, narrative_focus, key_bullet_points, visual_placeholder_desc, image_prompt
                     FROM fc_pitch_slides WHERE tender_id = p_tender_id ORDER BY slide_num) LOOP
             l_idx := l_idx + 1;
+
+            l_render_url := CASE MOD(s.slide_num, 8) + 1
+                WHEN 1 THEN 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'
+                WHEN 2 THEN 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80'
+                WHEN 3 THEN 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80'
+                WHEN 4 THEN 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80'
+                WHEN 5 THEN 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80'
+                WHEN 6 THEN 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80'
+                WHEN 7 THEN 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80'
+                ELSE 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80'
+            END;
+
             append_doc(
                 '<div class="v-slide' || CASE WHEN l_idx = 1 THEN ' active' END || '">' || CHR(10)
              || '  <div>' || CHR(10)
@@ -905,7 +1057,7 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
             append_doc(
                 '    </ul>' || CHR(10)
              || '    <div class="v-render-box">' || CHR(10)
-             || '      <img class="v-render-img" src="https://image.pollinations.ai/prompt/' || apex_util.url_encode(NVL(s.image_prompt, 'futuristic corporate stage Singapore event MICE render')) || '?width=600&height=340&nologo=true&enhance=true" alt="AI Staging Render" loading="lazy" />' || CHR(10)
+             || '      <img class="v-render-img" src="' || l_render_url || '" alt="AI Staging Blueprint" loading="lazy" onerror="this.onerror=null; this.src=''https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'';" />' || CHR(10)
              || '      <div class="v-render-caption">' || CHR(10)
              || '        <strong>AI Staging Blueprint</strong>' || CHR(10)
              || '        ' || apex_escape.html(NVL(SUBSTR(s.visual_placeholder_desc, 1, 140), 'Spatial and lighting staging brief')) || CHR(10)
@@ -934,6 +1086,23 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
          || '}' || CHR(10)
          || 'function nextSlide() { go(c + 1); }' || CHR(10)
          || 'function prevSlide() { go(c - 1); }' || CHR(10)
+         || 'function toggleDeckTheme() {' || CHR(10)
+         || '  var b = document.body;' || CHR(10)
+         || '  var isDark = b.classList.toggle("theme-dark");' || CHR(10)
+         || '  var btn = document.getElementById("themeToggleBtn");' || CHR(10)
+         || '  if (btn) btn.innerHTML = isDark ? "&#9728; Light Mode" : "&#127769; Dark Mode";' || CHR(10)
+         || '  try { localStorage.setItem("fc_deck_theme", isDark ? "dark" : "light"); } catch(e){}' || CHR(10)
+         || '}' || CHR(10)
+         || '(function() {' || CHR(10)
+         || '  var dbPrefersDark = ' || CASE WHEN l_dark_count > 0 THEN 'true' ELSE 'false' END || ';' || CHR(10)
+         || '  var saved = null;' || CHR(10)
+         || '  try { saved = localStorage.getItem("fc_deck_theme"); } catch(e){}' || CHR(10)
+         || '  if (dbPrefersDark || saved === "dark") {' || CHR(10)
+         || '    document.body.classList.add("theme-dark");' || CHR(10)
+         || '    var btn = document.getElementById("themeToggleBtn");' || CHR(10)
+         || '    if (btn) btn.innerHTML = "&#9728; Light Mode";' || CHR(10)
+         || '  }' || CHR(10)
+         || '})();' || CHR(10)
          || 'document.addEventListener("keydown", function(e) {' || CHR(10)
          || '  if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") nextSlide();' || CHR(10)
          || '  if (e.key === "ArrowLeft" || e.key === "PageUp") prevSlide();' || CHR(10)
@@ -991,7 +1160,7 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         append_html('<div class="fc-deck">');
         FOR s IN (SELECT slide_num, slide_title, narrative_focus, key_bullet_points, visual_placeholder_desc
                     FROM fc_pitch_slides WHERE tender_id = p_tender_id ORDER BY slide_num) LOOP
-            append_html('<article class="fc-slide' || CASE WHEN s.slide_num = 1 THEN ' fc-slide--title' END || '">'
+            append_html('<article class="fc-slide' || CASE WHEN s.slide_num = 1 THEN ' fc-slide--title' END || CASE WHEN l_dark_count > 0 THEN ' fc-slide--dark' END || '">'
                    || '<span class="fc-slide-num">' || s.slide_num || ' / ' || l_total || '</span>'
                    || '<h3 class="fc-slide-title">' || apex_escape.html(s.slide_title) || '</h3>'
                    || CASE WHEN s.narrative_focus IS NOT NULL THEN '<p class="fc-slide-focus">' || apex_escape.html(s.narrative_focus) || '</p>' END
