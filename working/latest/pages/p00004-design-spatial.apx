@@ -35,8 +35,54 @@ page 4 (
         }
     )
 
-    region design-handover-report (
+    region design-brief-tab (
         name: Design brief
+        type: staticContent
+        layout {
+            sequence: 40
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region design-brief-info-banner (
+        name: Design Brief Info
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="fc-feature-info-bar fc-feature-info-bar--planned">
+                  <span class="fa fa-info-circle fc-feature-info-icon" title="Feature Purpose"></span>
+                  <div class="fc-feature-info-body">
+                    <div class="fc-feature-info-title">
+                      Design Brief & Planning Studio Handoff
+                      <span class="fc-ai-tag fc-ai-tag--planned"><span class="fa fa-cog"></span> Rule-Based Engine (AI Planned)</span>
+                    </div>
+                    <div class="fc-feature-info-desc">
+                      Displays creative guidelines, client RFP assumptions, and spatial directives handed over from the Planning Studio (Michelle Lee) to Spatial Designers (Adi Nugroho) following Gate 1 concept sign-off.
+                    </div>
+                    <div class="fc-feature-info-ai-detail">
+                      <strong>ℹ️ AI Status:</strong> Currently a structured relational task matrix (FC_HANDOVER_ITEMS). <em>Planned AI:</em> Generative RFP Addenda Reconciliation Agent to automatically audit new client RFP amendments against active design assumptions and highlight required design pivots.
+                    </div>
+                  </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 5
+            parentRegion: @design-brief-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region design-handover-report (
+        name: Design brief items
         type: classicReport
         source {
             location: localDatabase
@@ -55,9 +101,9 @@ page 4 (
                 ```
         }
         layout {
-            sequence: 40
-            parentRegion: @design-tabs
-            slot: tabs
+            sequence: 10
+            parentRegion: @design-brief-tab
+            slot: subRegions
         }
         appearance {
             template: @/standard
@@ -157,6 +203,39 @@ page 4 (
             sequence: 30
             parentRegion: @design-tabs
             slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region drawing-package-info-banner (
+        name: Drawing Package Info
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="fc-feature-info-bar fc-feature-info-bar--planned">
+                  <span class="fa fa-info-circle fc-feature-info-icon" title="Feature Purpose"></span>
+                  <div class="fc-feature-info-body">
+                    <div class="fc-feature-info-title">
+                      Drawing Packages & CAD Repository
+                      <span class="fc-ai-tag fc-ai-tag--planned"><span class="fa fa-cog"></span> Rule-Based Engine (AI Planned)</span>
+                    </div>
+                    <div class="fc-feature-info-desc">
+                      Official drawing package repository for spatial designers to register and version-control AutoCAD DWG, DXF, PDF, and ZIP blueprints. Automatically tracks revisions (v1.0, v1.1) and marks downstream operations BOQ items as STALE when drawings change (BR-06 cascade).
+                    </div>
+                    <div class="fc-feature-info-ai-detail">
+                      <strong>ℹ️ AI Status:</strong> Currently running deterministic version lifecycle & file auditing. <em>Planned AI:</em> Multimodal CAD-LLM parser to automatically scan AutoCAD geometry layers, detect custom fabrication materials, and auto-generate cutting schedules without manual data entry.
+                    </div>
+                  </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 5
+            parentRegion: @drawing-packages-tab
+            slot: subRegions
         }
         appearance {
             template: @/blank-with-attributes
@@ -416,8 +495,54 @@ page 4 (
         }
     )
 
-    region structures-report (
+    region fit-clearance-tab (
         name: Fit and clearance checks
+        type: staticContent
+        layout {
+            sequence: 20
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region fit-clearance-info-banner (
+        name: Fit & Clearance Info
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="fc-feature-info-bar fc-feature-info-bar--planned">
+                  <span class="fa fa-info-circle fc-feature-info-icon" title="Feature Purpose"></span>
+                  <div class="fc-feature-info-body">
+                    <div class="fc-feature-info-title">
+                      3D Fit & Clearance Feasibility Checks
+                      <span class="fc-ai-tag fc-ai-tag--planned"><span class="fa fa-cog"></span> Rule-Based Engine (AI Planned)</span>
+                    </div>
+                    <div class="fc-feature-info-desc">
+                      Verifies that designed 3D exhibition booths, keynote stages, and overhead truss rigs comply with venue boundary limits, overhead clearance tolerances, and Singapore SCDF mandatory 3.0m emergency fire egress aisles.
+                    </div>
+                    <div class="fc-feature-info-ai-detail">
+                      <strong>ℹ️ AI Status:</strong> Currently powered by a deterministic geometric collision algorithm (fc_spatial_api.evaluate_spatial_fit). <em>Planned AI:</em> 3D Computer Vision AI for automated point-cloud clash detection against venue BIM models and overhead rigging point weight simulations.
+                    </div>
+                  </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 5
+            parentRegion: @fit-clearance-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region structures-report (
+        name: Structure clearance checks
         type: classicReport
         source {
             location: localDatabase
@@ -438,9 +563,9 @@ page 4 (
                 ```
         }
         layout {
-            sequence: 20
-            parentRegion: @design-tabs
-            slot: tabs
+            sequence: 10
+            parentRegion: @fit-clearance-tab
+            slot: subRegions
         }
         appearance {
             template: @/standard

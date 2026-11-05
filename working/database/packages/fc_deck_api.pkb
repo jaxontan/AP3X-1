@@ -787,7 +787,22 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         DBMS_LOB.CREATETEMPORARY(l_html, TRUE);
 
         append_html(
-            '<div class="fc-mini-browser" style="background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:20px; box-shadow:0 2px 12px rgba(0,0,0,0.05);">'
+            '<div class="fc-feature-info-bar fc-feature-info-bar--ai">'
+         || '  <span class="fa fa-info-circle fc-feature-info-icon" title="Feature Purpose"></span>'
+         || '  <div class="fc-feature-info-body">'
+         || '    <div class="fc-feature-info-title">'
+         || '      Slide Decks & Pitch Presentation'
+         || '      <span class="fc-ai-tag fc-ai-tag--active"><span class="fa fa-magic"></span> AI-Enabled</span>'
+         || '    </div>'
+         || '    <div class="fc-feature-info-desc">'
+         || '      Interactive 16:9 presentation preview showing how the 8-slide executive pitch deck appears to the client. Includes slide-by-slide navigation and direct export to PowerPoint (.pptx), standalone HTML presentation, and PDF.'
+         || '    </div>'
+         || '    <div class="fc-feature-info-ai-detail">'
+         || '      <strong>✨ AI Capability:</strong> Generative Pitch Agent automatically synthesizes an 8-slide narrative structure, slide messaging, and AI visual blueprints from the winning tender concept.'
+         || '    </div>'
+         || '  </div>'
+         || '</div>'
+         || '<div class="fc-mini-browser" style="background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:20px; box-shadow:0 2px 12px rgba(0,0,0,0.05);">'
          || '  <div style="background:#ffffff; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">'
          || '    <div style="font-weight:700; font-size:14px; color:#0f172a; display:flex; align-items:center; gap:8px;">'
          || '      <span class="t-Icon fa fa-television" style="color:#0284c7;" aria-hidden="true"></span>'
