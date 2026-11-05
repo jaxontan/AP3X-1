@@ -35,113 +35,72 @@ page 7 (
         }
     )
 
-    region compliance-report (
-        name: Compliance rules
-        type: classicReport
-        source {
-            location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select rule_id,
-                       jurisdiction,
-                       rule_code,
-                       description,
-                       threshold_condition,
-                       licensing_body,
-                       estimated_cost_sgd,
-                       is_active
-                from fc_compliance_rules
-                order by jurisdiction, rule_code
-                ```
-        }
+    region repo-tabs (
+        name: Master Repositories
+        type: staticContent
         layout {
-            sequence: 30
+            sequence: 20
             slot: body
         }
         appearance {
-            template: @/standard
+            template: @/tabs-container
             templateOptions: [
                 #DEFAULT#
-                t-Region--noPadding
+                t-TabsRegion-mod--pill
             ]
         }
-        componentAppearance {
-            template: @/standard
+    )
+
+    region venues-tab (
+        name: 🏛️ Venue Library
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @repo-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region add-venue-card (
+        name: Add New Venue Record (Single Row Insertion)
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @venues-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/collapsible
             templateOptions: [
                 #DEFAULT#
-                t-Report--stretch
-                t-Report--rowHighlight
+                t-Region--accent1
             ]
         }
-        pagination {
-            type: nextAndPreviousLinks
+    )
+
+    region upload-venues-card (
+        name: Bulk Ingest Venues (Excel / CSV Spreadsheet)
+        type: staticContent
+        layout {
+            sequence: 20
+            parentRegion: @venues-tab
+            slot: subRegions
         }
-
-        column DESCRIPTION (
-            derivedColumn: N
-            heading {
-                heading: Description
-            }
-            layout {
-                sequence: 4
-            }
-        )
-
-        column ESTIMATED_COST_SGD (
-            derivedColumn: N
-            heading {
-                heading: Endorsement Cost (SGD)
-            }
-            layout {
-                sequence: 6
-            }
-        )
-
-        column JURISDICTION (
-            derivedColumn: N
-            heading {
-                heading: Country
-            }
-            layout {
-                sequence: 2
-            }
-        )
-
-        column LICENSING_BODY (
-            derivedColumn: N
-            heading {
-                heading: Regulatory Body
-            }
-            layout {
-                sequence: 5
-            }
-        )
-
-        column RULE_CODE (
-            derivedColumn: N
-            heading {
-                heading: Rule Code
-            }
-            layout {
-                sequence: 3
-            }
-        )
-
-        column RULE_ID (
-            derivedColumn: N
-            heading {
-                heading: ID
-            }
-            layout {
-                sequence: 1
-            }
-        )
-
+        appearance {
+            template: @/collapsible
+            templateOptions: [
+                #DEFAULT#
+                t-Region--accent2
+                is-collapsed
+            ]
+        }
     )
 
     region venues-report (
-        name: Venue library
+        name: Verified Venue Profiles
         type: classicReport
         source {
             location: localDatabase
@@ -150,20 +109,23 @@ page 7 (
                 ```sql
                 select venue_id,
                        venue_name,
-                       city,
-                       max_hall_height_m,
-                       door_clearance_width_m,
-                       floor_loading_capacity_kn,
-                       electrical_supply_spec,
-                       pe_trigger_height_m,
-                       loading_dock_guidelines
-                from fc_venues
-                order by venue_name asc
+                       hall_name,
+                       location as city,
+                       usable_length_m,
+                       usable_width_m,
+                       clear_height_m,
+                       max_floor_load_kn,
+                       obstructions,
+                       verification_status,
+                       to_char(last_review_date, 'DD-Mon-YYYY') as last_reviewed
+                from fc_venue_profiles
+                order by venue_name asc, hall_name asc
                 ```
         }
         layout {
-            sequence: 20
-            slot: body
+            sequence: 30
+            parentRegion: @venues-tab
+            slot: subRegions
         }
         appearance {
             template: @/standard
@@ -183,46 +145,6 @@ page 7 (
         pagination {
             type: nextAndPreviousLinks
         }
-
-        column CITY (
-            derivedColumn: N
-            heading {
-                heading: City
-            }
-            layout {
-                sequence: 3
-            }
-        )
-
-        column ELECTRICAL_SUPPLY_SPEC (
-            derivedColumn: N
-            heading {
-                heading: Power Spec
-            }
-            layout {
-                sequence: 6
-            }
-        )
-
-        column FLOOR_LOADING_CAPACITY_KN (
-            derivedColumn: N
-            heading {
-                heading: Floor Load (kN/m2)
-            }
-            layout {
-                sequence: 5
-            }
-        )
-
-        column MAX_HALL_HEIGHT_M (
-            derivedColumn: N
-            heading {
-                heading: Max Height (m)
-            }
-            layout {
-                sequence: 4
-            }
-        )
 
         column VENUE_ID (
             derivedColumn: N
@@ -244,7 +166,790 @@ page 7 (
             }
         )
 
+        column HALL_NAME (
+            derivedColumn: N
+            heading {
+                heading: Hall / Space
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column CITY (
+            derivedColumn: N
+            heading {
+                heading: Location / City
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column USABLE_LENGTH_M (
+            derivedColumn: N
+            heading {
+                heading: Length (m)
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column USABLE_WIDTH_M (
+            derivedColumn: N
+            heading {
+                heading: Width (m)
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column CLEAR_HEIGHT_M (
+            derivedColumn: N
+            heading {
+                heading: Clear Height (m)
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column MAX_FLOOR_LOAD_KN (
+            derivedColumn: N
+            heading {
+                heading: Floor Load (kN/m2)
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column OBSTRUCTIONS (
+            derivedColumn: N
+            heading {
+                heading: Columns / Obstructions
+            }
+            layout {
+                sequence: 9
+            }
+        )
+
+        column VERIFICATION_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column LAST_REVIEWED (
+            derivedColumn: N
+            heading {
+                heading: Last Reviewed
+            }
+            layout {
+                sequence: 11
+            }
+        )
+
+    )
+
+    region compliance-tab (
+        name: ⚖️ Compliance Rules
+        type: staticContent
+        layout {
+            sequence: 20
+            parentRegion: @repo-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region add-rule-card (
+        name: Add New Compliance Rule (Single Row Insertion)
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @compliance-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/collapsible
+            templateOptions: [
+                #DEFAULT#
+                t-Region--accent1
+            ]
+        }
+    )
+
+    region upload-rules-card (
+        name: Bulk Ingest Compliance Rules (Excel / CSV Spreadsheet)
+        type: staticContent
+        layout {
+            sequence: 20
+            parentRegion: @compliance-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/collapsible
+            templateOptions: [
+                #DEFAULT#
+                t-Region--accent2
+                is-collapsed
+            ]
+        }
+    )
+
+    region compliance-report (
+        name: Statutory Compliance Rules
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select rule_id,
+                       jurisdiction,
+                       rule_code,
+                       threshold_condition,
+                       description,
+                       licensing_body,
+                       estimated_cost_sgd,
+                       is_active
+                from fc_compliance_rules
+                order by jurisdiction, rule_code
+                ```
+        }
+        layout {
+            sequence: 30
+            parentRegion: @compliance-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column RULE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column JURISDICTION (
+            derivedColumn: N
+            heading {
+                heading: Jurisdiction
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column RULE_CODE (
+            derivedColumn: N
+            heading {
+                heading: Rule Code
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column THRESHOLD_CONDITION (
+            derivedColumn: N
+            heading {
+                heading: Rule Title / Condition
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Regulation Description
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column LICENSING_BODY (
+            derivedColumn: N
+            heading {
+                heading: Regulatory Body
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column ESTIMATED_COST_SGD (
+            derivedColumn: N
+            heading {
+                heading: Endorsement Fee (SGD)
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column IS_ACTIVE (
+            derivedColumn: N
+            heading {
+                heading: Active
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+    )
+
+    pageItem P7_VENUE_NAME (
+        type: textField
+        label {
+            label: Venue name
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_HALL_NAME (
+        type: textField
+        label {
+            label: Hall / ballroom / space
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_LOCATION (
+        type: textField
+        label {
+            label: City / country
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_USABLE_LEN (
+        type: numberField
+        label {
+            label: Usable length (m)
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_USABLE_WID (
+        type: numberField
+        label {
+            label: Usable width (m)
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_CLEAR_HGT (
+        type: numberField
+        label {
+            label: Clear ceiling height (m)
+            alignment: left
+        }
+        layout {
+            sequence: 60
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_FLOOR_LOAD (
+        type: numberField
+        label {
+            label: Max floor load (kN/m2)
+            alignment: left
+        }
+        layout {
+            sequence: 70
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_OBSTRUCTIONS (
+        type: textField
+        label {
+            label: Columns / obstructions / guidelines
+            alignment: left
+        }
+        layout {
+            sequence: 80
+            region: @add-venue-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_VENUE_FILE (
+        type: fileUpload
+        label {
+            label: Venue Excel / CSV spreadsheet (.xlsx, .csv)
+            alignment: left
+        }
+        display {
+            displayAs: inlineDropzone
+            dropzoneTitle: Drop Venues Excel or CSV Spreadsheet Here
+            dropzoneDesc: Columns: Venue_Name, Hall_Name, City, Length_m, Width_m, Height_m, Floor_Load_kN, Obstructions
+        }
+        storage {
+            type: appTempFiles
+        }
+        layout {
+            sequence: 10
+            region: @upload-venues-card
+            slot: regionBody
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_RULE_JUR (
+        type: textField
+        label {
+            label: Jurisdiction (SG or JKT)
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @add-rule-card
+            slot: regionBody
+            columnSpan: 3
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_RULE_CAT (
+        type: textField
+        label {
+            label: Category / rule code (e.g. SCDF_FIRE, BCA_STRUCTURAL, EMA_ELECTRICAL)
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @add-rule-card
+            slot: regionBody
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_RULE_REF (
+        type: textField
+        label {
+            label: Regulatory body / official ref (e.g. SCDF Fire Safety, BCA Singapore)
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @add-rule-card
+            slot: regionBody
+            columnSpan: 5
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_RULE_TITLE (
+        type: textField
+        label {
+            label: Rule title / threshold condition
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @add-rule-card
+            slot: regionBody
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_RULE_DESC (
+        type: textarea
+        label {
+            label: Full regulation description & compliance requirements
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @add-rule-card
+            slot: regionBody
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P7_RULE_FILE (
+        type: fileUpload
+        label {
+            label: Compliance rules Excel / CSV spreadsheet (.xlsx, .csv)
+            alignment: left
+        }
+        display {
+            displayAs: inlineDropzone
+            dropzoneTitle: Drop Compliance Rules Excel or CSV Spreadsheet Here
+            dropzoneDesc: Columns: Jurisdiction, Category, Rule_Title, Description, Official_Reference
+        }
+        storage {
+            type: appTempFiles
+        }
+        layout {
+            sequence: 10
+            region: @upload-rules-card
+            slot: regionBody
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button save-venue (
+        buttonName: SAVE_VENUE
+        label: Save & register venue
+        layout {
+            sequence: 90
+            region: @add-venue-card
+            slot: regionBody
+        }
+        behavior {
+            action: submitPage
+            executeValidations: true
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--primary
+                t-Button--iconLeft
+            ]
+            icon: fa-plus
+        }
+    )
+
+    button ingest-venues (
+        buttonName: INGEST_VENUES
+        label: Ingest venues from spreadsheet
+        layout {
+            sequence: 20
+            region: @upload-venues-card
+            slot: regionBody
+        }
+        behavior {
+            action: submitPage
+            executeValidations: false
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--primary
+                t-Button--iconLeft
+            ]
+            icon: fa-upload
+        }
+    )
+
+    button save-rule (
+        buttonName: SAVE_RULE
+        label: Save compliance rule
+        layout {
+            sequence: 60
+            region: @add-rule-card
+            slot: regionBody
+        }
+        behavior {
+            action: submitPage
+            executeValidations: true
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--primary
+                t-Button--iconLeft
+            ]
+            icon: fa-plus
+        }
+    )
+
+    button ingest-rules (
+        buttonName: INGEST_RULES
+        label: Ingest rules from spreadsheet
+        layout {
+            sequence: 20
+            region: @upload-rules-card
+            slot: regionBody
+        }
+        behavior {
+            action: submitPage
+            executeValidations: false
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--primary
+                t-Button--iconLeft
+            ]
+            icon: fa-upload
+        }
+    )
+
+    process proc-save-venue (
+        name: Save Venue Record
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_id number;
+                begin
+                    fc_repository_api.insert_venue(
+                        p_venue_name   => :P7_VENUE_NAME,
+                        p_hall_name    => :P7_HALL_NAME,
+                        p_location     => :P7_LOCATION,
+                        p_length_m     => to_number(:P7_USABLE_LEN),
+                        p_width_m      => to_number(:P7_USABLE_WID),
+                        p_height_m     => to_number(:P7_CLEAR_HGT),
+                        p_floor_load   => to_number(:P7_FLOOR_LOAD),
+                        p_obstructions => :P7_OBSTRUCTIONS,
+                        p_user_name    => :APP_USER,
+                        x_venue_id     => l_id
+                    );
+                    :P7_VENUE_NAME := null;
+                    :P7_HALL_NAME := null;
+                    :P7_USABLE_LEN := null;
+                    :P7_USABLE_WID := null;
+                    :P7_CLEAR_HGT := null;
+                    :P7_FLOOR_LOAD := null;
+                    :P7_OBSTRUCTIONS := null;
+                    apex_application.g_print_success_message := 'New venue profile registered successfully! Venue ID: ' || l_id;
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_VENUE
+        }
+    )
+
+    process proc-ingest-venues (
+        name: Ingest Venues Spreadsheet
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_cnt number;
+                    l_msg varchar2(4000);
+                begin
+                    if :P7_VENUE_FILE is null then
+                        raise_application_error(-20001, 'Please select or drop an Excel/CSV spreadsheet first.');
+                    end if;
+                    fc_repository_api.ingest_venues_file(
+                        p_file_name => :P7_VENUE_FILE,
+                        p_user_name => :APP_USER,
+                        x_count     => l_cnt,
+                        x_message   => l_msg
+                    );
+                    :P7_VENUE_FILE := null;
+                    apex_application.g_print_success_message := apex_escape.html(l_msg);
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        serverSideCondition {
+            type: request=Value
+            value: INGEST_VENUES
+        }
+    )
+
+    process proc-save-rule (
+        name: Save Compliance Rule
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_id number;
+                begin
+                    fc_repository_api.insert_compliance_rule(
+                        p_jurisdiction => :P7_RULE_JUR,
+                        p_category     => :P7_RULE_CAT,
+                        p_rule_title   => :P7_RULE_TITLE,
+                        p_description  => :P7_RULE_DESC,
+                        p_official_ref => :P7_RULE_REF,
+                        p_user_name    => :APP_USER,
+                        x_rule_id      => l_id
+                    );
+                    :P7_RULE_CAT := null;
+                    :P7_RULE_TITLE := null;
+                    :P7_RULE_DESC := null;
+                    :P7_RULE_REF := null;
+                    apex_application.g_print_success_message := 'New compliance rule saved successfully! Rule ID: ' || l_id;
+                end;
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_RULE
+        }
+    )
+
+    process proc-ingest-rules (
+        name: Ingest Compliance Rules Spreadsheet
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_cnt number;
+                    l_msg varchar2(4000);
+                begin
+                    if :P7_RULE_FILE is null then
+                        raise_application_error(-20001, 'Please select or drop an Excel/CSV spreadsheet first.');
+                    end if;
+                    fc_repository_api.ingest_rules_file(
+                        p_file_name => :P7_RULE_FILE,
+                        p_user_name => :APP_USER,
+                        x_count     => l_cnt,
+                        x_message   => l_msg
+                    );
+                    :P7_RULE_FILE := null;
+                    apex_application.g_print_success_message := apex_escape.html(l_msg);
+                end;
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        serverSideCondition {
+            type: request=Value
+            value: INGEST_RULES
+        }
     )
 
 )
-
