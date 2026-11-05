@@ -738,13 +738,11 @@ page 4 (
             region: @drawing-upload-form
             slot: regionBody
             alignment: left
-            columnSpan: 6
+            columnSpan: 12
         }
         appearance {
-            template: @/optional
-            templateOptions: [
-                #DEFAULT#
-            ]
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
         }
     )
 
@@ -759,14 +757,12 @@ page 4 (
             region: @drawing-upload-form
             slot: regionBody
             alignment: left
-            startNewRow: false
-            columnSpan: 4
+            startNewRow: true
+            columnSpan: 8
         }
         appearance {
-            template: @/optional
-            templateOptions: [
-                #DEFAULT#
-            ]
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
             valuePlaceholder: e.g. NYP InnovSphere Main Stage 3D
         }
     )
@@ -783,13 +779,11 @@ page 4 (
             slot: regionBody
             alignment: left
             startNewRow: false
-            columnSpan: 2
+            columnSpan: 4
         }
         appearance {
-            template: @/optional
-            templateOptions: [
-                #DEFAULT#
-            ]
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
             valuePlaceholder: 1.0
         }
     )
