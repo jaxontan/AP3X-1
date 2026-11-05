@@ -75,6 +75,34 @@ page 2 (
                     }
                 });
             });
+            $(document).on('change', '.fc-mitigation-input', function() {
+                var $inp = $(this);
+                var fid = $inp.attr('data-id');
+                var val = $inp.val();
+                apex.server.process('UPDATE_PLANNING_FLAG', {
+                    x01: fid,
+                    x02: val
+                }, {
+                    success: function() {
+                        apex.message.showPageSuccess('Risk mitigation action saved.');
+                        setTimeout(function() { apex.message.hidePageSuccess(); }, 2000);
+                    }
+                });
+            });
+            $(document).on('change', '.fc-flag-status-select', function() {
+                var $sel = $(this);
+                var fid = $sel.attr('data-id');
+                var st = $sel.val();
+                apex.server.process('UPDATE_PLANNING_FLAG', {
+                    x01: fid,
+                    x03: st
+                }, {
+                    success: function() {
+                        apex.message.showPageSuccess('Risk status updated to ' + st + '.');
+                        setTimeout(function() { apex.message.hidePageSuccess(); }, 2000);
+                    }
+                });
+            });
             ```
     }
     security {
@@ -392,23 +420,6 @@ page 2 (
 
     )
 
-    region gate0-buttons (
-        name: Gate 0 Verification Actions
-        type: staticContent
-        layout {
-            sequence: 41
-            slot: body
-        }
-        appearance {
-            template: @/buttons-container
-            templateOptions: #DEFAULT#
-        }
-        serverSideCondition {
-            type: expression
-            plsqlExpression: :P2_TENDER_ID is not null
-        }
-    )
-
     region gate0-confirmed-banner (
         name: GATE 0 STATUS: CONFIRMED & VERIFIED
         type: staticContent
@@ -465,26 +476,6 @@ page 2 (
         }
     )
 
-    region gate0-verification-panel (
-        name: 4. Manual requirement & risk corrections
-        type: staticContent
-        layout {
-            sequence: 40
-            slot: body
-        }
-        appearance {
-            template: @/collapsible
-            templateOptions: [
-                #DEFAULT#
-                is-collapsed
-            ]
-        }
-        serverSideCondition {
-            type: expression
-            plsqlExpression: :P2_TENDER_ID is not null
-        }
-    )
-
     region intake-intel-tabs (
         name: Tender Dossier & AI Intelligence Hub
         type: staticContent
@@ -516,11 +507,21 @@ page 2 (
                 ```sql
                 select flag_id,
                        initcap(replace(flag_category, '_', ' ')) as flag_category,
-                       initcap(replace(severity, '_', ' ')) as severity,
+                       case
+                         when upper(severity) = 'CRITICAL' then '<span class="t-Badge t-Badge--danger"><span class="fa fa-exclamation-triangle" aria-hidden="true"></span> Critical</span>'
+                         when upper(severity) = 'WARNING'  then '<span class="t-Badge t-Badge--warning"><span class="fa fa-exclamation-circle" aria-hidden="true"></span> Warning</span>'
+                         when upper(severity) = 'ADVISORY' then '<span class="t-Badge t-Badge--info"><span class="fa fa-info-circle" aria-hidden="true"></span> Advisory</span>'
+                         else '<span class="t-Badge t-Badge--subtle">' || initcap(severity) || '</span>'
+                       end as severity,
                        title,
                        description,
-                       recommended_mitigation,
-                       initcap(replace(status, '_', ' ')) as status
+                       '<input type="text" class="fc-table-input fc-mitigation-input" data-id="' || flag_id || '" value="' || apex_escape.html_attribute(coalesce(recommended_mitigation, '')) || '" placeholder="Enter mitigation action..." aria-label="Edit mitigation action" />' as recommended_mitigation,
+                       '<select class="fc-table-select fc-flag-status-select" data-id="' || flag_id || '" aria-label="Risk status">
+                          <option value="ACTIVE"' || case when upper(status) = 'ACTIVE' then ' selected' end || '>Active</option>
+                          <option value="ACKNOWLEDGED"' || case when upper(status) = 'ACKNOWLEDGED' then ' selected' end || '>Acknowledged</option>
+                          <option value="MITIGATED"' || case when upper(status) = 'MITIGATED' then ' selected' end || '>Mitigated</option>
+                          <option value="RESOLVED"' || case when upper(status) = 'RESOLVED' then ' selected' end || '>Resolved</option>
+                        </select>' as status
                 from fc_planning_flags
                 where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
                 order by flag_id asc
@@ -591,6 +592,9 @@ page 2 (
             layout {
                 sequence: 6
             }
+            security {
+                escapeSpecialChars: false
+            }
         )
 
         column SEVERITY (
@@ -601,6 +605,9 @@ page 2 (
             layout {
                 sequence: 3
             }
+            security {
+                escapeSpecialChars: false
+            }
         )
 
         column STATUS (
@@ -610,6 +617,9 @@ page 2 (
             }
             layout {
                 sequence: 7
+            }
+            security {
+                escapeSpecialChars: false
             }
         )
 
@@ -1011,128 +1021,6 @@ page 2 (
             region: @brief-upload-section
             slot: regionBody
             alignment: left
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P2_EDIT_CONFIRMED_VAL (
-        type: textField
-        label {
-            label: Corrected value
-            alignment: left
-        }
-        layout {
-            sequence: 20
-            region: @gate0-verification-panel
-            slot: regionBody
-            alignment: left
-            startNewRow: false
-            columnSpan: 4
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P2_EDIT_FIELD_ID (
-        type: selectList
-        label {
-            label: Requirement to check
-            alignment: left
-        }
-        lov {
-            type: sharedComponent
-            lov: @intake-criteria-lov
-            displayExtraValues: false
-            nullDisplayValue: -- Choose Extracted Criterion --
-        }
-        cascadingLov {
-            parentItems: P2_TENDER_ID
-        }
-        layout {
-            sequence: 10
-            region: @gate0-verification-panel
-            slot: regionBody
-            alignment: left
-            columnSpan: 5
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P2_EDIT_FLAG_ID (
-        type: selectList
-        label {
-            label: Planning risk
-            alignment: left
-        }
-        lov {
-            type: sharedComponent
-            lov: @planning-flags-lov
-            displayExtraValues: false
-            nullDisplayValue: -- Choose Operational Flag --
-        }
-        cascadingLov {
-            parentItems: P2_TENDER_ID
-        }
-        layout {
-            sequence: 40
-            region: @gate0-verification-panel
-            slot: regionBody
-            alignment: left
-            columnSpan: 5
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P2_EDIT_MITIGATION_NOTES (
-        type: textField
-        label {
-            label: How we will handle this risk
-            alignment: left
-        }
-        layout {
-            sequence: 50
-            region: @gate0-verification-panel
-            slot: regionBody
-            alignment: left
-            startNewRow: false
-            columnSpan: 7
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P2_EDIT_REVIEW_STATUS (
-        type: selectList
-        label {
-            label: Review status
-            alignment: left
-        }
-        lov {
-            type: sharedComponent
-            lov: @review-status-lov
-            displayExtraValues: false
-            displayNullValue: false
-        }
-        layout {
-            sequence: 30
-            region: @gate0-verification-panel
-            slot: regionBody
-            alignment: left
-            startNewRow: false
-            columnSpan: 3
         }
         appearance {
             template: @/optional-floating
@@ -1548,42 +1436,6 @@ page 2 (
         }
     )
 
-    button save-criterion-btn (
-        buttonName: SAVE_FIELD_EDIT
-        label: Save correction
-        layout {
-            sequence: 10
-            region: @gate0-buttons
-            slot: next
-        }
-        appearance {
-            buttonTemplate: @/text-with-icon
-            templateOptions: [
-                #DEFAULT#
-                t-Button--iconLeft
-            ]
-            icon: fa-check
-        }
-    )
-
-    button save-mitigation-btn (
-        buttonName: SAVE_FLAG_MITIGATION
-        label: Save mitigation
-        layout {
-            sequence: 20
-            region: @gate0-buttons
-            slot: next
-        }
-        appearance {
-            buttonTemplate: @/text-with-icon
-            templateOptions: [
-                #DEFAULT#
-                t-Button--iconLeft
-            ]
-            icon: fa-shield
-        }
-    )
-
     button save-tender (
         buttonName: SAVE_TENDER
         label: Save details
@@ -1816,62 +1668,6 @@ page 2 (
         }
     )
 
-    process proc-save-field-edit (
-        name: Save Criterion Override
-        type: executeCode
-        source {
-            plsqlCode:
-                ```plsql
-                if :P2_EDIT_FIELD_ID is not null then
-                    update fc_intake_fields
-                       set confirmed_value = nvl(:P2_EDIT_CONFIRMED_VAL, confirmed_value),
-                           review_status   = nvl(:P2_EDIT_REVIEW_STATUS, 'CONFIRMED'),
-                           reviewed_by     = :APP_USER,
-                           reviewed_at     = current_timestamp
-                     where field_id = to_number(:P2_EDIT_FIELD_ID);
-                    apex_application.g_print_success_message := 'Criterion successfully verified and updated.';
-                end if;
-                ```
-        }
-        execution {
-            sequence: 52
-        }
-        advanced {
-            executionMappingIdentifier: 40968781994173884
-        }
-        serverSideCondition {
-            type: request=Value
-            value: SAVE_FIELD_EDIT
-        }
-    )
-
-    process proc-save-flag-mitigation (
-        name: Save Operational Flag Mitigation
-        type: executeCode
-        source {
-            plsqlCode:
-                ```plsql
-                if :P2_EDIT_FLAG_ID is not null then
-                    update fc_planning_flags
-                       set recommended_mitigation = :P2_EDIT_MITIGATION_NOTES,
-                           status                 = 'ACKNOWLEDGED'
-                     where flag_id = to_number(:P2_EDIT_FLAG_ID);
-                    apex_application.g_print_success_message := 'Mitigation saved. The risk is marked as acknowledged.';
-                end if;
-                ```
-        }
-        execution {
-            sequence: 55
-        }
-        advanced {
-            executionMappingIdentifier: 40968897335173884
-        }
-        serverSideCondition {
-            type: request=Value
-            value: SAVE_FLAG_MITIGATION
-        }
-    )
-
     process update-intake-field (
         name: UPDATE_INTAKE_FIELD
         type: executeCode
@@ -1937,6 +1733,46 @@ page 2 (
                             p_status     => l_status,
                             p_user_name  => :APP_USER
                         );
+                        commit;
+                    end if;
+                    apex_json.open_object;
+                    apex_json.write('status', 'success');
+                    apex_json.close_object;
+                end;
+                ```
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process update-planning-flag (
+        name: UPDATE_PLANNING_FLAG
+        type: executeCode
+        execution {
+            sequence: 60
+            point: ajaxCallback
+        }
+        source {
+            location: localDatabase
+            plsqlCode:
+                ```plsql
+                declare
+                    l_id         number := to_number(apex_application.g_x01);
+                    l_mitigation varchar2(4000) := apex_application.g_x02;
+                    l_status     varchar2(50) := upper(apex_application.g_x03);
+                begin
+                    if l_id is not null then
+                        if l_mitigation is not null then
+                            update fc_planning_flags
+                               set recommended_mitigation = l_mitigation,
+                                   status                 = coalesce(l_status, status, 'ACKNOWLEDGED')
+                             where flag_id = l_id;
+                        elsif l_status is not null then
+                            update fc_planning_flags
+                               set status = l_status
+                             where flag_id = l_id;
+                        end if;
                         commit;
                     end if;
                     apex_json.open_object;
