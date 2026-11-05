@@ -344,6 +344,14 @@
         }
     };
 
+    window.fcSetSlidePrompt = function(promptText) {
+        if (typeof apex !== 'undefined' && apex.item('P4_SLIDE_PROMPT')) {
+            apex.item('P4_SLIDE_PROMPT').setValue(promptText);
+            var el = document.getElementById('P4_SLIDE_PROMPT');
+            if (el) el.focus();
+        }
+    };
+
     // 7. Feature Info & AI Status Mini-Modal System
     window.FC_FEATURE_INFO = {
         "slide-decks": {

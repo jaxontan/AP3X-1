@@ -391,6 +391,41 @@ page 4 (
         }
     )
 
+    region slide-copilot-card (
+        name: AI Presentation Copilot & PowerPoint Remaker
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="fc-copilot-banner" style="background:#f8fafc; border-radius:10px; padding:12px 16px; margin-bottom:12px; border:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+                  <span class="fa fa-sparkles" style="font-size:20px; color:#7c3aed;" aria-hidden="true"></span>
+                  <div style="font-size:13px; color:#334155;">
+                    <strong>Interactive AI Slide Copilot:</strong> Chat with the Creative Pitch Director to edit, elevate narrative, or remake your PowerPoint presentation. Changes update the 16:9 interactive preview and rebuild downloadable PPTX, HTML, and PDF formats.
+                  </div>
+                </div>
+                <div class="fc-prompt-chips" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; margin-bottom:8px;">
+                  <span style="font-size:12px; color:#64748b; font-weight:600; display:flex; align-items:center; gap:4px;"><span class="fa fa-bolt"></span> Quick Prompts:</span>
+                  <button type="button" class="fc-chip-btn" onclick="fcSetSlidePrompt('Elevate narrative to executive C-suite tone with bold transformational themes');">💡 Executive C-Suite Tone</button>
+                  <button type="button" class="fc-chip-btn" onclick="fcSetSlidePrompt('Emphasize Singapore net-zero ESG commitments and eco-friendly modular structures on slide 3');">🌱 Net-Zero &amp; ESG</button>
+                  <button type="button" class="fc-chip-btn" onclick="fcSetSlidePrompt('Highlight 3D spatial clearance, BCA PE structural endorsement, and SCDF 3.0m fire egress on slide 7');">📐 3D &amp; SCDF Safety</button>
+                  <button type="button" class="fc-chip-btn" onclick="fcSetSlidePrompt('Add financial ROI metrics, transparent margins, and 50/40/10 milestone schedules on slide 8');">💰 Commercial ROI &amp; Milestones</button>
+                  <button type="button" class="fc-chip-btn" onclick="fcSetSlidePrompt('Make bullet points shorter, punchier, and focused on tangible attendee engagement metrics');">⚡ Shorter &amp; Punchier Bullets</button>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 5
+            parentRegion: @pitch-deck-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+            ]
+        }
+    )
+
     region html-ppt-browser (
         name: Pitch deck presentation & drafts
         type: dynamicContent
@@ -648,11 +683,27 @@ page 4 (
             columnSpan: 12
         }
         appearance {
-            template: @/required-floating
+            template: @/optional-floating
             templateOptions: #DEFAULT#
         }
-        validation {
-            valueRequired: true
+    )
+
+    pageItem P4_SLIDE_PROMPT (
+        type: textarea
+        label {
+            label: AI Presentation Edit Directive / Chatbox
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @slide-copilot-card
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
         }
     )
 
@@ -841,13 +892,40 @@ page 4 (
         }
     )
 
-    button generate-slides (
-        buttonName: GENERATE_SLIDES
-        label: Draft slides
+    button remake-slides (
+        buttonName: REMAKE_SLIDES
+        label: Remake PowerPoint with AI
         layout {
             sequence: 10
-            region: @html-ppt-browser
+            region: @slide-copilot-card
             slot: next
+        }
+        behavior {
+            action: submitPage
+            executeValidations: false
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--primary
+                t-Button--iconLeft
+            ]
+            icon: fa-magic
+        }
+    )
+
+    button generate-slides (
+        buttonName: GENERATE_SLIDES
+        label: Draft initial slides
+        layout {
+            sequence: 20
+            region: @slide-copilot-card
+            slot: next
+        }
+        behavior {
+            action: submitPage
+            executeValidations: false
         }
         appearance {
             buttonTemplate: @/text-with-icon
@@ -1145,6 +1223,34 @@ page 4 (
         serverSideCondition {
             type: request=Value
             value: GENERATE_SLIDES
+        }
+    )
+
+    process proc-remake-slides (
+        name: Remake Slides with AI Copilot
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_msg varchar2(4000);
+                begin
+                    fc_deck_api.remake_slides_with_chat(
+                        p_tender_id   => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                        p_chat_prompt => :P4_SLIDE_PROMPT,
+                        p_user_name   => :APP_USER,
+                        x_message     => l_msg
+                    );
+                    apex_application.g_print_success_message := apex_escape.html(l_msg);
+                end;
+                ```
+        }
+        execution {
+            sequence: 6
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REMAKE_SLIDES
         }
     )
 

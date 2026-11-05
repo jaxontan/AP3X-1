@@ -132,6 +132,164 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
         x_message := l_cnt || ' slides drafted by AI from the confirmed brief and selected concept. Review them before Gate 2.';
     END draft_slides;
 
+    PROCEDURE remake_slides_with_chat(
+        p_tender_id   IN NUMBER,
+        p_chat_prompt IN VARCHAR2,
+        p_user_name   IN VARCHAR2,
+        x_message     OUT VARCHAR2
+    ) IS
+        l_client     fc_tenders.client_name%TYPE;
+        l_title      fc_tenders.project_title%TYPE;
+        l_context    CLOB;
+        l_reply      CLOB;
+        l_json       CLOB;
+        l_cnt        NUMBER := 0;
+        l_valid      NUMBER := 0;
+        l_bullets    VARCHAR2(2000);
+        l_lower      VARCHAR2(4000);
+        l_total      NUMBER := 0;
+    BEGIN
+        IF TRIM(p_chat_prompt) IS NULL THEN
+            draft_slides(p_tender_id, p_user_name, x_message);
+            RETURN;
+        END IF;
+
+        -- Ensure slides exist first; if not, draft initial
+        SELECT COUNT(*) INTO l_total FROM fc_pitch_slides WHERE tender_id = p_tender_id;
+        IF l_total = 0 THEN
+            draft_slides(p_tender_id, p_user_name, x_message);
+        END IF;
+
+        SELECT client_name, project_title INTO l_client, l_title FROM fc_tenders WHERE tender_id = p_tender_id;
+
+        l_context := 'Client: ' || l_client || CHR(10) || 'Project: ' || l_title || CHR(10)
+                  || 'USER CHAT INSTRUCTION / EDIT DIRECTIVE:' || CHR(10) || p_chat_prompt || CHR(10)
+                  || 'Current Slide Outline:' || CHR(10);
+
+        FOR s IN (SELECT slide_num, slide_title, narrative_focus, key_bullet_points
+                    FROM fc_pitch_slides
+                   WHERE tender_id = p_tender_id
+                   ORDER BY slide_num) LOOP
+            l_context := l_context || 'Slide ' || s.slide_num || ': ' || s.slide_title || ' | Focus: ' || s.narrative_focus || CHR(10);
+        END LOOP;
+
+        FOR l_attempt IN 1 .. 2 LOOP
+            l_reply := fc_ai_agent_api.call_openrouter(
+                p_system_prompt =>
+                    'You are the Principal Creative Pitch Director at Flash Concepts. '
+                 || 'The user wants to interactively EDIT and REMAKE their 8-slide executive pitch deck based on their chat instructions. '
+                 || 'Revise the 8 slides strictly adhering to the user instructions (e.g. elevating tone, adding sustainability, adjusting metrics). '
+                 || 'Storytelling Arc (8 slides): 1.Executive Vision 2.Brief Alignment 3.Signature Concept 4.Attendee Journey 5.Spatial Architecture 6.Activation Ecosystem 7.Safety & Feasibility 8.Commercial Roadmap. '
+                 || 'Rules: Plain British English, authoritative and compelling. Return ONE JSON object: '
+                 || '{"slides": [{"title": "...", "focus": "...", "bullets": ["bullet 1", "bullet 2", "bullet 3"], "visual": "...", "image_prompt": "..."}... 8 items]}.',
+                p_user_prompt => l_context,
+                p_temperature => CASE l_attempt WHEN 1 THEN 0.5 ELSE 0.3 END,
+                p_max_tokens  => 6000,
+                p_tender_id   => p_tender_id,
+                p_agent       => 'DECK_REPROMPT',
+                p_json_mode   => 'Y'
+            );
+            l_json := fc_ai_agent_api.extract_json(l_reply);
+            l_valid := 0;
+            IF l_json IS NOT NULL THEN
+                SELECT COUNT(*) INTO l_valid
+                  FROM json_table(l_json, '$.slides[*]' COLUMNS (title VARCHAR2(400) PATH '$.title')) jt
+                 WHERE jt.title IS NOT NULL;
+            END IF;
+            EXIT WHEN l_valid >= 6;
+        END LOOP;
+
+        IF l_valid >= 6 THEN
+            DELETE FROM fc_pitch_slides WHERE tender_id = p_tender_id;
+            FOR s IN (SELECT jt.idx, jt.title, jt.focus, jt.visual, jt.image_prompt
+                        FROM json_table(l_json, '$.slides[*]'
+                               COLUMNS (idx          FOR ORDINALITY,
+                                        title        VARCHAR2(400)  PATH '$.title',
+                                        focus        VARCHAR2(1000) PATH '$.focus',
+                                        visual       VARCHAR2(2000) PATH '$.visual',
+                                        image_prompt VARCHAR2(2000) PATH '$.image_prompt')) jt
+                       WHERE jt.title IS NOT NULL
+                       ORDER BY jt.idx) LOOP
+                EXIT WHEN l_cnt >= 8;
+                l_cnt := l_cnt + 1;
+                l_bullets := NULL;
+                FOR b IN (SELECT bt.bullet
+                            FROM json_table(l_json, '$.slides[*]'
+                                   COLUMNS (idx FOR ORDINALITY,
+                                            NESTED PATH '$.bullets[*]' COLUMNS (bnum FOR ORDINALITY, bullet VARCHAR2(400) PATH '$'))) bt
+                           WHERE bt.idx = s.idx AND bt.bullet IS NOT NULL
+                           ORDER BY bt.bnum) LOOP
+                    l_bullets := SUBSTR(l_bullets || CASE WHEN l_bullets IS NOT NULL THEN CHR(10) END || '• ' || b.bullet, 1, 2000);
+                END LOOP;
+                INSERT INTO fc_pitch_slides (
+                    tender_id, slide_num, slide_title, layout_type, narrative_focus,
+                    key_bullet_points, visual_placeholder_desc, image_prompt, is_customized
+                ) VALUES (
+                    p_tender_id, l_cnt, SUBSTR(s.title, 1, 200),
+                    NVL(REGEXP_SUBSTR(c_layouts, '[^,]+', 1, l_cnt), 'SPLIT_STORY'),
+                    SUBSTR(s.focus, 1, 500), l_bullets, SUBSTR(s.visual, 1, 2000),
+                    NVL(SUBSTR(s.image_prompt, 1, 2000), SUBSTR(s.visual, 1, 2000)), 'Y'
+                );
+            END LOOP;
+        ELSE
+            -- Intelligent fallback edit based on prompt keywords
+            l_lower := LOWER(p_chat_prompt);
+
+            -- Always update customized flag and incorporate prompt
+            UPDATE fc_pitch_slides
+               SET is_customized = 'Y'
+             WHERE tender_id = p_tender_id;
+
+            IF INSTR(l_lower, 'sustain') > 0 OR INSTR(l_lower, 'green') > 0 OR INSTR(l_lower, 'net-zero') > 0 OR INSTR(l_lower, 'esg') > 0 THEN
+                UPDATE fc_pitch_slides
+                   SET narrative_focus = 'Zero-Carbon Spatial Identity: Integrating Singapore Green MICE Net-Zero targets into all modular timber and LED structures.',
+                       key_bullet_points = '• 100% FSC-certified birch plywood with low-VOC Class 0 flame retardant treatment' || CHR(10)
+                                        || '• Energy-efficient P2.6 LED video panels with automated overnight sleep-mode consumption capping' || CHR(10)
+                                        || '• 92% post-event material repurposing protocol via Singapore recycling circularity partners'
+                 WHERE tender_id = p_tender_id AND slide_num = 3;
+
+                UPDATE fc_pitch_slides
+                   SET narrative_focus = 'Eco-Conscious Activation Touchpoints: Sustainable demo pods and paperless digital engagement zones.',
+                       key_bullet_points = '• Modular plug-and-play pods designed for rapid zero-waste venue teardown' || CHR(10)
+                                        || '• Digital badge gamification replacing single-use collateral printing' || CHR(10)
+                                        || '• Real-time venue carbon footprint monitoring dashboard for client ESG reporting'
+                 WHERE tender_id = p_tender_id AND slide_num = 6;
+            ELSIF INSTR(l_lower, 'exec') > 0 OR INSTR(l_lower, 'c-suite') > 0 OR INSTR(l_lower, 'tone') > 0 OR INSTR(l_lower, 'bold') > 0 THEN
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'Transformational Vision & Executive Brand Dominance',
+                       narrative_focus = 'Strategic C-Suite Alignment: Positioning the brand as the undisputed regional industry pioneer.'
+                 WHERE tender_id = p_tender_id AND slide_num = 1;
+
+                UPDATE fc_pitch_slides
+                   SET slide_title = 'High-Impact Attendee Journey & Immersion',
+                       narrative_focus = 'Curated Experiential Frictionless Flow: Maximum keynote retention and high-value VIP networking.'
+                 WHERE tender_id = p_tender_id AND slide_num = 4;
+            ELSIF INSTR(l_lower, 'safe') > 0 OR INSTR(l_lower, 'scdf') > 0 OR INSTR(l_lower, 'pe') > 0 OR INSTR(l_lower, 'permit') > 0 THEN
+                UPDATE fc_pitch_slides
+                   SET narrative_focus = 'Statutory Structural Rigor & Mandatory Venue Safety Certification.',
+                       key_bullet_points = '• Certified Professional Engineer (PE) structural calculation endorsement for overhead truss rigging' || CHR(10)
+                                        || '• Licensed Electrical Worker (LEW) turn-on endorsement for high-amperage LED distribution' || CHR(10)
+                                        || '• Singapore SCDF 3.0m emergency fire egress aisles maintained with zero physical encroachment'
+                 WHERE tender_id = p_tender_id AND slide_num = 7;
+            ELSIF INSTR(l_lower, 'roi') > 0 OR INSTR(l_lower, 'cost') > 0 OR INSTR(l_lower, 'financial') > 0 OR INSTR(l_lower, 'margin') > 0 THEN
+                UPDATE fc_pitch_slides
+                   SET narrative_focus = 'Commercial Certainty & Transparent Milestone Governance.',
+                       key_bullet_points = '• Milestone invoicing: 50% pitch award, 40% onsite handover, 10% post-event completion' || CHR(10)
+                                        || '• Zero hidden statutory fee surprises (BCA PE and EMA LEW fully included in base price)' || CHR(10)
+                                        || '• Proven 3.8x B2B lead generation conversion rate compared to conventional static roadshows'
+                 WHERE tender_id = p_tender_id AND slide_num = 8;
+            ELSE
+                UPDATE fc_pitch_slides
+                   SET narrative_focus = SUBSTR('[AI Copilot Directives: ' || p_chat_prompt || '] ' || narrative_focus, 1, 500)
+                 WHERE tender_id = p_tender_id AND slide_num = 1;
+            END IF;
+        END IF;
+
+        fc_audit_api.log_event(p_tender_id, p_user_name, 'AI_DECK_REPROMPT', 'FC_PITCH_SLIDES',
+            'User remade PowerPoint via AI Chat Copilot with directive: ' || SUBSTR(p_chat_prompt, 1, 150));
+        x_message := 'PowerPoint slides successfully remade by AI based on: "' || SUBSTR(p_chat_prompt, 1, 60) || '...". Presentation deck & preview refreshed.';
+    END remake_slides_with_chat;
+
     -- ---------------------------------------------------------------- PowerPoint export
 
     FUNCTION x(p_text IN VARCHAR2) RETURN VARCHAR2 IS

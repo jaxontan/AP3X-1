@@ -9,6 +9,14 @@ CREATE OR REPLACE PACKAGE fc_deck_api AS
         x_message   OUT VARCHAR2
     );
 
+    -- Interactively edits and remakes the 8 slides and PowerPoint based on a natural language chat prompt.
+    PROCEDURE remake_slides_with_chat(
+        p_tender_id   IN NUMBER,
+        p_chat_prompt IN VARCHAR2,
+        p_user_name   IN VARCHAR2,
+        x_message     OUT VARCHAR2
+    );
+
     -- Builds a .pptx (Office Open XML) file from the tender's slides.
     FUNCTION build_pptx(p_tender_id IN NUMBER) RETURN BLOB;
 
