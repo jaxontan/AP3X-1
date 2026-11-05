@@ -578,21 +578,12 @@
 }
 
 /* AI Research Prompt Chips & Helper Box */
-.fc-research-query-wrap .t-Form-inputContainer {
-  display: flex !important;
-  flex-wrap: wrap !important;
-}
-
-.fc-research-query-wrap .t-Form-inputContainer > input {
-  width: 100% !important;
-  flex: 1 1 100% !important;
-}
-
 .fc-research-helper-box {
-  width: 100% !important;
-  flex: 1 1 100% !important;
-  margin-top: 8px;
-  margin-bottom: 4px;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  clear: both;
 }
 
 .fc-prompt-chips {
@@ -600,11 +591,11 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-top: 4px;
+  margin-top: 6px;
   margin-bottom: 8px;
 }
 .fc-chip-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--brand-muted);
   font-weight: 600;
   margin-right: 4px;
@@ -614,10 +605,31 @@
   border: 1px solid var(--brand-button-secondary-border);
   color: var(--brand-button-secondary-text);
   border-radius: 999px;
-  padding: 5px 12px;
-  font-size: 11px;
+  padding: 6px 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fc-chip:hover {
+  background-color: var(--brand-button-secondary-hover);
+  border-color: var(--brand-action);
+  color: var(--brand-ink);
+  transform: translateY(-1px);
+}
+.fc-search-hint {
+  font-size: 12px;
+  color: var(--brand-muted);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+}
   transition: all 0.15s ease;
   line-height: 1.4;
 }
@@ -2254,18 +2266,13 @@
   background: var(--brand-gradient);
 }
 .fc-slide--title {
-  background: var(--brand-black);
-  border-color: var(--brand-black);
-  color: #FFFFFF;
+  background: var(--brand-surface);
+  border-color: var(--brand-border);
+  color: var(--brand-ink);
 }
-.fc-slide-num {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  font-size: 11px;
-  color: var(--brand-muted);
-}
-.fc-slide--title .fc-slide-num { color: #BFBFBF; }
+.fc-slide--title .fc-slide-num { color: var(--brand-muted); }
+.fc-slide--title .fc-slide-focus { color: var(--brand-blue); }
+.fc-slide--title .fc-slide-visual { color: var(--brand-muted); }
 .fc-slide-title {
   margin: 0;
   font-family: var(--brand-font-heading);

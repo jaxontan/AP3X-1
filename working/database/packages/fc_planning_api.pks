@@ -107,5 +107,15 @@ CREATE OR REPLACE PACKAGE fc_planning_api AS
 
     -- Dynamic File Explorer Data JSON (Live Database Tenders & Documents)
     FUNCTION get_explorer_data_json RETURN CLOB;
+
+    -- Custom Document Upload (allows anyone to upload to Custom Uploads repository)
+    PROCEDURE upload_custom_document(
+        p_tender_id      IN NUMBER,
+        p_file_name      IN VARCHAR2,
+        p_file_size      IN NUMBER DEFAULT NULL,
+        p_mime_type      IN VARCHAR2 DEFAULT NULL,
+        p_user_name      IN VARCHAR2 DEFAULT NULL,
+        p_notes          IN VARCHAR2 DEFAULT NULL
+    );
 END fc_planning_api;
 /

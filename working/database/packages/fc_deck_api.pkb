@@ -1,3 +1,4 @@
+SET DEFINE OFF;
 CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
 
     c_layouts CONSTANT VARCHAR2(400) :=
@@ -661,9 +662,9 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
     BEGIN
         SELECT COUNT(*) INTO l_total FROM fc_pitch_slides WHERE tender_id = p_tender_id;
         IF l_total = 0 THEN
-            RETURN '<div class="fc-deck-empty" style="padding:40px; text-align:center; color:#94a3b8; background:#0f172a; border-radius:12px; border:1px solid #334155; margin:16px 0;">'
-                || '<span class="t-Icon fa fa-television" style="font-size:36px; margin-bottom:12px; color:#38bdf8; display:block;" aria-hidden="true"></span>'
-                || '<h4 style="color:#f8fafc; margin-bottom:8px;">No Slide Deck Drafts Yet</h4>'
+            RETURN '<div class="fc-deck-empty" style="padding:40px; text-align:center; color:#64748b; background:#ffffff; border-radius:12px; border:1px solid #e2e8f0; margin:16px 0;">'
+                || '<span class="t-Icon fa fa-television" style="font-size:36px; margin-bottom:12px; color:#0284c7; display:block;" aria-hidden="true"></span>'
+                || '<h4 style="color:#0f172a; margin-bottom:8px;">No Slide Deck Drafts Yet</h4>'
                 || '<p style="margin:0;">Click <strong>Draft slides</strong> above to synthesize the 8-slide executive pitch deck using AI.</p>'
                 || '</div>';
         END IF;
@@ -683,29 +684,29 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
             || '<meta name="viewport" content="width=device-width, initial-scale=1">' || CHR(10)
             || '<style>' || CHR(10)
             || '* { box-sizing: border-box; margin: 0; padding: 0; }' || CHR(10)
-            || 'body { background: #080c14; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }' || CHR(10)
-            || '.deck-nav { display: flex; justify-content: space-between; align-items: center; background: #131b2e; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 18px; margin-bottom: 16px; }' || CHR(10)
-            || '.deck-title { font-weight: 700; color: #38bdf8; font-size: 14px; display: flex; align-items: center; gap: 8px; }' || CHR(10)
+            || 'body { background: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }' || CHR(10)
+            || '.deck-nav { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }' || CHR(10)
+            || '.deck-title { font-weight: 700; color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px; }' || CHR(10)
             || '.deck-ctrls { display: flex; align-items: center; gap: 8px; }' || CHR(10)
-            || '.ctrl-btn { background: #1e293b; border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: 600; }' || CHR(10)
-            || '.ctrl-btn:hover { background: #334155; }' || CHR(10)
-            || '.slide-counter { font-size: 13px; color: #94a3b8; font-variant-numeric: tabular-nums; margin: 0 4px; }' || CHR(10)
+            || '.ctrl-btn { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; transition: all 0.15s; }' || CHR(10)
+            || '.ctrl-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #94a3b8; }' || CHR(10)
+            || '.slide-counter { font-size: 13px; color: #64748b; font-variant-numeric: tabular-nums; margin: 0 6px; font-weight: 600; }' || CHR(10)
             || '.slide-viewport { flex: 1; display: flex; justify-content: center; align-items: center; }' || CHR(10)
-            || '.v-slide { width: 100%; max-width: 900px; aspect-ratio: 16 / 9; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 32px 36px; display: none; flex-direction: column; justify-content: space-between; box-shadow: 0 16px 36px rgba(0,0,0,0.6); position: relative; overflow: hidden; }' || CHR(10)
+            || '.v-slide { width: 100%; max-width: 900px; aspect-ratio: 16 / 9; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px 36px; display: none; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.06); position: relative; overflow: hidden; }' || CHR(10)
             || '.v-slide.active { display: flex; }' || CHR(10)
-            || '.v-slide::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #36FF9F, #026BD3); }' || CHR(10)
-            || '.v-slide-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 10px; }' || CHR(10)
-            || '.v-focus { font-size: 13px; color: #38bdf8; background: rgba(56,189,248,0.1); border-left: 3px solid #38bdf8; padding: 6px 12px; border-radius: 0 4px 4px 0; margin-bottom: 14px; line-height: 1.4; }' || CHR(10)
+            || '.v-slide::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #0284c7, #10b981); }' || CHR(10)
+            || '.v-slide-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }' || CHR(10)
+            || '.v-focus { font-size: 13px; color: #0369a1; background: #f0f9ff; border-left: 3px solid #0284c7; padding: 8px 14px; border-radius: 0 6px 6px 0; margin-bottom: 14px; line-height: 1.4; }' || CHR(10)
             || '.v-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; flex: 1; align-items: center; }' || CHR(10)
             || '@media(max-width: 720px) { .v-grid { grid-template-columns: 1fr; } }' || CHR(10)
             || '.v-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }' || CHR(10)
-            || '.v-bullets li { position: relative; padding-left: 20px; font-size: 13px; line-height: 1.5; color: #cbd5e1; }' || CHR(10)
-            || '.v-bullets li::before { content: ""; position: absolute; left: 2px; top: 7px; width: 7px; height: 7px; border-radius: 50%; background: #36FF9F; box-shadow: 0 0 6px #36FF9F; }' || CHR(10)
-            || '.v-render-box { background: #1e293b; border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }' || CHR(10)
-            || '.v-render-img { width: 100%; height: 160px; object-fit: cover; display: block; background: #080c14; }' || CHR(10)
-            || '.v-render-caption { padding: 8px 10px; background: rgba(15,23,42,0.95); font-size: 11px; color: #94a3b8; line-height: 1.35; border-top: 1px solid rgba(255,255,255,0.06); }' || CHR(10)
-            || '.v-render-caption strong { color: #f59e0b; display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }' || CHR(10)
-            || '.v-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; font-size: 11px; color: #64748b; }' || CHR(10)
+            || '.v-bullets li { position: relative; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #334155; }' || CHR(10)
+            || '.v-bullets li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: #0284c7; }' || CHR(10)
+            || '.v-render-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }' || CHR(10)
+            || '.v-render-img { width: 100%; height: 160px; object-fit: cover; display: block; background: #f1f5f9; }' || CHR(10)
+            || '.v-render-caption { padding: 8px 12px; background: #ffffff; font-size: 11px; color: #64748b; line-height: 1.4; border-top: 1px solid #e2e8f0; }' || CHR(10)
+            || '.v-render-caption strong { color: #d97706; display: block; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }' || CHR(10)
+            || '.v-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; }' || CHR(10)
             || '</style></head><body>' || CHR(10)
             || '<div class="deck-nav">' || CHR(10)
             || '  <div class="deck-title">&#128250; ' || apex_escape.html(l_code) || ' · ' || apex_escape.html(l_client) || '</div>' || CHR(10)
@@ -725,8 +726,8 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
                 '<div class="v-slide' || CASE WHEN l_idx = 1 THEN ' active' END || '">' || CHR(10)
              || '  <div>' || CHR(10)
              || '    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' || CHR(10)
-             || '      <span style="font-size:11px; font-weight:700; color:#36FF9F; background:rgba(54,255,159,0.12); padding:3px 8px; border-radius:4px; text-transform:uppercase;">Slide ' || l_idx || ' of ' || l_total || '</span>' || CHR(10)
-             || '      <span style="font-size:11px; color:#38bdf8;">' || apex_escape.html(s.layout_type) || '</span>' || CHR(10)
+             || '      <span style="font-size:11px; font-weight:700; color:#0369a1; background:#e0f2fe; padding:3px 8px; border-radius:4px; text-transform:uppercase;">Slide ' || l_idx || ' of ' || l_total || '</span>' || CHR(10)
+             || '      <span style="font-size:11px; color:#64748b; font-weight:600;">' || apex_escape.html(s.layout_type) || '</span>' || CHR(10)
              || '    </div>' || CHR(10)
              || '    <h3 class="v-slide-title">' || apex_escape.html(s.slide_title) || '</h3>' || CHR(10)
              || CASE WHEN s.narrative_focus IS NOT NULL
@@ -782,20 +783,15 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
          || '</script></body></html>'
         );
 
-        -- 2. Build Mini-Browser Viewport Container with macOS window chrome
+        -- 2. Build Clean Preview Container with white background (no mac-three dots, no fake browser bar)
         DBMS_LOB.CREATETEMPORARY(l_html, TRUE);
 
         append_html(
-            '<div class="fc-mini-browser" style="background:#131b2e; border-radius:12px; overflow:hidden; border:1px solid #334155; margin-bottom:20px; box-shadow:0 12px 30px rgba(0,0,0,0.4);">'
-         || '  <div style="background:#090d16; padding:10px 16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #243049; flex-wrap:wrap;">'
-         || '    <div style="display:flex; gap:6px;">'
-         || '      <span style="width:12px; height:12px; border-radius:50%; background:#ef4444; display:inline-block;"></span>'
-         || '      <span style="width:12px; height:12px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>'
-         || '      <span style="width:12px; height:12px; border-radius:50%; background:#10b981; display:inline-block;"></span>'
-         || '    </div>'
-         || '    <div style="flex:1; min-width:200px; background:#162035; border-radius:6px; padding:6px 14px; font-family:monospace; font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:8px;">'
-         || '      <span style="color:#10b981; font-weight:700;">[SSL]</span>'
-         || '      <span>https://deck.flashconcepts.sg/pitches/' || apex_escape.html(l_code) || '.html</span>'
+            '<div class="fc-mini-browser" style="background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:20px; box-shadow:0 2px 12px rgba(0,0,0,0.05);">'
+         || '  <div style="background:#ffffff; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">'
+         || '    <div style="font-weight:700; font-size:14px; color:#0f172a; display:flex; align-items:center; gap:8px;">'
+         || '      <span class="t-Icon fa fa-television" style="color:#0284c7;" aria-hidden="true"></span>'
+         || '      <span>' || apex_escape.html(l_code) || ' — ' || apex_escape.html(l_title) || '</span>'
          || '    </div>'
          || '    <div class="fc-deck-actions" style="display:inline-flex; gap:8px; flex-wrap:wrap;">'
          || '      <button type="button" class="t-Button t-Button--hot t-Button--small" onclick="fcExportDeck(''EXPORT_PPTX'');">'
@@ -806,7 +802,7 @@ CREATE OR REPLACE PACKAGE BODY fc_deck_api AS
          || '        <span class="t-Icon fa fa-file-pdf-o" aria-hidden="true"></span> PDF (.pdf)</button>'
          || '    </div>'
          || '  </div>'
-         || '  <iframe id="slide-presentation-viewport" name="slide-presentation-viewport" style="width:100%; height:520px; border:none; display:block;" title="Interactive HTML-PPT Viewport"></iframe>'
+         || '  <iframe id="slide-presentation-viewport" name="slide-presentation-viewport" style="width:100%; height:520px; border:none; display:block; background:#ffffff;" title="Interactive HTML-PPT Viewport"></iframe>'
          || '  <template id="fc-deck-template">'
         );
 

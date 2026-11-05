@@ -1110,8 +1110,10 @@ page 2 (
             columnSpan: 12
         }
         appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
+            template: @/optional
+            templateOptions: [
+                #DEFAULT#
+            ]
         }
     )
 
@@ -1129,9 +1131,11 @@ page 2 (
             columnSpan: 12
         }
         appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-            cssClasses: fc-research-query-wrap
+            template: @/optional
+            templateOptions: [
+                #DEFAULT#
+            ]
+            valuePlaceholder: What do you want to know about the client?
         }
         advanced {
             postText:
@@ -1422,6 +1426,7 @@ page 2 (
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
+                t-Button--primary
             ]
             icon: fa-search
         }

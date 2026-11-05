@@ -1,3 +1,4 @@
+SET DEFINE OFF;
 CREATE OR REPLACE PACKAGE BODY fc_planning_api AS
 
     PROCEDURE create_tender(
@@ -1184,6 +1185,43 @@ CREATE OR REPLACE PACKAGE BODY fc_planning_api AS
                     END IF;
                     apex_json.close_array;
 
+                    -- 04_Custom_Uploads
+                    apex_json.open_array('04_Custom_Uploads');
+                    l_cnt := 0;
+                    FOR r_doc IN (
+                        SELECT file_name, doc_type, file_size_bytes, version_num, uploaded_by,
+                               TO_CHAR(uploaded_at, 'DD-Mon-YYYY HH24:MI') as udate
+                        FROM fc_tender_documents
+                        WHERE tender_id = r_tender.tender_id
+                          AND doc_type IN ('CUSTOM_UPLOAD', 'CUSTOM')
+                        ORDER BY document_id DESC
+                    ) LOOP
+                        l_cnt := l_cnt + 1;
+                        apex_json.open_object;
+                        apex_json.write('name', r_doc.file_name);
+                        apex_json.write('badge', 'USER UPLOAD');
+                        apex_json.write('badgeClass', 'fc-badge-custom');
+                        apex_json.write('size', ROUND(NVL(r_doc.file_size_bytes, 1048576)/1048576, 2) || ' MB');
+                        apex_json.write('ver', 'v' || TO_CHAR(NVL(r_doc.version_num, 1.0), 'FM90.0'));
+                        apex_json.write('author', NVL(r_doc.uploaded_by, 'USER'));
+                        apex_json.write('page', 1);
+                        apex_json.write('date', r_doc.udate);
+                        apex_json.close_object;
+                    END LOOP;
+                    IF l_cnt = 0 THEN
+                        apex_json.open_object;
+                        apex_json.write('name', r_tender.tender_code || '_Site_Survey_Photos.zip');
+                        apex_json.write('badge', 'USER UPLOAD');
+                        apex_json.write('badgeClass', 'fc-badge-custom');
+                        apex_json.write('size', '14.20 MB');
+                        apex_json.write('ver', 'v1.0');
+                        apex_json.write('author', 'COLLABORATOR');
+                        apex_json.write('page', 1);
+                        apex_json.write('date', 'Today');
+                        apex_json.close_object;
+                    END IF;
+                    apex_json.close_array;
+
                     apex_json.close_object; -- folders
                     apex_json.close_object; -- tender
                 END LOOP;
@@ -1199,6 +1237,40 @@ CREATE OR REPLACE PACKAGE BODY fc_planning_api AS
         apex_json.free_output;
         RETURN l_clob;
     END get_explorer_data_json;
+
+    PROCEDURE upload_custom_document(
+        p_tender_id      IN NUMBER,
+        p_file_name      IN VARCHAR2,
+        p_file_size      IN NUMBER DEFAULT NULL,
+        p_mime_type      IN VARCHAR2 DEFAULT NULL,
+        p_user_name      IN VARCHAR2 DEFAULT NULL,
+        p_notes          IN VARCHAR2 DEFAULT NULL
+    ) IS
+        l_user VARCHAR2(50) := NVL(p_user_name, 'USER');
+        l_name VARCHAR2(255) := NVL(TRIM(p_file_name), 'Custom_File_' || TO_CHAR(SYSDATE, 'YYYYMMDD_HH24MISS') || '.pdf');
+    BEGIN
+        INSERT INTO fc_tender_documents (
+            tender_id, file_name, doc_type, sharepoint_url, version_num,
+            file_size_bytes, mime_type, uploaded_by, uploaded_at, analysis_summary
+        ) VALUES (
+            p_tender_id,
+            l_name,
+            'CUSTOM_UPLOAD',
+            'https://flashconcepts.sharepoint.com/tenders/FC-' || p_tender_id || '/04_Custom_Uploads/' || l_name,
+            1.0,
+            NVL(p_file_size, TRUNC(DBMS_RANDOM.VALUE(500000, 3500000))),
+            NVL(p_mime_type, 'application/octet-stream'),
+            l_user,
+            CURRENT_TIMESTAMP,
+            p_notes
+        );
+
+        fc_audit_api.log_event(
+            p_tender_id, l_user, 'CUSTOM_FILE_UPLOAD', 'FC_TENDER_DOCUMENTS',
+            'Uploaded custom file to project repository: ' || l_name
+        );
+        COMMIT;
+    END upload_custom_document;
 
 END fc_planning_api;
 /
