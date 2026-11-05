@@ -592,10 +592,16 @@ page 3 (
 
     pageItem P3_EDIT_CONCEPT_ID (
         type: hidden
+        settings {
+            valueProtected: false
+        }
         layout {
             sequence: 1
             region: @reprompt-concept-modal
             slot: regionBody
+        }
+        security {
+            sessionStateProtection: unrestricted
         }
     )
 
@@ -604,6 +610,9 @@ page 3 (
         label {
             label: Editing Concept Option
             alignment: left
+        }
+        settings {
+            sendOnPageSubmit: false
         }
         layout {
             sequence: 5
