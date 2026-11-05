@@ -379,7 +379,7 @@ page 4 (
     )
 
     region html-ppt-browser (
-        name: Deck preview
+        name: Pitch deck presentation & drafts
         type: dynamicContent
         source {
             plsqlFunctionBody:
@@ -401,125 +401,6 @@ page 4 (
                 t-Region--noPadding
             ]
         }
-    )
-
-    region slide-decks-report (
-        name: Slide drafts
-        type: classicReport
-        source {
-            location: localDatabase
-            type: sqlQuery
-            sqlQuery:
-                ```sql
-                select slide_id,
-                       slide_num,
-                       slide_title,
-                       initcap(replace(layout_type, '_', ' ')) as layout_type,
-                       narrative_focus,
-                       key_bullet_points,
-                       visual_placeholder_desc
-                from fc_pitch_slides
-                where tender_id = to_number(coalesce(:P4_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
-                order by slide_num asc
-                ```
-        }
-        layout {
-            sequence: 20
-            parentRegion: @pitch-deck-tab
-            slot: subRegions
-        }
-        appearance {
-            template: @/standard
-            templateOptions: [
-                #DEFAULT#
-                t-Region--noPadding
-            ]
-        }
-        reportLayout {
-            numberOfRows: 8
-        }
-        componentAppearance {
-            template: @/standard
-            templateOptions: [
-                #DEFAULT#
-                t-Report--stretch
-                t-Report--rowHighlight
-            ]
-        }
-        pagination {
-            type: nextAndPreviousLinks
-        }
-
-        column KEY_BULLET_POINTS (
-            derivedColumn: N
-            heading {
-                heading: Draft Content
-            }
-            layout {
-                sequence: 6
-            }
-        )
-
-        column LAYOUT_TYPE (
-            derivedColumn: N
-            heading {
-                heading: AI Layout Type
-            }
-            layout {
-                sequence: 4
-            }
-        )
-
-        column NARRATIVE_FOCUS (
-            derivedColumn: N
-            heading {
-                heading: Narrative Alignment
-            }
-            layout {
-                sequence: 5
-            }
-        )
-
-        column SLIDE_ID (
-            derivedColumn: N
-            heading {
-                heading: ID
-            }
-            layout {
-                sequence: 1
-            }
-        )
-
-        column SLIDE_NUM (
-            derivedColumn: N
-            heading {
-                heading: Slide #
-            }
-            layout {
-                sequence: 2
-            }
-        )
-
-        column SLIDE_TITLE (
-            derivedColumn: N
-            heading {
-                heading: Slide Title
-            }
-            layout {
-                sequence: 3
-            }
-        )
-
-        column VISUAL_PLACEHOLDER_DESC (
-            derivedColumn: N
-            heading {
-                heading: AI Visual Placeholder Blueprint
-            }
-            layout {
-                sequence: 7
-            }
-        )
-
     )
 
     region spatial-form (
@@ -939,7 +820,7 @@ page 4 (
         label: Draft slides
         layout {
             sequence: 10
-            region: @slide-decks-report
+            region: @html-ppt-browser
             slot: next
         }
         appearance {
