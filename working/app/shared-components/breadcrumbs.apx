@@ -1,0 +1,178 @@
+breadcrumb breadcrumb (
+    name: Breadcrumb
+
+    entry administration (
+        name: Administration
+        pageNumber: 8
+        execution {
+            sequence: 80
+        }
+        appearance {
+            parentEntry: @year-2026
+        }
+        link {
+            target: {
+                page: 8
+            }
+        }
+    )
+
+    entry costing (
+        name: Costing & Operations
+        pageNumber: 5
+        execution {
+            sequence: 50
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 5
+            }
+        }
+    )
+
+    entry design (
+        name: Design & Spatial
+        pageNumber: 4
+        execution {
+            sequence: 40
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 4
+            }
+        }
+    )
+
+    entry financial-analytics (
+        name: Executive Financials
+        pageNumber: 9
+        execution {
+            sequence: 15
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 9
+            }
+        }
+    )
+
+    entry home (
+        name: Pipeline Dashboard
+        pageNumber: 1
+        execution {
+            sequence: 10
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+    entry intake (
+        name: Tender Intake
+        pageNumber: 2
+        execution {
+            sequence: 20
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 2
+            }
+        }
+    )
+
+    entry planning (
+        name: Planning Studio
+        pageNumber: 3
+        execution {
+            sequence: 30
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 3
+            }
+        }
+    )
+
+    entry project-selected (
+        name: &FC_TENDER_LABEL.
+        pageNumber: 0
+        execution {
+            sequence: 7
+        }
+        appearance {
+            parentEntry: @year-2026
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+    entry release (
+        name: Proposal Release
+        pageNumber: 6
+        execution {
+            sequence: 60
+        }
+        appearance {
+            parentEntry: @project-selected
+        }
+        link {
+            target: {
+                page: 6
+            }
+        }
+    )
+
+    entry repositories (
+        name: Repositories
+        pageNumber: 7
+        execution {
+            sequence: 70
+        }
+        appearance {
+            parentEntry: @year-2026
+        }
+        link {
+            target: {
+                page: 7
+            }
+        }
+    )
+
+    entry year-2026 (
+        name: Pipeline
+        pageNumber: 0
+        execution {
+            sequence: 5
+        }
+        link {
+            target: {
+                page: 1
+            }
+        }
+    )
+
+)
+

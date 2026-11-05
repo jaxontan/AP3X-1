@@ -1,0 +1,389 @@
+lov boolean (
+    name: BOOLEAN
+    source {
+        location: staticValues
+    }
+
+    entry false (
+        sequence: 2
+        display: No
+        return: FALSE
+    )
+
+    entry true (
+        sequence: 1
+        display: Yes
+        return: TRUE
+    )
+
+)
+
+lov client-lov (
+    name: CLIENT_LOV
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select client_name as d, client_name as r
+            from (
+                select distinct client_name from fc_tenders where client_name is not null
+                union
+                select distinct client_name from fc_event_archives where client_name is not null
+            )
+            order by 1 asc
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov concept-options-lov (
+    name: CONCEPT_OPTIONS_LOV
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select option_code || ': ' || concept_title as d, concept_id as r
+            from fc_concept_options
+            where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+            order by option_code asc
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov currencies (
+    name: CURRENCIES
+    source {
+        location: staticValues
+    }
+
+    entry idr (
+        sequence: 20
+        display: IDR - Indonesian Rupiah
+        return: IDR
+    )
+
+    entry sgd (
+        sequence: 10
+        display: SGD - Singapore Dollar
+        return: SGD
+    )
+
+    entry usd (
+        sequence: 30
+        display: USD - US Dollar
+        return: USD
+    )
+
+)
+
+lov customer-choice-lov (
+    name: CUSTOMER_CHOICE_LOV
+    source {
+        location: staticValues
+    }
+
+    entry existing (
+        sequence: 10
+        display: Existing Customer
+        return: EXISTING
+    )
+
+    entry new (
+        sequence: 20
+        display: + Add Brand-New Customer
+        return: NEW
+    )
+
+)
+
+lov doc-type-lov (
+    name: DOC_TYPE_LOV
+    source {
+        location: staticValues
+    }
+
+    entry addendum (
+        sequence: 30
+        display: Tender Addendum
+        return: ADDENDUM
+    )
+
+    entry brief (
+        sequence: 10
+        display: Tender Brief / RFP
+        return: BRIEF
+    )
+
+    entry drawing (
+        sequence: 40
+        display: Technical Drawing
+        return: DRAWING
+    )
+
+    entry floorplan (
+        sequence: 20
+        display: Venue Floorplan (PDF/DWG)
+        return: FLOORPLAN
+    )
+
+)
+
+lov gate-status (
+    name: GATE_STATUS
+    source {
+        location: staticValues
+    }
+
+    entry approved (
+        sequence: 30
+        display: Approved
+        return: APPROVED
+    )
+
+    entry draft (
+        sequence: 10
+        display: Draft
+        return: DRAFT
+    )
+
+    entry in-review (
+        sequence: 20
+        display: In Review
+        return: IN_REVIEW
+    )
+
+    entry rejected (
+        sequence: 40
+        display: Rejected
+        return: REJECTED
+    )
+
+    entry released (
+        sequence: 50
+        display: Released
+        return: RELEASED
+    )
+
+)
+
+lov intake-criteria-lov (
+    name: INTAKE_CRITERIA_LOV
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select field_category || ' - ' || field_label || ': ' || substr(extracted_value, 1, 35) as d, field_id as r
+            from fc_intake_fields
+            where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+            order by field_id asc
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov language-mode-lov (
+    name: LANGUAGE_MODE_LOV
+    source {
+        location: staticValues
+    }
+
+    entry en (
+        sequence: 10
+        display: English (EN)
+        return: EN
+    )
+
+    entry id (
+        sequence: 20
+        display: Bahasa Indonesia (ID)
+        return: ID
+    )
+
+)
+
+lov office-lov (
+    name: OFFICE_LOV
+    source {
+        location: staticValues
+    }
+
+    entry jkt (
+        sequence: 20
+        display: Jakarta (Studio)
+        return: JKT
+    )
+
+    entry sg (
+        sequence: 10
+        display: Singapore (HQ)
+        return: SG
+    )
+
+)
+
+lov planning-flags-lov (
+    name: PLANNING_FLAGS_LOV
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select severity || ' - ' || title as d, flag_id as r
+            from fc_planning_flags
+            where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+            order by flag_id asc
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov review-status-lov (
+    name: REVIEW_STATUS_LOV
+    source {
+        location: staticValues
+    }
+
+    entry confirmed (
+        sequence: 10
+        display: CONFIRMED - Verified by Michelle
+        return: CONFIRMED
+    )
+
+    entry flagged (
+        sequence: 30
+        display: FLAGGED - Clarification Needed
+        return: FLAGGED
+    )
+
+    entry pending (
+        sequence: 20
+        display: PENDING - Under Review
+        return: PENDING
+    )
+
+)
+
+lov search-engine-lov (
+    name: SEARCH_ENGINE_LOV
+    source {
+        location: staticValues
+    }
+
+    entry linkedin (
+        sequence: 30
+        display: Leadership and hiring signals
+        return: LINKEDIN_CORP
+    )
+
+    entry mas (
+        sequence: 20
+        display: Regulatory context (MAS)
+        return: MAS_PRESS
+    )
+
+    entry tavily (
+        sequence: 10
+        display: Company strategy and priorities
+        return: TAVILY_AI_FINANCE
+    )
+
+)
+
+lov tender-lov (
+    name: TENDER_LOV
+    source {
+        type: sqlQuery
+        sqlQuery: select client_name || ' - ' || project_title || ' (' || tender_code || ')' as d, tender_id as r from fc_tenders order by tender_id desc
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+
+lov user-roles (
+    name: USER_ROLES
+    source {
+        location: staticValues
+    }
+
+    entry admin (
+        sequence: 10
+        display: Administrator
+        return: ADMINISTRATOR
+    )
+
+    entry auditor (
+        sequence: 80
+        display: Compliance Auditor
+        return: AUDITOR
+    )
+
+    entry copywriter (
+        sequence: 50
+        display: Copywriter
+        return: COPYWRITER
+    )
+
+    entry costing (
+        sequence: 40
+        display: Operations Lead
+        return: OPERATIONS_LEAD
+    )
+
+    entry designer (
+        sequence: 30
+        display: Designer
+        return: DESIGNER
+    )
+
+    entry leadership (
+        sequence: 70
+        display: Leadership
+        return: LEADERSHIP
+    )
+
+    entry planner (
+        sequence: 20
+        display: Planning Lead
+        return: PLANNING_LEAD
+    )
+
+    entry translation (
+        sequence: 60
+        display: Translation Reviewer
+        return: TRANSLATION_REVIEWER
+    )
+
+)
+
+lov venue-lov (
+    name: VENUE_LOV
+    source {
+        type: sqlQuery
+        sqlQuery:
+            ```sql
+            select venue_name || ' (' || hall_name || ' - ' || clear_height_m || 'm clear)' as d,
+                   venue_id as r
+            from fc_venue_profiles
+            order by venue_id asc
+            ```
+    }
+    columnMapping {
+        return: R
+        display: D
+    }
+)
+

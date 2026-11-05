@@ -1,0 +1,50 @@
+{
+  "$schema": "brand-kit/1",
+  "version": "26.2",
+  "source": {
+    "reference": "https://www.flashconcepts.com.sg/",
+    "capture": "working/page-design/design/reference/reference.json",
+    "captured": "2026-11-03T06:46:56.032Z"
+  },
+  "colors": {
+    "primary": "#3BE891",
+    "action": "#3BE891",
+    "ground": "#FFFFFF",
+    "surface": "#E9F2E9",
+    "ink": "#121212",
+    "muted": null,
+    "border": "#000000",
+    "success": "#1F7A4D",
+    "warning": "#B25E09",
+    "danger": "#C62828",
+    "info": "#1D5FB4"
+  },
+  "font": {
+    "family": "Montserrat",
+    "reason": "reference uses Montserrat, an open-licence font",
+    "referenceFamily": "Montserrat",
+    "headingWeight": 600,
+    "headingCase": "none"
+  },
+  "shape": {
+    "radius": 4,
+    "button": "pill"
+  },
+  "depth": {
+    "shadow": "flat",
+    "referenceShadow": null
+  },
+  "header": {
+    "style": "light",
+    "logo": "primary",
+    "tall": true
+  },
+  "nav": {
+    "style": "light"
+  },
+  "notes": [
+    "Edit values here, then rebuild with: node scripts/build-brand-kit.mjs --kit <this file>",
+    "colors.primary = brand/wayfinding colour (logo, selected nav, links, focus). colors.action = the hot/primary button fill.",
+    "header.style: light | brand | dark. nav.style: light | dark. shape.button: rounded | pill | square. depth.shadow: soft | flat. font.headingCase: none | uppercase. colors.accents: { name: hex } adds --brand-accent-<name> tokens."
+  ]
+}

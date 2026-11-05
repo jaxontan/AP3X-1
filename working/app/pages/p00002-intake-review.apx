@@ -1,0 +1,2106 @@
+page 2 (
+    name: Tender Setup & Intake Review
+    alias: INTAKE-REVIEW
+    title: Tender Setup & AI Document Intake
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+        warnOnUnsavedChanges: false
+    }
+    javaScript {
+        executeWhenPageLoads:
+            ```javascript-browser
+            function syncCustomerMode() {
+                var c = apex.item('P2_CUSTOMER_CHOICE').getValue();
+                if (c === 'NEW') {
+                    apex.item('P2_NEW_CLIENT_NAME').show();
+                    apex.item('P2_CLIENT_NAME').hide();
+                } else {
+                    apex.item('P2_CLIENT_NAME').show();
+                    apex.item('P2_NEW_CLIENT_NAME').hide();
+                }
+            }
+            $('#P2_CUSTOMER_CHOICE').on('change', syncCustomerMode);
+            syncCustomerMode();
+            ```
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region ai-research-section (
+        name: 3. Client research
+        type: staticContent
+        layout {
+            sequence: 41
+            slot: body
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region brief-upload-section (
+        name: 2. Upload client brief
+        type: staticContent
+        layout {
+            sequence: 40
+            slot: body
+            columnSpan: 6
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    region event-archives-report (
+        name: Past pitches
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select archive_id,
+                       event_title,
+                       client_name,
+                       event_year,
+                       venue_name,
+                       scale_pax,
+                       won_pitch_concept,
+                       budget_sgd
+                from fc_event_archives a
+                where exists (
+                    select 1 from fc_tenders t
+                    where t.tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                      and lower(a.client_name) like '%' || lower(substr(t.client_name, 1, 4)) || '%'
+                )
+                order by event_year desc
+                ```
+        }
+        layout {
+            sequence: 50
+            parentRegion: @intake-intel-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column ARCHIVE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column BUDGET_SGD (
+            derivedColumn: N
+            heading {
+                heading: Budget (SGD)
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column CLIENT_NAME (
+            derivedColumn: N
+            heading {
+                heading: Client
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column EVENT_TITLE (
+            derivedColumn: N
+            heading {
+                heading: Historical Event
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column EVENT_YEAR (
+            derivedColumn: N
+            heading {
+                heading: Year
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column SCALE_PAX (
+            derivedColumn: N
+            heading {
+                heading: Pax
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column VENUE_NAME (
+            derivedColumn: N
+            heading {
+                heading: Venue
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column WON_PITCH_CONCEPT (
+            derivedColumn: N
+            heading {
+                heading: Winning Pitch Concept
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+    )
+
+    region findings-report (
+        name: Brief requirements
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select field_id,
+                       initcap(replace(field_category, '_', ' ')) as field_category,
+                       field_label,
+                       extracted_value,
+                       confirmed_value,
+                       initcap(replace(review_status, '_', ' ')) as review_status
+                from fc_intake_fields
+                where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by field_id asc
+                ```
+        }
+        layout {
+            sequence: 20
+            parentRegion: @intake-intel-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 20
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column CONFIRMED_VALUE (
+            derivedColumn: N
+            heading {
+                heading: Confirmed Value
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column EXTRACTED_VALUE (
+            derivedColumn: N
+            heading {
+                heading: AI Extracted Fact
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column FIELD_CATEGORY (
+            derivedColumn: N
+            heading {
+                heading: Category
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column FIELD_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column FIELD_LABEL (
+            derivedColumn: N
+            heading {
+                heading: Criterion / Label
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column REVIEW_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+    )
+
+    region gate0-buttons (
+        name: Gate 0 Verification Actions
+        type: staticContent
+        layout {
+            sequence: 44
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    region gate0-confirmed-banner (
+        name: Gate 0 Confirmed Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 0 STATUS: CONFIRMED &amp; VERIFIED</h2>
+                            <div class="t-Alert-body">Intake criteria verified by Michelle (Planning Lead). Brief parameters and statutory venue constraints locked.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--success t-Badge--large">GATE 0 CONFIRMED</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 41
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    region gate0-pending-banner (
+        name: Gate 0 Pending Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-exclamation-triangle" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 0 STATUS: PENDING VERIFICATION</h2>
+                            <div class="t-Alert-body">Check the brief requirements and planning risks below, then click <strong>Confirm brief (Gate 0)</strong>.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 0</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 42
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and not fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    region gate0-verification-panel (
+        name: 4. Review and confirm (Gate 0)
+        type: staticContent
+        layout {
+            sequence: 43
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    region intake-intel-tabs (
+        name: Tender Dossier & AI Intelligence Hub
+        type: staticContent
+        layout {
+            sequence: 45
+            slot: body
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                t-TabsRegion-mod--fillLabels
+                t-TabsRegion-mod--pill
+            ]
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    region planning-flags-report (
+        name: Planning risks
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select flag_id,
+                       initcap(replace(flag_category, '_', ' ')) as flag_category,
+                       initcap(replace(severity, '_', ' ')) as severity,
+                       title,
+                       description,
+                       recommended_mitigation,
+                       initcap(replace(status, '_', ' ')) as status
+                from fc_planning_flags
+                where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by flag_id asc
+                ```
+        }
+        layout {
+            sequence: 30
+            parentRegion: @intake-intel-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Operational Impact
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column FLAG_CATEGORY (
+            derivedColumn: N
+            heading {
+                heading: Category
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column FLAG_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column RECOMMENDED_MITIGATION (
+            derivedColumn: N
+            heading {
+                heading: Recommended Action
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column SEVERITY (
+            derivedColumn: N
+            heading {
+                heading: Severity
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column TITLE (
+            derivedColumn: N
+            heading {
+                heading: Planning Flag
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+    )
+
+    region research-findings-report (
+        name: Research sources
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select finding_id,
+                       topic,
+                       claim_text,
+                       source_url,
+                       publisher,
+                       confidence_score,
+                       initcap(replace(review_status, '_', ' ')) as review_status
+                from fc_research_findings
+                where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by finding_id asc
+                ```
+        }
+        layout {
+            sequence: 40
+            parentRegion: @intake-intel-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column CLAIM_TEXT (
+            derivedColumn: N
+            heading {
+                heading: Verified Fact / Initiative
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column CONFIDENCE_SCORE (
+            derivedColumn: N
+            heading {
+                heading: Confidence
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column FINDING_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column PUBLISHER (
+            derivedColumn: N
+            heading {
+                heading: Source
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column REVIEW_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Review Status
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column SOURCE_URL (
+            derivedColumn: N
+            heading {
+                heading: Citation Link
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column TOPIC (
+            derivedColumn: N
+            heading {
+                heading: Research Topic
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    region tender-buttons (
+        name: Tender Actions
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region tender-form (
+        name: 1. Tender details
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region uploaded-docs-report (
+        name: Documents
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select document_id,
+                       file_name,
+                       initcap(replace(doc_type, '_', ' ')) as doc_type,
+                       version_num,
+                       uploaded_by,
+                       uploaded_at
+                from fc_tender_documents
+                where tender_id = to_number(coalesce(:P2_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by document_id desc
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @intake-intel-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DOCUMENT_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column DOC_TYPE (
+            derivedColumn: N
+            heading {
+                heading: Type
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column FILE_NAME (
+            derivedColumn: N
+            heading {
+                heading: File Name
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column UPLOADED_AT (
+            derivedColumn: N
+            heading {
+                heading: Timestamp
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column UPLOADED_BY (
+            derivedColumn: N
+            heading {
+                heading: Uploaded By
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column VERSION_NUM (
+            derivedColumn: N
+            heading {
+                heading: Version
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+    )
+
+    pageItem P2_ACTION_FINDING_ID (
+        type: selectList
+        label {
+            label: Research finding to review
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select substr(topic || ': ' || claim_text, 1, 120) || ' (' || initcap(replace(review_status, '_', ' ')) || ')' d, finding_id v
+                  from fc_research_findings
+                 where tender_id = :P2_TENDER_ID
+                 order by finding_id
+                ```
+            displayExtraValues: false
+            nullDisplayValue: - Choose a finding -
+        }
+        cascadingLov {
+            parentItems: P2_TENDER_ID
+        }
+        layout {
+            sequence: 40
+            region: @ai-research-section
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_BRIEF_FILE (
+        type: fileUpload
+        label {
+            label: Client brief or RFP
+            alignment: left
+        }
+        display {
+            displayAs: inlineDropzone
+            dropzoneTitle: Drop Brief Document (PDF, Word, DWG) Here
+            dropzoneDesc: Upload tender specifications, floorplans, or client RFP addenda
+        }
+        storage {
+            type: appTempFiles
+        }
+        layout {
+            sequence: 10
+            region: @brief-upload-section
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_BUDGET_AMOUNT (
+        type: numberField
+        label {
+            label: Client budget (SGD)
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_CLIENT_NAME (
+        type: selectList
+        label {
+            label: Client
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @client-lov
+            nullDisplayValue: -- Choose Existing Customer Enterprise --
+        }
+        layout {
+            sequence: 30
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_CUSTOMER_CHOICE (
+        type: selectList
+        label {
+            label: Client type
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @customer-choice-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 25
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        default {
+            type: static
+            staticValue: EXISTING
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_DOC_TYPE (
+        type: selectList
+        label {
+            label: Document type
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @doc-type-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 20
+            region: @brief-upload-section
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_EDIT_CONFIRMED_VAL (
+        type: textField
+        label {
+            label: Corrected value
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @gate0-verification-panel
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_EDIT_FIELD_ID (
+        type: selectList
+        label {
+            label: Requirement to check
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @intake-criteria-lov
+            displayExtraValues: false
+            nullDisplayValue: -- Choose Extracted Criterion --
+        }
+        cascadingLov {
+            parentItems: P2_TENDER_ID
+        }
+        layout {
+            sequence: 10
+            region: @gate0-verification-panel
+            slot: regionBody
+            alignment: left
+            columnSpan: 5
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_EDIT_FLAG_ID (
+        type: selectList
+        label {
+            label: Planning risk
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @planning-flags-lov
+            displayExtraValues: false
+            nullDisplayValue: -- Choose Operational Flag --
+        }
+        cascadingLov {
+            parentItems: P2_TENDER_ID
+        }
+        layout {
+            sequence: 40
+            region: @gate0-verification-panel
+            slot: regionBody
+            alignment: left
+            columnSpan: 5
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_EDIT_MITIGATION_NOTES (
+        type: textField
+        label {
+            label: How we will handle this risk
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @gate0-verification-panel
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 7
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_EDIT_REVIEW_STATUS (
+        type: selectList
+        label {
+            label: Review status
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @review-status-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 30
+            region: @gate0-verification-panel
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_NEW_CLIENT_NAME (
+        type: textField
+        label {
+            label: New client name
+            alignment: left
+        }
+        layout {
+            sequence: 35
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_NEW_MODE (
+        type: hidden
+        layout {
+            sequence: 5
+            region: @tender-form
+            slot: regionBody
+        }
+    )
+
+    pageItem P2_OFFICE (
+        type: selectList
+        label {
+            label: Office
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @office-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 40
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 3
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_RESEARCH_QUERY (
+        type: textField
+        label {
+            label: What do you want to know about the client?
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @ai-research-section
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_SAMPLE_DOC_NAME (
+        type: textField
+        label {
+            label: Or use a file already in the library
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @brief-upload-section
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_SEARCH_ENGINE (
+        type: selectList
+        label {
+            label: Research focus
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @search-engine-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 20
+            region: @ai-research-section
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_TARGET_MARGIN_PCT (
+        type: numberField
+        label {
+            label: Target margin (%)
+            alignment: left
+        }
+        layout {
+            sequence: 60
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_TEARDOWN_TIME (
+        type: textField
+        label {
+            label: Venue teardown deadline
+            alignment: left
+        }
+        layout {
+            sequence: 70
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 3
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        default {
+            type: static
+            staticValue: 23:00 SGT
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    pageItem P2_TENDER_ID (
+        type: selectList
+        label {
+            label: Open an existing tender
+            alignment: left
+        }
+        settings {
+            pageActionOnSelection: submitPage
+            executeValidations: false
+        }
+        lov {
+            type: sharedComponent
+            lov: @tender-lov
+            displayExtraValues: false
+            nullDisplayValue: -- New tender --
+        }
+        layout {
+            sequence: 10
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P2_TITLE (
+        type: textField
+        label {
+            label: Project Title
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @tender-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        readOnly {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null and fc_workflow_api.is_gate_approved(to_number(:P2_TENDER_ID), 0)
+        }
+    )
+
+    button analyze-brief (
+        buttonName: ANALYZE_BRIEF
+        label: Analyse brief
+        layout {
+            sequence: 40
+            region: @brief-upload-section
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-robot
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    button approve-citation (
+        buttonName: APPROVE_CITATION
+        label: Approve Citation
+        layout {
+            sequence: 50
+            region: @ai-research-section
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    button confirm-gate0-intake-btn (
+        buttonName: CONFIRM_GATE0_INTAKE
+        label: Confirm brief (Gate 0)
+        layout {
+            sequence: 30
+            region: @gate0-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-flag
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    button create-tender (
+        buttonName: CREATE_TENDER
+        label: Create tender
+        layout {
+            sequence: 10
+            region: @tender-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-plus-circle
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is null
+        }
+    )
+
+    button load-tender (
+        buttonName: LOAD_TENDER
+        label: Load tender
+        layout {
+            sequence: 15
+            region: @tender-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-folder-open-o
+        }
+    )
+
+    button new-tender (
+        buttonName: NEW_TENDER
+        label: New tender
+        layout {
+            sequence: 5
+            region: @tender-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-plus-circle
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    button process-addendum (
+        buttonName: PROCESS_ADDENDUM
+        label: Add addendum
+        layout {
+            sequence: 35
+            region: @tender-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Process formal tender addendum? This will mark downstream drawings SUPERSEDED and BOQ items STALE (BR-06 cascade).
+            style: warning
+        }
+    )
+
+    button reject-citation (
+        buttonName: REJECT_CITATION
+        label: Reject Citation
+        layout {
+            sequence: 60
+            region: @ai-research-section
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    button run-ai-search (
+        buttonName: RUN_AI_SEARCH
+        label: Search client info
+        layout {
+            sequence: 30
+            region: @ai-research-section
+            slot: regionBody
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-search
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    button save-criterion-btn (
+        buttonName: SAVE_FIELD_EDIT
+        label: Save correction
+        layout {
+            sequence: 10
+            region: @gate0-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check
+        }
+    )
+
+    button save-mitigation-btn (
+        buttonName: SAVE_FLAG_MITIGATION
+        label: Save mitigation
+        layout {
+            sequence: 20
+            region: @gate0-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-shield
+        }
+    )
+
+    button save-tender (
+        buttonName: SAVE_TENDER
+        label: Save details
+        layout {
+            sequence: 20
+            region: @tender-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :P2_TENDER_ID is not null
+        }
+    )
+
+    process create-new-tender (
+        name: Create New Tender
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_new_id number;
+                    l_client varchar2(100);
+                begin
+                    if :P2_CUSTOMER_CHOICE = 'NEW' then
+                        l_client := trim(:P2_NEW_CLIENT_NAME);
+                    else
+                        l_client := :P2_CLIENT_NAME;
+                    end if;
+                    if l_client is null or trim(:P2_TITLE) is null then
+                        raise_application_error(-20011, 'Enter a project title and a client before creating the tender.');
+                    end if;
+                
+                    fc_planning_api.create_tender(
+                        p_client_name    => l_client,
+                        p_project_title  => trim(:P2_TITLE),
+                        p_office         => nvl(:P2_OFFICE, 'SG'),
+                        p_budget_ceiling => nvl(to_number(:P2_BUDGET_AMOUNT), 150000),
+                        p_currency       => 'SGD',
+                        p_user_name      => :APP_USER,
+                        x_tender_id      => l_new_id
+                    );
+                    :P2_TENDER_ID := to_char(l_new_id);
+                    fc_workflow_api.set_active_project(l_new_id, :APP_USER);
+                    select tender_code || ' · ' || client_name into :FC_TENDER_LABEL from fc_tenders where tender_id = l_new_id;
+                    select project_title, client_name, office, total_price, margin_pct
+                      into :P2_TITLE, :P2_CLIENT_NAME, :P2_OFFICE, :P2_BUDGET_AMOUNT, :P2_TARGET_MARGIN_PCT
+                      from fc_tenders
+                     where tender_id = l_new_id;
+                    :P2_CUSTOMER_CHOICE := 'EXISTING';
+                    :P2_NEW_CLIENT_NAME := null;
+                    :P2_NEW_MODE := null;
+                    :P2_TEARDOWN_TIME := '23:00 SGT';
+                    apex_application.g_print_success_message := 'Tender ' || :FC_TENDER_LABEL || ' created. Upload the client brief next.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 40900759682205852
+        }
+        serverSideCondition {
+            type: request=Value
+            value: CREATE_TENDER
+        }
+    )
+
+    process init-tender-metadata (
+        name: Load Selected Tender Metadata
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P2_TENDER_ID is not null then
+                    :P2_NEW_MODE := null;
+                    fc_workflow_api.set_active_project(to_number(:P2_TENDER_ID), :APP_USER);
+                    begin
+                        select project_title, client_name, office, total_price, margin_pct
+                          into :P2_TITLE, :P2_CLIENT_NAME, :P2_OFFICE, :P2_BUDGET_AMOUNT, :P2_TARGET_MARGIN_PCT
+                          from fc_tenders
+                         where tender_id = to_number(:P2_TENDER_ID);
+                        :P2_CUSTOMER_CHOICE := 'EXISTING';
+                        :P2_NEW_CLIENT_NAME := null;
+                        begin
+                            select confirmed_value into :P2_TEARDOWN_TIME
+                              from fc_intake_fields
+                             where tender_id = to_number(:P2_TENDER_ID)
+                               and field_label = 'TEARDOWN_CURFEW'
+                             fetch first 1 rows only;
+                        exception
+                            when no_data_found then
+                                :P2_TEARDOWN_TIME := '23:00 SGT';
+                        end;
+                    exception
+                        when no_data_found then null;
+                    end;
+                elsif :P2_TENDER_ID is null and nvl(:P2_NEW_MODE, 'N') = 'Y' then
+                    :P2_CUSTOMER_CHOICE := nvl(:P2_CUSTOMER_CHOICE, 'NEW');
+                    :P2_TEARDOWN_TIME := nvl(:P2_TEARDOWN_TIME, '23:00 SGT');
+                    :FC_TENDER_LABEL := 'New tender';
+                elsif :P2_TENDER_ID is null then
+                    declare
+                        l_active_id number := fc_workflow_api.get_active_project(:APP_USER);
+                    begin
+                        if l_active_id is null then
+                            select max(tender_id) into l_active_id from fc_tenders;
+                        end if;
+                        if l_active_id is not null then
+                            :P2_TENDER_ID := to_char(l_active_id);
+                            fc_workflow_api.set_active_project(l_active_id, :APP_USER);
+                            select project_title, client_name, office, total_price, margin_pct
+                              into :P2_TITLE, :P2_CLIENT_NAME, :P2_OFFICE, :P2_BUDGET_AMOUNT, :P2_TARGET_MARGIN_PCT
+                              from fc_tenders
+                             where tender_id = l_active_id;
+                            :P2_CUSTOMER_CHOICE := 'EXISTING';
+                            :P2_NEW_CLIENT_NAME := null;
+                            begin
+                                select confirmed_value into :P2_TEARDOWN_TIME
+                                  from fc_intake_fields
+                                 where tender_id = l_active_id
+                                   and field_label = 'TEARDOWN_CURFEW'
+                                 fetch first 1 rows only;
+                            exception
+                                when no_data_found then
+                                    :P2_TEARDOWN_TIME := '23:00 SGT';
+                            end;
+                        else
+                            :P2_CUSTOMER_CHOICE := nvl(:P2_CUSTOMER_CHOICE, 'EXISTING');
+                            :P2_TEARDOWN_TIME := '23:00 SGT';
+                        end if;
+                    exception
+                        when no_data_found then null;
+                    end;
+                end if;
+                for t in (select tender_code || ' · ' || client_name as label
+                            from fc_tenders
+                           where tender_id = coalesce(to_number(:P2_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER))) loop
+                    :FC_TENDER_LABEL := t.label;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 5
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 40954968938591374
+        }
+    )
+
+    process load-tender-action (
+        name: Fetch Selected Tender
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P2_TENDER_ID is not null then
+                    fc_workflow_api.set_active_project(to_number(:P2_TENDER_ID), :APP_USER);
+                    begin
+                        select project_title, client_name, office, total_price, margin_pct
+                          into :P2_TITLE, :P2_CLIENT_NAME, :P2_OFFICE, :P2_BUDGET_AMOUNT, :P2_TARGET_MARGIN_PCT
+                          from fc_tenders
+                         where tender_id = to_number(:P2_TENDER_ID);
+                        :P2_CUSTOMER_CHOICE := 'EXISTING';
+                        :P2_NEW_CLIENT_NAME := null;
+                        begin
+                            select confirmed_value into :P2_TEARDOWN_TIME
+                              from fc_intake_fields
+                             where tender_id = to_number(:P2_TENDER_ID)
+                               and field_label = 'TEARDOWN_CURFEW'
+                             fetch first 1 rows only;
+                        exception
+                            when no_data_found then
+                                :P2_TEARDOWN_TIME := '23:00 SGT';
+                        end;
+                    exception
+                        when no_data_found then null;
+                    end;
+                end if;
+                ```
+        }
+        execution {
+            sequence: 8
+        }
+        advanced {
+            executionMappingIdentifier: 40955004037591374
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: LOAD_TENDER:P2_TENDER_ID
+        }
+    )
+
+    process proc-process-addendum (
+        name: Process Tender Addendum API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid number := nvl(to_number(:P2_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    fc_planning_api.process_tender_addendum(
+                        p_tender_id => l_tid,
+                        p_user_name => :APP_USER
+                    );
+                    apex_application.g_print_success_message := 'Tender Addendum processed successfully! Brief addendum registered, drawings marked SUPERSEDED, and downstream BOQ marked STALE (BR-06 cascade). Handover brief re-issued.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 70
+        }
+        advanced {
+            executionMappingIdentifier: 41343716944949766
+        }
+        serverSideCondition {
+            type: request=Value
+            value: PROCESS_ADDENDUM
+        }
+    )
+
+    process proc-save-field-edit (
+        name: Save Criterion Override
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P2_EDIT_FIELD_ID is not null then
+                    update fc_intake_fields
+                       set confirmed_value = nvl(:P2_EDIT_CONFIRMED_VAL, confirmed_value),
+                           review_status   = nvl(:P2_EDIT_REVIEW_STATUS, 'CONFIRMED'),
+                           reviewed_by     = :APP_USER,
+                           reviewed_at     = current_timestamp
+                     where field_id = to_number(:P2_EDIT_FIELD_ID);
+                    apex_application.g_print_success_message := 'Criterion successfully verified and updated.';
+                end if;
+                ```
+        }
+        execution {
+            sequence: 52
+        }
+        advanced {
+            executionMappingIdentifier: 40968781994173884
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_FIELD_EDIT
+        }
+    )
+
+    process proc-save-flag-mitigation (
+        name: Save Operational Flag Mitigation
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P2_EDIT_FLAG_ID is not null then
+                    update fc_planning_flags
+                       set recommended_mitigation = :P2_EDIT_MITIGATION_NOTES,
+                           status                 = 'ACKNOWLEDGED'
+                     where flag_id = to_number(:P2_EDIT_FLAG_ID);
+                    apex_application.g_print_success_message := 'Mitigation saved. The risk is marked as acknowledged.';
+                end if;
+                ```
+        }
+        execution {
+            sequence: 55
+        }
+        advanced {
+            executionMappingIdentifier: 40968897335173884
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_FLAG_MITIGATION
+        }
+    )
+
+    process review-citation (
+        name: Review AI Research Citation
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :REQUEST = 'APPROVE_CITATION' then
+                    fc_planning_api.review_finding(
+                        p_finding_id => to_number(:P2_ACTION_FINDING_ID),
+                        p_status     => 'APPROVED',
+                        p_user_name  => :APP_USER
+                    );
+                elsif :REQUEST = 'REJECT_CITATION' then
+                    fc_planning_api.review_finding(
+                        p_finding_id => to_number(:P2_ACTION_FINDING_ID),
+                        p_status     => 'REJECTED',
+                        p_user_name  => :APP_USER
+                    );
+                end if;
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 40901004833205852
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: APPROVE_CITATION:REJECT_CITATION
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process run-client-search (
+        name: Execute Supervised AI Research Search
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.run_client_research(
+                    p_tender_id     => to_number(:P2_TENDER_ID),
+                    p_query         => :P2_RESEARCH_QUERY,
+                    p_search_engine => :P2_SEARCH_ENGINE,
+                    p_user_name     => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Client research added. Approve or reject each finding before it is used in the proposal.';
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 40900920155205852
+        }
+        serverSideCondition {
+            type: request=Value
+            value: RUN_AI_SEARCH
+        }
+    )
+
+    process run-confirm-intake (
+        name: Execute Confirm Intake API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid number := nvl(to_number(:P2_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    if :P2_TEARDOWN_TIME is not null and l_tid is not null then
+                        update fc_intake_fields
+                           set confirmed_value = :P2_TEARDOWN_TIME,
+                               extracted_value = :P2_TEARDOWN_TIME
+                         where tender_id = l_tid
+                           and field_label = 'TEARDOWN_CURFEW';
+                        if sql%rowcount = 0 then
+                            insert into fc_intake_fields (tender_id, field_category, field_label, extracted_value, confirmed_value, source_doc_ref, is_missing, is_contradictory, review_status, reviewed_by)
+                            values (l_tid, 'LOGISTICS', 'TEARDOWN_CURFEW', :P2_TEARDOWN_TIME, :P2_TEARDOWN_TIME, 'Michelle Planning Review', 'N', 'N', 'CONFIRMED', :APP_USER);
+                        end if;
+                    end if;
+                
+                    fc_planning_api.confirm_intake(
+                        p_tender_id => l_tid,
+                        p_user_name => :APP_USER
+                    );
+                    apex_application.g_print_success_message := 'Gate 0 confirmed by ' || initcap(:APP_USER) || '. The brief is locked and planning can start.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 60
+        }
+        advanced {
+            executionMappingIdentifier: 40901255444205852
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: CONFIRM_INTAKE:CONFIRM_GATE0_INTAKE
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process run-ocr-analysis (
+        name: Upload and Analyse Brief
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_doc_id    number;
+                    l_msg       varchar2(4000);
+                    l_tender_id number := nvl(to_number(:P2_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    if :P2_BRIEF_FILE is not null then
+                        -- Real upload: store the file, extract its text, AI analysis for briefs and addenda.
+                        fc_planning_api.ingest_uploaded_brief(
+                            p_tender_id      => l_tender_id,
+                            p_temp_file_name => :P2_BRIEF_FILE,
+                            p_doc_type       => nvl(:P2_DOC_TYPE, 'BRIEF'),
+                            p_user_name      => :APP_USER,
+                            x_doc_id         => l_doc_id,
+                            x_message        => l_msg
+                        );
+                        apex_application.g_print_success_message := apex_escape.html(l_msg);
+                    elsif :P2_SAMPLE_DOC_NAME is not null then
+                        -- Library sample documents from the demo data set.
+                        fc_planning_api.ingest_and_parse_brief(
+                            p_tender_id => l_tender_id,
+                            p_file_name => :P2_SAMPLE_DOC_NAME,
+                            p_doc_type  => nvl(:P2_DOC_TYPE, 'BRIEF'),
+                            p_user_name => :APP_USER,
+                            x_doc_id    => l_doc_id
+                        );
+                        apex_application.g_print_success_message := 'Sample document loaded from the library.';
+                    else
+                        raise_application_error(-20001, 'Drop a brief file into the upload area first.');
+                    end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 40900890899205852
+        }
+        serverSideCondition {
+            type: request=Value
+            value: ANALYZE_BRIEF
+        }
+    )
+
+    process save-metadata (
+        name: Save Metadata & Log Intake
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P2_TENDER_ID is not null then
+                    if not fc_security_api.can_access_tender(p_tender_id => to_number(:P2_TENDER_ID), p_username => :APP_USER) then
+                        raise_application_error(-20005, 'Tender access denied');
+                    end if;
+                    declare
+                        l_client varchar2(100);
+                    begin
+                        if :P2_CUSTOMER_CHOICE = 'NEW' and :P2_NEW_CLIENT_NAME is not null then
+                            l_client := trim(:P2_NEW_CLIENT_NAME);
+                        else
+                            l_client := :P2_CLIENT_NAME;
+                        end if;
+                        update fc_tenders
+                           set project_title = nvl(:P2_TITLE, project_title),
+                               client_name = nvl(l_client, client_name),
+                               total_price = nvl(to_number(:P2_BUDGET_AMOUNT), total_price),
+                               margin_pct = nvl(to_number(:P2_TARGET_MARGIN_PCT), margin_pct)
+                         where tender_id = to_number(:P2_TENDER_ID);
+                
+                        if :P2_TEARDOWN_TIME is not null then
+                            update fc_intake_fields
+                               set confirmed_value = :P2_TEARDOWN_TIME,
+                                   extracted_value = :P2_TEARDOWN_TIME
+                             where tender_id = to_number(:P2_TENDER_ID)
+                               and field_label = 'TEARDOWN_CURFEW';
+                            if sql%rowcount = 0 then
+                                insert into fc_intake_fields (tender_id, field_category, field_label, extracted_value, confirmed_value, source_doc_ref, is_missing, is_contradictory, review_status, reviewed_by)
+                                values (to_number(:P2_TENDER_ID), 'LOGISTICS', 'TEARDOWN_CURFEW', :P2_TEARDOWN_TIME, :P2_TEARDOWN_TIME, 'Michelle Planning Review', 'N', 'N', 'CONFIRMED', :APP_USER);
+                            end if;
+                        end if;
+                    end;
+                    fc_audit_api.log_event(
+                        p_tender_id => to_number(:P2_TENDER_ID),
+                        p_user_name => :APP_USER,
+                        p_action => 'TENDER_UPDATED',
+                        p_entity => 'TENDER',
+                        p_details => :P2_TITLE
+                    );
+                end if;
+                ```
+        }
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 40901111145205852
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_TENDER
+        }
+    )
+
+    process start-new-tender (
+        name: Start New Tender
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                apex_util.clear_page_cache(2);
+                :P2_NEW_MODE := 'Y';
+                :P2_CUSTOMER_CHOICE := 'NEW';
+                ```
+        }
+        execution {
+            sequence: 1
+        }
+        advanced {
+            executionMappingIdentifier: 42021236063780412
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: :REQUEST = 'NEW_TENDER' or (:REQUEST = 'P2_TENDER_ID' and :P2_TENDER_ID is null)
+        }
+    )
+
+)
+

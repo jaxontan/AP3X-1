@@ -1,0 +1,1426 @@
+page 4 (
+    name: Design & Spatial Studio
+    alias: DESIGN-SPATIAL
+    title: Design Studio - 3D Dimensions & Spatial Feasibility
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region design-buttons (
+        name: Step 2 Design Studio Actions
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region design-handover-report (
+        name: Design brief
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select handover_id,
+                       initcap(replace(item_type, '_', ' ')) as item_type,
+                       title || case when is_assumption = 'Y' then ' (assumption: confirm)' end as title,
+                       description,
+                       priority
+                from fc_handover_items
+                where tender_id = to_number(coalesce(:P4_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                  and target_team = 'DESIGN'
+                order by case priority when 'HIGH' then 1 when 'NORMAL' then 2 else 3 end, handover_id
+                ```
+        }
+        layout {
+            sequence: 40
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Details
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column HANDOVER_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column ITEM_TYPE (
+            derivedColumn: N
+            heading {
+                heading: Type
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column PRIORITY (
+            derivedColumn: N
+            heading {
+                heading: Priority
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column TITLE (
+            derivedColumn: N
+            heading {
+                heading: Task
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+    )
+
+    region design-tabs (
+        name: Design Studio Workbench
+        type: staticContent
+        layout {
+            sequence: 35
+            slot: body
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                t-TabsRegion-mod--fillLabels
+                t-TabsRegion-mod--pill
+            ]
+        }
+    )
+
+    region drawing-packages-report (
+        name: Drawing packages
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select package_id,
+                       version_num,
+                       package_title,
+                       drawing_url,
+                       initcap(replace(approval_status, '_', ' ')) as approval_status,
+                       is_current,
+                       approved_by,
+                       approved_at
+                from fc_drawing_packages
+                where tender_id = to_number(coalesce(:P4_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by package_id desc
+                ```
+        }
+        layout {
+            sequence: 40
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column APPROVAL_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column APPROVED_AT (
+            derivedColumn: N
+            heading {
+                heading: Timestamp
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column APPROVED_BY (
+            derivedColumn: N
+            heading {
+                heading: Registered By
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column DRAWING_URL (
+            derivedColumn: N
+            heading {
+                heading: SharePoint Path
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column IS_CURRENT (
+            derivedColumn: N
+            heading {
+                heading: Active
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column PACKAGE_ID (
+            derivedColumn: N
+            heading {
+                heading: Drawing ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column PACKAGE_TITLE (
+            derivedColumn: N
+            heading {
+                heading: Drawing Package Title
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column VERSION_NUM (
+            derivedColumn: N
+            heading {
+                heading: Version
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    region gate2-pending-banner (
+        name: Gate 2 Pending Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-clock-o" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 2 DESIGN STATUS: IN REVIEW (PENDING ADI SIGN-OFF)</h2>
+                            <div class="t-Alert-body">Check the fit and clearance results and the slide drafts, then click <strong>Approve Gate 2</strong>.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 2</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 26
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: not fc_workflow_api.is_gate_approved(nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)), 2)
+        }
+    )
+
+    region gate2-status-banner (
+        name: Gate 2 Approved Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 2 DESIGN STATUS: SIGNED OFF &amp; APPROVED</h2>
+                            <div class="t-Alert-body">3D spatial dimensions and slide deck drafts confirmed. Dispatched to Operations Studio (Wei Lin).</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--success t-Badge--large">STAGE 3: OPERATIONS READY</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 25
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: fc_workflow_api.is_gate_approved(nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)), 2)
+        }
+    )
+
+    region html-ppt-browser (
+        name: Deck preview
+        type: dynamicContent
+        source {
+            plsqlFunctionBody:
+                ```plsql
+                return fc_deck_api.render_preview(
+                    p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER))
+                );
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+    )
+
+    region slide-decks-report (
+        name: Slide drafts
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select slide_id,
+                       slide_num,
+                       slide_title,
+                       initcap(replace(layout_type, '_', ' ')) as layout_type,
+                       narrative_focus,
+                       key_bullet_points,
+                       visual_placeholder_desc
+                from fc_pitch_slides
+                where tender_id = to_number(coalesce(:P4_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by slide_num asc
+                ```
+        }
+        layout {
+            sequence: 20
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 8
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column KEY_BULLET_POINTS (
+            derivedColumn: N
+            heading {
+                heading: Draft Content
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column LAYOUT_TYPE (
+            derivedColumn: N
+            heading {
+                heading: AI Layout Type
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column NARRATIVE_FOCUS (
+            derivedColumn: N
+            heading {
+                heading: Narrative Alignment
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column SLIDE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column SLIDE_NUM (
+            derivedColumn: N
+            heading {
+                heading: Slide #
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column SLIDE_TITLE (
+            derivedColumn: N
+            heading {
+                heading: Slide Title
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column VISUAL_PLACEHOLDER_DESC (
+            derivedColumn: N
+            heading {
+                heading: AI Visual Placeholder Blueprint
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+    )
+
+    region spatial-form (
+        name: Spatial check
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region structures-report (
+        name: Fit and clearance checks
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select check_id,
+                       structure_name,
+                       req_length_m,
+                       req_width_m,
+                       req_height_m,
+                       initcap(replace(feasibility_status, '_', ' ')) as feasibility_status,
+                       clearance_delta_m,
+                       assumptions_log
+                from fc_spatial_checks
+                where tender_id = to_number(coalesce(:P4_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by check_id asc
+                ```
+        }
+        layout {
+            sequence: 30
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column ASSUMPTIONS_LOG (
+            derivedColumn: N
+            heading {
+                heading: Spatial Diagnostics
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column CHECK_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column CLEARANCE_DELTA_M (
+            derivedColumn: N
+            heading {
+                heading: Clearance Buffer (m)
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column FEASIBILITY_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Collision Feasibility
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column REQ_HEIGHT_M (
+            derivedColumn: N
+            heading {
+                heading: Height (m)
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column REQ_LENGTH_M (
+            derivedColumn: N
+            heading {
+                heading: Length (m)
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column REQ_WIDTH_M (
+            derivedColumn: N
+            heading {
+                heading: Width (m)
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column STRUCTURE_NAME (
+            derivedColumn: N
+            heading {
+                heading: Structure Name
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    pageItem P4_GATE2_COMMENTS (
+        type: textarea
+        label {
+            label: Gate 2 comments
+            alignment: left
+        }
+        layout {
+            sequence: 90
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_HGT (
+        type: numberField
+        label {
+            label: Height (m)
+            alignment: left
+        }
+        layout {
+            sequence: 60
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_LEN (
+        type: numberField
+        label {
+            label: Length (m)
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_PKG_TITLE (
+        type: textField
+        label {
+            label: Drawing package name
+            alignment: left
+        }
+        layout {
+            sequence: 35
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_PKG_VER (
+        type: numberField
+        label {
+            label: Drawing version
+            alignment: left
+        }
+        layout {
+            sequence: 80
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_STRUCT_NAME (
+        type: textField
+        label {
+            label: Structure (booth, stage, arch)
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_TENDER_ID (
+        type: selectList
+        label {
+            label: Tender
+            alignment: left
+        }
+        settings {
+            pageActionOnSelection: submitPage
+            executeValidations: false
+        }
+        lov {
+            type: sharedComponent
+            lov: @tender-lov
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 10
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_VENUE_ID (
+        type: selectList
+        label {
+            label: Venue
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @venue-lov
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 20
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P4_WID (
+        type: numberField
+        label {
+            label: Width (m)
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @spatial-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button approve-gate2 (
+        buttonName: APPROVE_GATE2
+        label: Approve Gate 2
+        layout {
+            sequence: 40
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Approve Gate 2 (Design & Spatial) and confirm clearance against venue perimeter?
+            style: information
+        }
+        security {
+            authorizationScheme: @designer-role
+        }
+    )
+
+    button auto-mitigate-collision (
+        buttonName: RESOLVE_COLLISION
+        label: Fix height clash
+        layout {
+            sequence: 32
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-wrench
+        }
+        serverSideCondition {
+            type: rowsReturned
+            sqlQuery: select 1 from fc_spatial_checks where tender_id = nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)) and feasibility_status = 'FAIL'
+        }
+    )
+
+    button generate-slides (
+        buttonName: GENERATE_SLIDES
+        label: Draft slides
+        layout {
+            sequence: 10
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-file-powerpoint-o
+        }
+    )
+
+    button load-tender-p4 (
+        buttonName: LOAD_TENDER
+        label: Load tender
+        layout {
+            sequence: 5
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+    )
+
+    button process-addendum (
+        buttonName: PROCESS_ADDENDUM
+        label: Add addendum
+        layout {
+            sequence: 35
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Process formal tender addendum? This will mark downstream drawings SUPERSEDED and BOQ items STALE (BR-06 cascade).
+            style: warning
+        }
+    )
+
+    button reject-gate2 (
+        buttonName: REJECT_GATE2
+        label: Reject Gate 2
+        layout {
+            sequence: 50
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Reject Gate 2 and require dimension revisions?
+            style: warning
+        }
+        security {
+            authorizationScheme: @designer-role
+        }
+    )
+
+    button run-spatial-engine (
+        buttonName: RUN_SPATIAL_ENGINE
+        label: Run fit check
+        layout {
+            sequence: 20
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-cube
+        }
+    )
+
+    button upload-package (
+        buttonName: UPLOAD_PACKAGE
+        label: Register drawings
+        layout {
+            sequence: 30
+            region: @design-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-upload
+        }
+    )
+
+    process init-page-tender (
+        name: Initialize Page Tender Context
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P4_TENDER_ID is null then
+                    :P4_TENDER_ID := to_char(fc_workflow_api.get_active_project(:APP_USER));
+                    if :P4_TENDER_ID is not null then
+                        fc_workflow_api.set_active_project(to_number(:P4_TENDER_ID), :APP_USER);
+                    end if;
+                else
+                    fc_workflow_api.set_active_project(to_number(:P4_TENDER_ID), :APP_USER);
+                end if;
+                declare
+                    l_tid number := nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    if l_tid = 1 then
+                        :P4_VENUE_ID := '1';
+                    elsif l_tid = 4 then
+                        :P4_VENUE_ID := '4';
+                    elsif l_tid = 2 then
+                        :P4_VENUE_ID := '2';
+                    else
+                        :P4_VENUE_ID := '21';
+                    end if;
+                end;
+                for t in (select tender_code || ' · ' || client_name as label
+                            from fc_tenders
+                           where tender_id = fc_workflow_api.get_active_project(:APP_USER)) loop
+                    :FC_TENDER_LABEL := t.label;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 1
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 40957946126652339
+        }
+    )
+
+    process proc-approve-gate2 (
+        name: Execute Approve Gate 2 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_design_api.approve_gate2(
+                    p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_user_name => :APP_USER,
+                    p_comments => :P4_GATE2_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Gate 2 approved by ' || initcap(:APP_USER) || '. Handed over to Operations for costing.';
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 40909592077205872
+        }
+        serverSideCondition {
+            type: request=Value
+            value: APPROVE_GATE2
+        }
+        security {
+            authorizationScheme: @designer-role
+        }
+    )
+
+    process proc-export-deck (
+        name: Export Pitch Deck (PPTX, HTML, PDF)
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid  number := nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                    l_file blob;
+                    l_base varchar2(200);
+                    l_name varchar2(250);
+                    l_mime varchar2(100);
+                begin
+                    select regexp_replace(tender_code || '_' || client_name, '[^A-Za-z0-9-]+', '_')
+                      into l_base
+                      from fc_tenders
+                     where tender_id = l_tid;
+
+                    if :REQUEST = 'EXPORT_PPTX' then
+                        l_file := fc_deck_api.build_pptx(l_tid);
+                        l_name := l_base || '_Pitch_Deck.pptx';
+                        l_mime := 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+                    elsif :REQUEST = 'EXPORT_HTML' then
+                        l_file := fc_deck_api.build_html(l_tid);
+                        l_name := l_base || '_Presentation_Deck.html';
+                        l_mime := 'text/html; charset=utf-8';
+                    elsif :REQUEST = 'EXPORT_PDF' then
+                        l_file := fc_deck_api.build_pdf(l_tid);
+                        l_name := l_base || '_Pitch_Deck.pdf';
+                        l_mime := 'application/pdf';
+                    end if;
+
+                    if l_file is not null then
+                        sys.htp.init;
+                        sys.owa_util.mime_header(l_mime, false);
+                        sys.htp.p('Content-Length: ' || dbms_lob.getlength(l_file));
+                        sys.htp.p('Content-Disposition: attachment; filename="' || l_name || '"');
+                        sys.owa_util.http_header_close;
+                        sys.wpg_docload.download_file(l_file);
+                        apex_application.stop_apex_engine;
+                    end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 2
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 41078530133603064
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: EXPORT_PPTX:EXPORT_HTML:EXPORT_PDF
+        }
+    )
+
+    process proc-generate-slides (
+        name: Generate AI Slide Drafts API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_msg varchar2(4000);
+                begin
+                    fc_deck_api.draft_slides(
+                        p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                        p_user_name => :APP_USER,
+                        x_message   => l_msg
+                    );
+                    apex_application.g_print_success_message := apex_escape.html(l_msg);
+                end;
+                ```
+        }
+        execution {
+            sequence: 5
+        }
+        advanced {
+            executionMappingIdentifier: 40909119087205872
+        }
+        serverSideCondition {
+            type: request=Value
+            value: GENERATE_SLIDES
+        }
+    )
+
+    process proc-load-tender (
+        name: Execute Load Selected Tender
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P4_TENDER_ID is not null then
+                    fc_workflow_api.set_active_project(to_number(:P4_TENDER_ID), :APP_USER);
+                    declare
+                        l_tid number := to_number(:P4_TENDER_ID);
+                    begin
+                        if l_tid = 1 then :P4_VENUE_ID := '1';
+                        elsif l_tid = 4 then :P4_VENUE_ID := '4';
+                        elsif l_tid = 2 then :P4_VENUE_ID := '2';
+                        else :P4_VENUE_ID := '21';
+                        end if;
+                    end;
+                    apex_application.g_print_success_message := 'Active tender loaded: #' || :P4_TENDER_ID;
+                end if;
+                ```
+        }
+        execution {
+            sequence: 2
+        }
+        advanced {
+            executionMappingIdentifier: 41247314005592134
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: LOAD_TENDER:P4_TENDER_ID
+        }
+    )
+
+    process proc-process-addendum (
+        name: Process Tender Addendum API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid number := nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    fc_planning_api.process_tender_addendum(
+                        p_tender_id => l_tid,
+                        p_user_name => :APP_USER
+                    );
+                    apex_application.g_print_success_message := 'Tender Addendum processed successfully! Brief addendum registered, drawings marked SUPERSEDED, and downstream BOQ marked STALE (BR-06 cascade). Handover brief re-issued.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 28
+        }
+        advanced {
+            executionMappingIdentifier: 41345336256949808
+        }
+        serverSideCondition {
+            type: request=Value
+            value: PROCESS_ADDENDUM
+        }
+    )
+
+    process proc-reject-gate2 (
+        name: Execute Reject Gate 2 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_workflow_api.reject_gate(
+                    p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_gate_number => 2,
+                    p_user_name => :APP_USER,
+                    p_comments => :P4_GATE2_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Gate 2 Design Rejected. Returned for revisions.';
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 40909674122205872
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REJECT_GATE2
+        }
+        security {
+            authorizationScheme: @designer-role
+        }
+    )
+
+    process proc-resolve-collision (
+        name: Auto-Mitigate Collision API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid   number := nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                    l_names varchar2(2000);
+                begin
+                    -- Trim each structure that is too tall to 0.5 m under its venue's clear height.
+                    -- Footprint failures need a redesign and are left as they are.
+                    for r in (select s.structure_name, v.clear_height_m - 0.5 as new_h
+                                from fc_spatial_checks s
+                                join fc_venue_profiles v on v.venue_id = s.venue_id
+                               where s.tender_id = l_tid
+                                 and s.feasibility_status = 'FAIL'
+                                 and s.req_height_m > v.clear_height_m) loop
+                        fc_design_api.resolve_spatial_collision(
+                            p_tender_id      => l_tid,
+                            p_structure_name => r.structure_name,
+                            p_new_height     => r.new_h,
+                            p_user_name      => :APP_USER
+                        );
+                        l_names := l_names || case when l_names is not null then '; ' end || r.structure_name || ' to ' || to_char(r.new_h, 'FM990.0') || ' m';
+                    end loop;
+                    apex_application.g_print_success_message := case when l_names is null
+                        then 'No height clashes to fix. Any remaining failures need a smaller footprint.'
+                        else 'Height trimmed: ' || apex_escape.html(l_names) || '. Re-check the design with the client before Gate 2.' end;
+                end;
+                ```
+        }
+        execution {
+            sequence: 25
+        }
+        advanced {
+            executionMappingIdentifier: 41345236086949808
+        }
+        serverSideCondition {
+            type: request=Value
+            value: RESOLVE_COLLISION
+        }
+    )
+
+    process proc-spatial-check (
+        name: Execute Spatial Check API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_design_api.run_spatial_check(
+                    p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_venue_id => nvl(to_number(:P4_VENUE_ID), 21),
+                    p_structure_name => nvl(:P4_STRUCT_NAME, 'Main Exhibition Pavilion'),
+                    p_len => nvl(to_number(:P4_LEN), 12.0),
+                    p_wid => nvl(to_number(:P4_WID), 8.0),
+                    p_hgt => nvl(to_number(:P4_HGT), 3.8),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Spatial feasibility check completed.';
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 40909314299205872
+        }
+        serverSideCondition {
+            type: request=Value
+            value: CHECK_SPATIAL
+        }
+    )
+
+    process proc-spatial-engine (
+        name: Execute 3D Spatial Collision Engine
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid    number := nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                    l_status varchar2(20);
+                    l_log    varchar2(2000);
+                begin
+                    if :P4_HGT is not null and :P4_VENUE_ID is not null then
+                        -- Check the structure the designer entered against the chosen venue.
+                        fc_design_api.run_spatial_check(
+                            p_tender_id      => l_tid,
+                            p_venue_id       => to_number(:P4_VENUE_ID),
+                            p_structure_name => nvl(:P4_STRUCT_NAME, 'Main structure'),
+                            p_len            => nvl(to_number(:P4_LEN), 0),
+                            p_wid            => nvl(to_number(:P4_WID), 0),
+                            p_hgt            => to_number(:P4_HGT),
+                            p_user_name      => :APP_USER
+                        );
+                        select feasibility_status, assumptions_log into l_status, l_log
+                          from fc_spatial_checks
+                         where tender_id = l_tid
+                         order by check_id desc
+                         fetch first 1 row only;
+                        apex_application.g_print_success_message := 'Fit check ' || l_status || ' for ' || apex_escape.html(nvl(:P4_STRUCT_NAME, 'the structure')) || '. ' || apex_escape.html(l_log)
+                            || case when l_status = 'FAIL' then ' Gate 2 stays blocked until this is fixed.' end;
+                    else
+                        fc_design_api.generate_3d_specs(
+                            p_tender_id => l_tid,
+                            p_user_name => :APP_USER,
+                            p_venue_id  => to_number(:P4_VENUE_ID)
+                        );
+                        apex_application.g_print_success_message := 'Standard structures checked against the venue. Enter a structure size above to check your own design.';
+                    end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 8
+        }
+        advanced {
+            executionMappingIdentifier: 40909230294205872
+        }
+        serverSideCondition {
+            type: request=Value
+            value: RUN_SPATIAL_ENGINE
+        }
+    )
+
+    process proc-upload-package (
+        name: Execute Upload Drawing Package API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_pkg_id number;
+                begin
+                    fc_design_api.upload_drawing_package(
+                        p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                        p_title => nvl(:P4_PKG_TITLE, 'NYP_InnovSphere_Stage_and_Pods_3D.dwg'),
+                        p_version => nvl(to_number(:P4_PKG_VER), 1.0),
+                        p_user_name => :APP_USER,
+                        x_package_id => l_pkg_id
+                    );
+                    apex_application.g_print_success_message := 'Drawing Package registered! Drawing ID: ' || l_pkg_id || ' (' || nvl(:P4_PKG_TITLE, 'NYP_InnovSphere_Stage_and_Pods_3D.dwg') || ', v' || nvl(:P4_PKG_VER, '1.0') || ' ACTIVE) in /03_3D_Sketches/. Downstream BOQ items marked STALE (BR-06 cascade).';
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 40909419223205872
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: UPLOAD_PACKAGE:REGISTER_PACKAGE:REGISTER_DRAWING:P4_PKG_TITLE
+        }
+    )
+
+)
+

@@ -1,0 +1,626 @@
+page 8 (
+    name: System Administration & Security
+    alias: ADMINISTRATION
+    title: System Administration - User Roles & Audit Trail
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        authorizationScheme: @auditor-role
+        formAutoComplete: false
+    }
+
+    region admin-buttons (
+        name: Security Actions
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    region admin-controller (
+        name: Roles and delegation
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    region ai-buttons (
+        name: AI Gateway Actions
+        type: staticContent
+        layout {
+            sequence: 38
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    region ai-gateway (
+        name: AI settings
+        type: staticContent
+        layout {
+            sequence: 35
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    region audit-report (
+        name: Audit trail
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select log_id,
+                       tender_id,
+                       user_name,
+                       action,
+                       entity_name,
+                       details,
+                       created_at
+                from fc_audit_log
+                order by log_id desc
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 25
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column ACTION (
+            derivedColumn: N
+            heading {
+                heading: Action
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column CREATED_AT (
+            derivedColumn: N
+            heading {
+                heading: Timestamp
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column DETAILS (
+            derivedColumn: N
+            heading {
+                heading: Details
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column ENTITY_NAME (
+            derivedColumn: N
+            heading {
+                heading: Entity
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column LOG_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column USER_NAME (
+            derivedColumn: N
+            heading {
+                heading: User
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    pageItem P8_DELEGATE_USER (
+        type: textField
+        label {
+            label: Delegate to (user)
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @admin-controller
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_ENDPOINT_URL (
+        type: textField
+        label {
+            label: LLM endpoint (OpenAI-compatible chat completions URL)
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @ai-gateway
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_INPUT_COST (
+        type: numberField
+        label {
+            label: Input price per million tokens (USD)
+            alignment: left
+        }
+        layout {
+            sequence: 40
+            region: @ai-gateway
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_OPENROUTER_KEY (
+        type: password
+        label {
+            label: LLM API key (leave blank to keep the current key)
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @ai-gateway
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_OPENROUTER_MODEL (
+        type: textField
+        label {
+            label: LLM model name
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @ai-gateway
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_OUTPUT_COST (
+        type: numberField
+        label {
+            label: Output price per million tokens (USD)
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @ai-gateway
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_ROLE (
+        type: selectList
+        label {
+            label: Role
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @user-roles
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 20
+            region: @admin-controller
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_TENDER_ID (
+        type: selectList
+        label {
+            label: Tender to delegate
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @tender-lov
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 30
+            region: @admin-controller
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P8_USERNAME (
+        type: textField
+        label {
+            label: User
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @admin-controller
+            slot: regionBody
+            alignment: left
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button assign-role (
+        buttonName: ASSIGN_ROLE
+        label: Assign role
+        layout {
+            sequence: 10
+            region: @admin-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-shield
+        }
+    )
+
+    button save-ai-config (
+        buttonName: SAVE_AI_CONFIG
+        label: Save AI settings
+        layout {
+            sequence: 20
+            region: @ai-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-save
+        }
+    )
+
+    button set-delegate (
+        buttonName: SET_DELEGATE
+        label: Save delegation
+        layout {
+            sequence: 20
+            region: @admin-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-user
+        }
+    )
+
+    button test-ai-connection (
+        buttonName: TEST_AI_CONNECTION
+        label: Test AI connection
+        layout {
+            sequence: 10
+            region: @ai-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-plug
+        }
+    )
+
+    process load-ai-settings (
+        name: Load AI Settings
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                for s in (select model_name, endpoint_url, input_cost_per_mtok, output_cost_per_mtok
+                            from fc_ai_settings where setting_id = 1) loop
+                    :P8_OPENROUTER_MODEL := s.model_name;
+                    :P8_ENDPOINT_URL     := s.endpoint_url;
+                    :P8_INPUT_COST       := s.input_cost_per_mtok;
+                    :P8_OUTPUT_COST      := s.output_cost_per_mtok;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 5
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 42022973304780495
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    process proc-assign-role (
+        name: Execute Assign Role API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_user varchar2(100) := upper(trim(:P8_USERNAME));
+                    l_cnt  number;
+                begin
+                    select count(*) into l_cnt from fc_users where username = l_user;
+                    if l_cnt = 0 or :P8_ROLE is null then
+                        raise_application_error(-20051, 'Enter an existing user name and choose a role.');
+                    end if;
+                    fc_security_api.assign_role(
+                        p_username => l_user,
+                        p_role => :P8_ROLE
+                    );
+                    apex_application.g_print_success_message := 'Role ' || initcap(replace(:P8_ROLE, '_', ' ')) || ' given to ' || l_user || '.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 40923520711205887
+        }
+        serverSideCondition {
+            type: request=Value
+            value: ASSIGN_ROLE
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    process proc-save-ai-config (
+        name: Save AI Settings
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_ai_agent_api.save_config(
+                    p_api_key      => :P8_OPENROUTER_KEY,
+                    p_model_name   => :P8_OPENROUTER_MODEL,
+                    p_endpoint_url => :P8_ENDPOINT_URL,
+                    p_user_name    => :APP_USER
+                );
+                update fc_ai_settings
+                   set input_cost_per_mtok  = nvl(to_number(:P8_INPUT_COST), 0),
+                       output_cost_per_mtok = nvl(to_number(:P8_OUTPUT_COST), 0)
+                 where setting_id = 1;
+                :P8_OPENROUTER_KEY := null;
+                apex_application.g_print_success_message := 'AI settings saved.';
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 40950077332324294
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SAVE_AI_CONFIG
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    process proc-set-delegate (
+        name: Execute Set Delegate API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_user varchar2(100) := upper(trim(:P8_DELEGATE_USER));
+                    l_cnt  number;
+                begin
+                    select count(*) into l_cnt from fc_users where username = l_user;
+                    if l_cnt = 0 or :P8_TENDER_ID is null then
+                        raise_application_error(-20052, 'Choose a tender and enter an existing user name to delegate to.');
+                    end if;
+                    fc_security_api.set_delegate(
+                        p_tender_id => to_number(:P8_TENDER_ID),
+                        p_delegate_user => l_user
+                    );
+                    apex_application.g_print_success_message := 'Tender delegated to ' || l_user || '.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 40923611314205887
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SET_DELEGATE
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+    process proc-test-ai-connection (
+        name: Test AI Connection
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                DECLARE
+                    l_res VARCHAR2(400);
+                BEGIN
+                    l_res := fc_ai_agent_api.test_connection;
+                    apex_application.g_print_success_message := l_res;
+                END;
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 40950164839324294
+        }
+        serverSideCondition {
+            type: request=Value
+            value: TEST_AI_CONNECTION
+        }
+        security {
+            authorizationScheme: @admin-role
+        }
+    )
+
+)
+

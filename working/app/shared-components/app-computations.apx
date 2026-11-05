@@ -1,0 +1,17 @@
+appComputation fc-tender-label (
+    itemName: FC_TENDER_LABEL
+    execution {
+        sequence: 10
+        point: beforeHeader
+    }
+    computation {
+        type: sqlQuerySingleValue
+        sqlQuery:
+            ```sql
+            select tender_code || ' · ' || client_name
+              from fc_tenders
+             where tender_id = fc_workflow_api.get_active_project(:APP_USER)
+            ```
+    }
+)
+

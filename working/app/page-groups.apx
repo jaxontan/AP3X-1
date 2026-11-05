@@ -1,0 +1,16 @@
+pageGroup administration (
+    name: Administration
+)
+
+pageGroup pipeline (
+    name: Pipeline & Proposals
+)
+
+pageGroup repositories (
+    name: Repositories
+)
+
+pageGroup studios (
+    name: Department Studios
+)
+

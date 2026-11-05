@@ -1,0 +1,598 @@
+page 9 (
+    name: Executive Financials & Commercial Pipeline
+    alias: FINANCIAL-ANALYTICS
+    title: Executive Financials & Commercial Pipeline Command
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region actions-bar (
+        name: Financial Actions
+        type: staticContent
+        layout {
+            sequence: 15
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region ai-usage (
+        name: AI usage and cost per tender
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select nvl(t.tender_code, 'Not linked') as tender_code,
+                       nvl(t.client_name, '-') as client_name,
+                       count(*) as ai_calls,
+                       count(case when c.outcome <> 'OK' then 1 end) as failed_calls,
+                       to_char(nvl(sum(c.prompt_tokens), 0), 'FM999G999G990') as tokens_in,
+                       to_char(nvl(sum(c.completion_tokens), 0), 'FM999G999G990') as tokens_out,
+                       nvl(max(c.cost_currency), 'USD') || ' ' || to_char(nvl(sum(c.cost_amount), 0), 'FM999G990D0000') as ai_cost,
+                       to_char(round(avg(c.latency_ms) / 1000, 1), 'FM9990D0') as avg_seconds,
+                       to_char(max(c.created_at), 'DD Mon HH24:MI') as last_call
+                  from fc_ai_calls c
+                  left join fc_tenders t on t.tender_id = c.tender_id
+                 group by t.tender_code, t.client_name
+                 order by max(c.created_at) desc
+                ```
+        }
+        layout {
+            sequence: 50
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column AI_CALLS (
+            derivedColumn: N
+            heading {
+                heading: AI calls
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column AI_COST (
+            derivedColumn: N
+            heading {
+                heading: AI cost
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column AVG_SECONDS (
+            derivedColumn: N
+            heading {
+                heading: Avg response (s)
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column CLIENT_NAME (
+            derivedColumn: N
+            heading {
+                heading: Client
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column FAILED_CALLS (
+            derivedColumn: N
+            heading {
+                heading: Failed
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column LAST_CALL (
+            derivedColumn: N
+            heading {
+                heading: Last used
+            }
+            layout {
+                sequence: 9
+            }
+        )
+
+        column TENDER_CODE (
+            derivedColumn: N
+            heading {
+                heading: Tender
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column TOKENS_IN (
+            derivedColumn: N
+            heading {
+                heading: Tokens in
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column TOKENS_OUT (
+            derivedColumn: N
+            heading {
+                heading: Tokens out
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+    )
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region kpi-summary (
+        name: Pipeline summary
+        type: dynamicContent
+        source {
+            plsqlFunctionBody:
+                ```plsql
+                declare
+                    l_html clob;
+                    function tile(p_label varchar2, p_value varchar2, p_sub varchar2, p_accent boolean default false) return varchar2 is
+                    begin
+                        return '<div class="fc-kpi-card"><div class="fc-kpi-label">' || apex_escape.html(p_label) || '</div>'
+                            || '<div class="fc-kpi-value' || case when p_accent then ' fc-kpi-accent' end || '">' || apex_escape.html(p_value) || '</div>'
+                            || '<div class="fc-kpi-subtext">' || apex_escape.html(p_sub) || '</div></div>';
+                    end;
+                    function amt(p_cur varchar2, p_val number) return varchar2 is
+                    begin
+                        return p_cur || ' ' || to_char(nvl(p_val, 0), 'FM999G999G999G990');
+                    end;
+                begin
+                    for k in (
+                        select count(case when status not in ('RELEASED', 'ARCHIVED') then 1 end) as active_cnt,
+                               count(case when status not in ('RELEASED', 'ARCHIVED') and office = 'SG' then 1 end) as active_sg,
+                               count(case when status not in ('RELEASED', 'ARCHIVED') and office = 'JKT' then 1 end) as active_jkt,
+                               sum(case when status not in ('RELEASED', 'ARCHIVED') and primary_currency = 'SGD' then total_price end) as pipe_sgd,
+                               sum(case when status not in ('RELEASED', 'ARCHIVED') and primary_currency = 'IDR' then total_price end) as pipe_idr,
+                               count(case when deal_progression = 'DEAL_CLOSED' then 1 end) as won_cnt,
+                               sum(case when deal_progression = 'DEAL_CLOSED' and primary_currency = 'SGD' then deal_value end) as won_sgd,
+                               count(case when deal_progression = 'DEAL_CLOSED' or status = 'RELEASED' then 1 end) as decided_cnt,
+                               round(avg(case when status not in ('RELEASED', 'ARCHIVED') then margin_pct end), 1) as avg_margin,
+                               count(case when status = 'RELEASED' then 1 end) as released_cnt
+                          from fc_tenders
+                    ) loop
+                        l_html := '<div class="fc-kpi-grid">'
+                            || tile('Active tenders', to_char(k.active_cnt), k.active_sg || ' Singapore · ' || k.active_jkt || ' Jakarta')
+                            || tile('Pipeline value (SGD)', amt('SGD', k.pipe_sgd),
+                                    case when k.pipe_idr > 0 then 'Plus ' || amt('IDR', k.pipe_idr) || ' in Jakarta tenders' else 'Client price of active SGD tenders' end)
+                            || tile('Won', amt('SGD', k.won_sgd), k.won_cnt || ' won of ' || k.decided_cnt || ' proposals submitted', true)
+                            || tile('Average target margin', nvl(to_char(k.avg_margin, 'FM990.0') || '%', '-'), 'Across active tenders');
+                    end loop;
+                    for d in (
+                        select tender_code, client_name, submission_deadline
+                          from fc_tenders
+                         where status not in ('RELEASED', 'ARCHIVED')
+                           and submission_deadline >= trunc(sysdate)
+                         order by submission_deadline
+                         fetch first 1 row only
+                    ) loop
+                        l_html := l_html || tile('Next submission', to_char(d.submission_deadline, 'DD Mon'),
+                                    d.tender_code || ' · ' || d.client_name || ' · ' || (trunc(d.submission_deadline) - trunc(sysdate)) || ' days left');
+                    end loop;
+                    for g in (
+                        select count(*) as total_cnt,
+                               count(case when upper(action) like 'REJECT%' then 1 end) as rejected_cnt
+                          from fc_workflow_gates
+                    ) loop
+                        l_html := l_html || tile('Human gate decisions', to_char(g.total_cnt), g.rejected_cnt || ' sent back for changes');
+                    end loop;
+                    for a in (
+                        select count(distinct tender_id) as tenders,
+                               count(*) as calls,
+                               nvl(sum(cost_amount), 0) as cost,
+                               nvl(max(cost_currency), 'USD') as cur,
+                               round(avg(latency_ms) / 1000, 1) as avg_s
+                          from fc_ai_calls
+                         where tender_id is not null
+                    ) loop
+                        l_html := l_html || tile('AI cost per pitch',
+                                    case when a.tenders > 0 then a.cur || ' ' || to_char(a.cost / a.tenders, 'FM999G990D00') else '-' end,
+                                    a.calls || ' AI calls across ' || a.tenders || ' tenders · avg ' || nvl(to_char(a.avg_s, 'FM990D0'), '-') || ' s per call');
+                    end loop;
+                    return l_html || '</div>';
+                end;
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+            columnSpan: 12
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--removeHeader js-removeLandmark
+                t-Region--noBorder
+                t-Region--scrollBody
+            ]
+        }
+    )
+
+    region pipeline-table (
+        name: Tender ledger
+        type: interactiveReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select tender_id,
+                       tender_code,
+                       client_name,
+                       project_title,
+                       office,
+                       initcap(replace(current_stage, '_', ' ')) as current_stage,
+                       initcap(replace(status, '_', ' ')) as status,
+                       to_char(submission_deadline, 'DD Mon YYYY') as submission_deadline,
+                       initcap(replace(deal_progression, '_', ' ')) as deal_progression,
+                       nvl2(deal_value, primary_currency || ' ' || to_char(deal_value, 'FM999G999G999G990'), '-') as deal_value,
+                       nvl2(total_cost, primary_currency || ' ' || to_char(total_cost, 'FM999G999G999G990'), '-') as total_cost,
+                       nvl2(total_price, primary_currency || ' ' || to_char(total_price, 'FM999G999G999G990'), '-') as total_price,
+                       nvl2(margin_pct, to_char(margin_pct, 'FM990.0') || '%', '-') as margin_pct
+                  from fc_tenders
+                 order by submission_deadline asc
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/interactive-report
+            templateOptions: #DEFAULT#
+        }
+        pagination {
+            type: rowRangesXToY
+        }
+        messages {
+            whenNoDataFound: No tenders found.
+            whenMoreDataFound: The maximum row count for this report is #MAX_ROW_COUNT# rows. Please apply a filter to reduce the number of records in your query.
+        }
+
+        column TENDER_ID (
+            type: hidden
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+            source {
+                dataType: NUMBER
+            }
+        )
+
+        column TENDER_CODE (
+            type: plainText
+            heading {
+                heading: Tender Code
+            }
+            layout {
+                sequence: 2
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column CLIENT_NAME (
+            type: plainText
+            heading {
+                heading: Client
+            }
+            layout {
+                sequence: 3
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column PROJECT_TITLE (
+            type: plainText
+            heading {
+                heading: Project Title
+            }
+            layout {
+                sequence: 4
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column OFFICE (
+            type: plainText
+            heading {
+                heading: Office
+            }
+            layout {
+                sequence: 5
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column CURRENT_STAGE (
+            type: plainText
+            heading {
+                heading: Stage
+            }
+            layout {
+                sequence: 6
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column STATUS (
+            type: plainText
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 7
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column SUBMISSION_DEADLINE (
+            type: plainText
+            heading {
+                heading: Deadline
+            }
+            layout {
+                sequence: 8
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column DEAL_PROGRESSION (
+            type: plainText
+            heading {
+                heading: Progress
+            }
+            layout {
+                sequence: 9
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column DEAL_VALUE (
+            type: plainText
+            heading {
+                heading: Contract Value
+                alignment: end
+            }
+            layout {
+                sequence: 10
+                columnAlignment: end
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column TOTAL_COST (
+            type: plainText
+            heading {
+                heading: Direct Cost
+                alignment: end
+            }
+            layout {
+                sequence: 11
+                columnAlignment: end
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column TOTAL_PRICE (
+            type: plainText
+            heading {
+                heading: Client Price
+                alignment: end
+            }
+            layout {
+                sequence: 12
+                columnAlignment: end
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        column MARGIN_PCT (
+            type: plainText
+            heading {
+                heading: Margin
+                alignment: end
+            }
+            layout {
+                sequence: 13
+                columnAlignment: end
+            }
+            source {
+                dataType: STRING
+            }
+        )
+
+        savedReport default (
+            visibility: primaryDefault
+            view {
+                rowsPerPage: 25
+            }
+
+            displayColumn TENDER_CODE (
+                sequence: 1
+            )
+
+            displayColumn CLIENT_NAME (
+                sequence: 2
+            )
+
+            displayColumn PROJECT_TITLE (
+                sequence: 3
+            )
+
+            displayColumn OFFICE (
+                sequence: 4
+            )
+
+            displayColumn CURRENT_STAGE (
+                sequence: 5
+            )
+
+            displayColumn STATUS (
+                sequence: 6
+            )
+
+            displayColumn SUBMISSION_DEADLINE (
+                sequence: 7
+            )
+
+            displayColumn DEAL_PROGRESSION (
+                sequence: 8
+            )
+
+            displayColumn DEAL_VALUE (
+                sequence: 9
+            )
+
+            displayColumn TOTAL_COST (
+                sequence: 10
+            )
+
+            displayColumn TOTAL_PRICE (
+                sequence: 11
+            )
+
+            displayColumn MARGIN_PCT (
+                sequence: 12
+            )
+        )
+
+    )
+
+    button new-tender (
+        buttonName: NEW_TENDER
+        label: Create New Tender
+        layout {
+            sequence: 10
+            region: @actions-bar
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-plus
+        }
+        behavior {
+            action: redirectThisApp
+            target: {
+                page: 2
+            }
+        }
+    )
+
+    button refresh-financials (
+        buttonName: REFRESH_FINANCIALS
+        label: Refresh Financials
+        layout {
+            sequence: 20
+            region: @actions-bar
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+    )
+
+)
+

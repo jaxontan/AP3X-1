@@ -1,0 +1,1140 @@
+page 3 (
+    name: Planning Studio & Gate 1
+    alias: PLANNING-STUDIO
+    title: Planning Studio - Creative Ideation & Gate 1
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+        warnOnUnsavedChanges: false
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region ai-research-section (
+        name: Client research
+        type: staticContent
+        layout {
+            sequence: 25
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region citations-report (
+        name: Research sources
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select finding_id,
+                       topic,
+                       claim_text,
+                       source_url,
+                       publisher,
+                       confidence_score,
+                       initcap(replace(review_status, '_', ' ')) as review_status
+                from fc_research_findings
+                where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by finding_id asc
+                ```
+        }
+        layout {
+            sequence: 15
+            parentRegion: @planning-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column CLAIM_TEXT (
+            derivedColumn: N
+            heading {
+                heading: Corporate Strategic Mandate / Claim
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column CONFIDENCE_SCORE (
+            derivedColumn: N
+            heading {
+                heading: Confidence (%)
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column FINDING_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column PUBLISHER (
+            derivedColumn: N
+            heading {
+                heading: Publisher / Engine
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column REVIEW_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column SOURCE_URL (
+            derivedColumn: N
+            heading {
+                heading: Citation Source URL
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column TOPIC (
+            derivedColumn: N
+            heading {
+                heading: Topic
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    region concepts-report (
+        name: Concept options
+        type: cards
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select concept_id,
+                       option_code,
+                       concept_title,
+                       image_url,
+                       image_prompt,
+                       narrative,
+                       brief_fit,
+                       spatial_notes,
+                       event_flow,
+                       fringe_activities,
+                       is_selected,
+                       case when is_selected = 'Y' then 'Selected concept' else 'Option ' || option_code end as selection_label,
+                       case when generated_by = 'AI' then 'AI draft' else 'Template' end as source_label
+                from fc_concept_options
+                where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by option_code asc
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @planning-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+        componentAppearance {
+            gridColumns: 3
+            cssClasses: fc-concept-cards
+        }
+        card {
+            cssClasses: [
+                fc-concept-card
+                fc-concept-card--&IS_SELECTED.
+            ]
+            primaryKeyColumn1: CONCEPT_ID
+        }
+        title {
+            column: CONCEPT_TITLE
+        }
+        subtitle {
+            advancedFormatting: true
+            htmlExpression: <span class="fc-concept-tag fc-concept-tag--&IS_SELECTED.">&SELECTION_LABEL.</span> <span class="fc-concept-source">&SOURCE_LABEL.</span>
+        }
+        body {
+            advancedFormatting: true
+            htmlExpression: <p class="fc-concept-text">&NARRATIVE.</p><p class="fc-concept-label">Why it fits the brief</p><p class="fc-concept-text">&BRIEF_FIT.</p><p class="fc-concept-label">Space and clearance</p><p class="fc-concept-text">&SPATIAL_NOTES.</p>
+        }
+        secondaryBody {
+            advancedFormatting: true
+            htmlExpression: <p class="fc-concept-label">Run of show</p><p class="fc-concept-text fc-concept-pre">&EVENT_FLOW.</p><p class="fc-concept-label">Fringe activities</p><p class="fc-concept-text fc-concept-pre">&FRINGE_ACTIVITIES.</p>{if IMAGE_PROMPT/}<p class="fc-concept-label">Visual brief for the design team</p><p class="fc-concept-text fc-concept-visual">&IMAGE_PROMPT.</p>{endif/}
+        }
+        media {
+            source: urlColumn
+            urlColumn: IMAGE_URL
+            position: first
+            appearance: widescreen
+            sizing: cover
+            imageDescription: Scene visual for &CONCEPT_TITLE.
+        }
+    )
+
+    region early-warning-flags-report (
+        name: Venue and safety flags
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select flag_id,
+                       initcap(replace(flag_category, '_', ' ')) as flag_category,
+                       initcap(replace(severity, '_', ' ')) as severity,
+                       case
+                         when severity = 'CRITICAL' then '<span class="t-Badge t-Badge--danger t-Badge--large"><span class="fa fa-ban"></span> CRITICAL</span>'
+                         when severity = 'WARNING' then '<span class="t-Badge t-Badge--warning t-Badge--large"><span class="fa fa-exclamation-triangle"></span> WARNING</span>'
+                         else '<span class="t-Badge t-Badge--info t-Badge--large"><span class="fa fa-info-circle"></span> ' || severity || '</span>'
+                       end as severity_badge,
+                       title,
+                       description,
+                       recommended_mitigation,
+                       initcap(replace(status, '_', ' ')) as status
+                from fc_planning_flags
+                where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by case fc_planning_flags.severity when 'CRITICAL' then 1 when 'WARNING' then 2 else 3 end, flag_id asc
+                ```
+        }
+        layout {
+            sequence: 12
+            parentRegion: @planning-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Statutory / Venue Impact
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column FLAG_CATEGORY (
+            derivedColumn: N
+            heading {
+                heading: Category
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column FLAG_ID (
+            derivedColumn: N
+            heading {
+                heading: Flag ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column RECOMMENDED_MITIGATION (
+            derivedColumn: N
+            heading {
+                heading: Recommended Engineering Mitigation
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column SEVERITY_BADGE (
+            derivedColumn: N
+            heading {
+                heading: Severity
+            }
+            layout {
+                sequence: 3
+            }
+            security {
+                escapeSpecialChars: false
+            }
+        )
+
+        column STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column TITLE (
+            derivedColumn: N
+            heading {
+                heading: Early Warning Constraint
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+    )
+
+    region gate1-pending-banner (
+        name: Gate 1 Pending Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-clock-o" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 1 PLANNING STATUS: IN REVIEW (PENDING MICHELLE SIGN-OFF)</h2>
+                            <div class="t-Alert-body">Select a concept, check the team handover tasks, then click <strong>Approve Gate 1 and hand over</strong>.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 1</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 33
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: not fc_workflow_api.is_gate_approved(nvl(to_number(:P3_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)), 1)
+        }
+    )
+
+    region gate1-status-banner (
+        name: Gate 1 Approval Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 1 PLANNING STATUS: SIGNED OFF &amp; APPROVED</h2>
+                            <div class="t-Alert-body">Signed off by Michelle (Planning Lead). Handover packages dispatched to Design Studio (Adi) &amp; Operations (Wei Lin).</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--success t-Badge--large">STAGE 2: DESIGN READY</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 32
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: fc_workflow_api.is_gate_approved(nvl(to_number(:P3_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)), 1)
+        }
+    )
+
+    region handover-report (
+        name: Team handover tasks
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select handover_id,
+                       target_team,
+                       initcap(replace(item_type, '_', ' ')) as item_type,
+                       title || case when is_assumption = 'Y' then ' (assumption: confirm)' end as title,
+                       description,
+                       priority,
+                       case status
+                         when 'COMPLETED' then '<span class="t-Badge t-Badge--success t-Badge--large">COMPLETED</span>'
+                         when 'DISPATCHED' then '<span class="t-Badge t-Badge--info t-Badge--large">DISPATCHED</span>'
+                         when 'IN_PROGRESS' then '<span class="t-Badge t-Badge--warning">IN PROGRESS</span>'
+                         else '<span class="t-Badge t-Badge--subtle">OPEN</span>'
+                       end as status_badge,
+                       initcap(replace(status, '_', ' ')) as status
+                from fc_handover_items
+                where tender_id = to_number(coalesce(:P3_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by target_team asc, case priority when 'HIGH' then 1 when 'NORMAL' then 2 else 3 end, handover_id
+                ```
+        }
+        layout {
+            sequence: 20
+            parentRegion: @planning-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 10
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Technical Scope & Parameters
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column HANDOVER_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column ITEM_TYPE (
+            derivedColumn: N
+            heading {
+                heading: Type
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column PRIORITY (
+            derivedColumn: N
+            heading {
+                heading: Priority
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column STATUS (
+            derivedColumn: N
+            heading {
+                heading: Raw Status
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column STATUS_BADGE (
+            derivedColumn: N
+            heading {
+                heading: Dispatched Status
+            }
+            layout {
+                sequence: 7
+            }
+            security {
+                escapeSpecialChars: false
+            }
+        )
+
+        column TARGET_TEAM (
+            derivedColumn: N
+            heading {
+                heading: Target Team
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column TITLE (
+            derivedColumn: N
+            heading {
+                heading: Deliverable / Task
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+    )
+
+    region planning-tabs (
+        name: Planning Studio Workbench
+        type: staticContent
+        layout {
+            sequence: 35
+            slot: body
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                t-TabsRegion-mod--fillLabels
+                t-TabsRegion-mod--pill
+            ]
+        }
+    )
+
+    region studio-buttons (
+        name: Step 1 Planning Actions & Gate 1
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region tender-selector (
+        name: Tender and concept
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_CONCEPT_ID (
+        type: selectList
+        label {
+            label: Concept to select
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @concept-options-lov
+            displayExtraValues: false
+            nullDisplayValue: -- Choose Winning Hero Concept --
+        }
+        cascadingLov {
+            parentItems: P3_TENDER_ID
+        }
+        layout {
+            sequence: 20
+            region: @tender-selector
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_GATE1_COMMENTS (
+        type: textarea
+        label {
+            label: Gate 1 comments
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @tender-selector
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_LANG_CHOICE (
+        type: selectList
+        label {
+            label: Handover language
+            alignment: left
+        }
+        settings {
+            pageActionOnSelection: submitPage
+            executeValidations: false
+        }
+        lov {
+            type: sharedComponent
+            lov: @language-mode-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 15
+            region: @tender-selector
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+        default {
+            type: static
+            staticValue: EN
+        }
+    )
+
+    pageItem P3_RESEARCH_QUERY (
+        type: textField
+        label {
+            label: What do you want to know about the client?
+            alignment: left
+        }
+        layout {
+            sequence: 10
+            region: @ai-research-section
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_SEARCH_ENGINE (
+        type: selectList
+        label {
+            label: Research focus
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @search-engine-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 20
+            region: @ai-research-section
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P3_TENDER_ID (
+        type: selectList
+        label {
+            label: Tender
+            alignment: left
+        }
+        settings {
+            pageActionOnSelection: submitPage
+            executeValidations: false
+        }
+        lov {
+            type: sharedComponent
+            lov: @tender-lov
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 10
+            region: @tender-selector
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button approve-gate1 (
+        buttonName: APPROVE_GATE1
+        label: Approve Gate 1 and hand over
+        layout {
+            sequence: 40
+            region: @studio-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Approve Gate 1 (Planning) and dispatch internal handover collateral?
+            style: information
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    button generate-concepts (
+        buttonName: GENERATE_CONCEPTS
+        label: Generate concepts
+        layout {
+            sequence: 10
+            region: @studio-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-magic
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    button generate-handover (
+        buttonName: GENERATE_HANDOVER
+        label: Build handover
+        layout {
+            sequence: 30
+            region: @studio-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-list
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    button reject-gate1 (
+        buttonName: REJECT_GATE1
+        label: Reject Gate 1
+        layout {
+            sequence: 50
+            region: @studio-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Reject Gate 1 and return to narrative framing?
+            style: warning
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    button run-deep-research (
+        buttonName: RUN_DEEP_RESEARCH
+        label: Research client
+        layout {
+            sequence: 30
+            region: @ai-research-section
+            slot: regionBody
+            startNewRow: false
+            columnSpan: 2
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-search
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    button select-concept (
+        buttonName: SELECT_CONCEPT
+        label: Select concept
+        layout {
+            sequence: 20
+            region: @studio-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check-circle
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process init-page-tender (
+        name: Initialize Page Tender Context
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P3_TENDER_ID is not null then
+                    fc_workflow_api.set_active_project(to_number(:P3_TENDER_ID), :APP_USER);
+                else
+                    declare
+                        l_active_id number := fc_workflow_api.get_active_project(:APP_USER);
+                    begin
+                        if l_active_id is null then
+                            select max(tender_id) into l_active_id from fc_tenders;
+                        end if;
+                        if l_active_id is not null then
+                            :P3_TENDER_ID := to_char(l_active_id);
+                            fc_workflow_api.set_active_project(l_active_id, :APP_USER);
+                        end if;
+                    end;
+                end if;
+                for t in (select tender_code || ' · ' || client_name as label
+                            from fc_tenders
+                           where tender_id = fc_workflow_api.get_active_project(:APP_USER)) loop
+                    :FC_TENDER_LABEL := t.label;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 1
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 40957758812652319
+        }
+    )
+
+    process proc-approve-gate1 (
+        name: Call Approve Gate 1 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.approve_gate_1(
+                    p_tender_id => to_number(:P3_TENDER_ID),
+                    p_user_name => :APP_USER,
+                    p_comments  => :P3_GATE1_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Gate 1 approved by ' || initcap(:APP_USER) || '. Handover tasks sent to the Design and Operations teams.';
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 40904620189205853
+        }
+        serverSideCondition {
+            type: request=Value
+            value: APPROVE_GATE1
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process proc-generate-concepts (
+        name: Call Generate AI Concepts API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_ai number;
+                begin
+                    fc_planning_api.generate_concept_options(
+                        p_tender_id => to_number(:P3_TENDER_ID),
+                        p_user_name => :APP_USER
+                    );
+                    select count(*) into l_ai
+                      from fc_concept_options
+                     where tender_id = to_number(:P3_TENDER_ID) and generated_by = 'AI';
+                    apex_application.g_print_success_message := case
+                        when l_ai > 0 then l_ai || ' concept options generated by AI from the confirmed brief. Review them and select one.'
+                        else 'The AI service is unavailable, so template concept options are shown. Check AI settings and try again.'
+                    end;
+                end;
+                ```
+        }
+        execution {
+            sequence: 5
+        }
+        advanced {
+            executionMappingIdentifier: 40904318054205853
+        }
+        serverSideCondition {
+            type: request=Value
+            value: GENERATE_CONCEPTS
+        }
+    )
+
+    process proc-generate-handover (
+        name: Call Generate Handover API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.generate_handover(
+                    p_tender_id => to_number(:P3_TENDER_ID),
+                    p_user_name => :APP_USER,
+                    p_lang      => nvl(:P3_LANG_CHOICE, 'EN')
+                );
+                for c in (select count(case when target_team = 'DESIGN' then 1 end) d,
+                                 count(case when target_team = 'OPERATIONS' then 1 end) o,
+                                 count(case when is_assumption = 'Y' then 1 end) a
+                            from fc_handover_items
+                           where tender_id = to_number(:P3_TENDER_ID)) loop
+                    apex_application.g_print_success_message := 'Handover built: ' || c.d || ' tasks for Design, ' || c.o || ' for Operations'
+                        || case when c.a > 0 then ', ' || c.a || ' marked as assumptions to confirm' end || '. Review them, then approve Gate 1.';
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 40904587060205853
+        }
+        serverSideCondition {
+            type: request=Value
+            value: GENERATE_HANDOVER
+        }
+    )
+
+    process proc-reject-gate1 (
+        name: Call Reject Gate 1 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_workflow_api.reject_gate(
+                    p_tender_id => to_number(:P3_TENDER_ID),
+                    p_gate_number => 1,
+                    p_user_name => :APP_USER,
+                    p_comments => :P3_GATE1_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Gate 1 proposal returned to Planning stage for narrative revisions.';
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 40904763375205853
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REJECT_GATE1
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+    process proc-run-deep-research (
+        name: Execute Supervised AI Research Search
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.run_client_research(
+                    p_tender_id     => nvl(to_number(:P3_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_query         => :P3_RESEARCH_QUERY,
+                    p_search_engine => :P3_SEARCH_ENGINE,
+                    p_user_name     => :APP_USER
+                );
+                apex_application.g_print_success_message := 'AI research notes added (not web-verified). Approve or reject each one on the Intake page; only approved notes are used for concepts.';
+                ```
+        }
+        execution {
+            sequence: 4
+        }
+        advanced {
+            executionMappingIdentifier: 40970857051173905
+        }
+        serverSideCondition {
+            type: request=Value
+            value: RUN_DEEP_RESEARCH
+        }
+    )
+
+    process proc-select-concept (
+        name: Call Select Concept API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_planning_api.select_concept(
+                    p_tender_id => to_number(:P3_TENDER_ID),
+                    p_concept_id => to_number(:P3_CONCEPT_ID),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Winning concept selected as Hero Proposal.';
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 40904445435205853
+        }
+        serverSideCondition {
+            type: request=Value
+            value: SELECT_CONCEPT
+        }
+        security {
+            authorizationScheme: @planner-role
+        }
+    )
+
+)
+

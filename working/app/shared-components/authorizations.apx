@@ -1,0 +1,77 @@
+authorization admin-role (
+    name: Administrator Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.is_admin(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Administrator role required.
+    }
+)
+
+authorization auditor-role (
+    name: Auditor Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.is_auditor(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Auditor role required.
+    }
+)
+
+authorization copy-role (
+    name: Copy & Translation Review Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.has_role(:APP_USER, 'COPYWRITER') or fc_security_api.has_role(:APP_USER, 'TRANSLATION_REVIEWER') or fc_security_api.is_admin(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Copywriter or Translation Reviewer role required.
+    }
+)
+
+authorization costing-role (
+    name: Operations Lead Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.has_role(:APP_USER, 'OPERATIONS_LEAD') or fc_security_api.is_admin(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Operations Lead role required.
+    }
+)
+
+authorization designer-role (
+    name: Designer Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.has_role(:APP_USER, 'DESIGNER') or fc_security_api.is_admin(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Designer role required.
+    }
+)
+
+authorization leadership-role (
+    name: Leadership Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.has_role(:APP_USER, 'LEADERSHIP') or fc_security_api.is_admin(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Leadership role required.
+    }
+)
+
+authorization planner-role (
+    name: Planning Lead Rights
+    type: plSqlFunctionBody
+    settings {
+        plsqlFunctionBody: return fc_security_api.has_role(:APP_USER, 'PLANNING_LEAD') or fc_security_api.is_admin(:APP_USER);
+    }
+    error {
+        errorMessage: Insufficient privileges, Planning Lead role required.
+    }
+)
+

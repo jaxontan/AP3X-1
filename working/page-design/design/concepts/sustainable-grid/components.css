@@ -1,0 +1,44 @@
+
+.brand-grid-panel {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 4px;
+    margin-bottom: 24px;
+}
+.brand-grid-header {
+    background: var(--brand-ground);
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 1px solid var(--brand-border);
+}
+.brand-grid-row {
+    display: flex;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--brand-border);
+    align-items: center;
+}
+.brand-cell {
+    flex: 1;
+    font-size: 14px;
+}
+.brand-status-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 300px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    color: var(--brand-ink);
+}
+.brand-metric-pill {
+    background: var(--brand-primary);
+    color: var(--brand-primary-text);
+    border-radius: 300px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 8px;
+}

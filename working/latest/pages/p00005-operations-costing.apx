@@ -1,0 +1,1970 @@
+page 5 (
+    name: Operations & Costing Hub
+    alias: OPERATIONS-COSTING
+    title: Operations Hub - BOQ Calibration & Vendor Quotes
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region boq-report (
+        name: Bill of quantities
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select boq_id,
+                       component_name,
+                       initcap(replace(category, '_', ' ')) as category,
+                       quantity,
+                       uom,
+                       unit_cost,
+                       initcap(replace(pricing_basis, '_', ' ')) as pricing_basis,
+                       margin_pct,
+                       markup_pct,
+                       total_cost,
+                       total_price,
+                       spec_details,
+                       image_url,
+                       extraction_confidence,
+                       case when spec_details is not null or image_url is not null then 'BOUND' else 'PENDING' end as spec_bound
+                from fc_boq_items
+                where tender_id = to_number(coalesce(:P5_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by category asc, boq_id asc
+                ```
+        }
+        layout {
+            sequence: 10
+            parentRegion: @operations-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 25
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column BOQ_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column CATEGORY (
+            derivedColumn: N
+            heading {
+                heading: Trade / Category
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column COMPONENT_NAME (
+            derivedColumn: N
+            heading {
+                heading: Item / Component Name
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column EXTRACTION_CONFIDENCE (
+            derivedColumn: N
+            heading {
+                heading: Confidence
+            }
+            layout {
+                sequence: 13
+            }
+        )
+
+        column IMAGE_URL (
+            derivedColumn: N
+            heading {
+                heading: Bound Drawing / Image Asset
+            }
+            layout {
+                sequence: 12
+            }
+        )
+
+        column MARKUP_PCT (
+            derivedColumn: N
+            heading {
+                heading: Markup %
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column PRICING_BASIS (
+            derivedColumn: N
+            heading {
+                heading: Pricing Source
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column QUANTITY (
+            derivedColumn: N
+            heading {
+                heading: Qty
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column SPEC_BOUND (
+            derivedColumn: N
+            heading {
+                heading: Spec Bound
+            }
+            layout {
+                sequence: 14
+            }
+            columnFormatting {
+                htmlExpression: <span class="t-Badge t-Badge--success">#SPEC_BOUND#</span>
+            }
+        )
+
+        column SPEC_DETAILS (
+            derivedColumn: N
+            heading {
+                heading: Technical Detailing & Specs
+            }
+            layout {
+                sequence: 11
+            }
+        )
+
+        column TOTAL_COST (
+            derivedColumn: N
+            heading {
+                heading: Total Cost
+            }
+            layout {
+                sequence: 9
+            }
+        )
+
+        column TOTAL_PRICE (
+            derivedColumn: N
+            heading {
+                heading: Client Price
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column UNIT_COST (
+            derivedColumn: N
+            heading {
+                heading: Unit Cost (SGD)
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column UOM (
+            derivedColumn: N
+            heading {
+                heading: UOM
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+    )
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region compliance-findings-report (
+        name: Compliance and permits
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select finding_id,
+                       initcap(replace(severity, '_', ' ')) as severity,
+                       finding_text,
+                       required_action,
+                       est_compliance_cost,
+                       initcap(replace(status, '_', ' ')) as status
+                from fc_compliance_findings
+                where tender_id = to_number(coalesce(:P5_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by finding_id asc
+                ```
+        }
+        layout {
+            sequence: 40
+            parentRegion: @operations-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column EST_COMPLIANCE_COST (
+            derivedColumn: N
+            heading {
+                heading: Auto-Injected Fee (SGD)
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column FINDING_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column FINDING_TEXT (
+            derivedColumn: N
+            heading {
+                heading: Compliance Check
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column REQUIRED_ACTION (
+            derivedColumn: N
+            heading {
+                heading: Statutory Mitigation
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column SEVERITY (
+            derivedColumn: N
+            heading {
+                heading: Severity
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+    )
+
+    region costing-buttons (
+        name: Step 3 Operations Actions & Budget Gate
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region costing-form (
+        name: Costing controls
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region gate3-pending-banner (
+        name: Gate 3 Pending Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--warning t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-clock-o" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 3 OPERATIONS BUDGET: IN REVIEW (PENDING WEI LIN SIGN-OFF)</h2>
+                            <div class="t-Alert-body">Check the bill of quantities, compliance and payment schedule, then click <strong>Approve Gate 3 budget</strong>.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--warning t-Badge--large">PENDING GATE 3</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 26
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: not fc_workflow_api.is_gate_approved(nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)), 3)
+        }
+    )
+
+    region gate3-status-banner (
+        name: Gate 3 Approved Status
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--success t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-check-circle" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">GATE 3 OPERATIONS BUDGET: SIGNED OFF &amp; APPROVED</h2>
+                            <div class="t-Alert-body">Granular BOQ verified, PE/LEW statutory fees injected, and client pro-forma invoice generated. Dispatched to Copy &amp; Localisation.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--success t-Badge--large">STAGE 4: COPY REVIEW READY</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 25
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: fc_workflow_api.is_gate_approved(nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)), 3)
+        }
+    )
+
+    region invoices-report (
+        name: Payment schedule
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select invoice_id,
+                       invoice_number,
+                       initcap(replace(invoice_type, '_', ' ')) as invoice_type,
+                       currency,
+                       subtotal_amount,
+                       gst_rate_pct,
+                       gst_amount,
+                       total_amount,
+                       payment_terms,
+                       initcap(replace(payment_status, '_', ' ')) as payment_status,
+                       client_contact,
+                       due_date
+                from fc_invoices
+                where tender_id = to_number(coalesce(:P5_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by invoice_id desc
+                ```
+        }
+        layout {
+            sequence: 50
+            parentRegion: @operations-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column CLIENT_CONTACT (
+            derivedColumn: N
+            heading {
+                heading: Client Contact
+            }
+            layout {
+                sequence: 11
+            }
+        )
+
+        column CURRENCY (
+            derivedColumn: N
+            heading {
+                heading: Currency
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column DUE_DATE (
+            derivedColumn: N
+            heading {
+                heading: Payment Due Date
+            }
+            layout {
+                sequence: 12
+            }
+        )
+
+        column GST_AMOUNT (
+            derivedColumn: N
+            heading {
+                heading: GST (9%)
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column GST_RATE_PCT (
+            derivedColumn: N
+            heading {
+                heading: GST %
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column INVOICE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column INVOICE_NUMBER (
+            derivedColumn: N
+            heading {
+                heading: Invoice #
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column INVOICE_TYPE (
+            derivedColumn: N
+            heading {
+                heading: Type
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column PAYMENT_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column PAYMENT_TERMS (
+            derivedColumn: N
+            heading {
+                heading: Payment Terms
+            }
+            layout {
+                sequence: 9
+            }
+        )
+
+        column SUBTOTAL_AMOUNT (
+            derivedColumn: N
+            heading {
+                heading: Subtotal
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column TOTAL_AMOUNT (
+            derivedColumn: N
+            heading {
+                heading: Total Amount (SGD)
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+    )
+
+    region margin-warning-banner (
+        name: Commercial Margin Warning Banner
+        type: staticContent
+        source {
+            htmlCode:
+                ```html
+                <div class="t-Alert t-Alert--danger t-Alert--horizontal t-Alert--page">
+                    <div class="t-Alert-wrap">
+                        <div class="t-Alert-icon">
+                            <span class="t-Icon fa fa-exclamation-circle" aria-hidden="true"></span>
+                        </div>
+                        <div class="t-Alert-content">
+                            <h2 class="t-Alert-title">COMMERCIAL MARGIN THRESHOLD WARNING</h2>
+                            <div class="t-Alert-body">Calibrated tender margin is below the mandatory corporate 20.0% threshold (Current: &P5_MARKUP_PCT.%). Re-negotiate vendor trade rates or apply statutory overtime surcharge before final commercial release.</div>
+                        </div>
+                        <div class="t-Alert-buttons">
+                            <span class="t-Badge t-Badge--danger t-Badge--large">MARGIN &lt; 20%</span>
+                        </div>
+                    </div>
+                </div>
+                ```
+        }
+        layout {
+            sequence: 27
+            slot: body
+        }
+        appearance {
+            template: @/blank-with-attributes
+            templateOptions: #DEFAULT#
+        }
+        serverSideCondition {
+            type: expression
+            plsqlExpression: to_number(nvl(:P5_MARKUP_PCT, '25')) < 20.0
+        }
+    )
+
+    region operations-handover-report (
+        name: Operations brief
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select handover_id,
+                       initcap(replace(item_type, '_', ' ')) as item_type,
+                       title || case when is_assumption = 'Y' then ' (assumption: confirm)' end as title,
+                       description,
+                       priority
+                from fc_handover_items
+                where tender_id = to_number(coalesce(:P5_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                  and target_team = 'OPERATIONS'
+                order by case priority when 'HIGH' then 1 when 'NORMAL' then 2 else 3 end, handover_id
+                ```
+        }
+        layout {
+            sequence: 5
+            parentRegion: @operations-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Details
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column HANDOVER_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column ITEM_TYPE (
+            derivedColumn: N
+            heading {
+                heading: Type
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column PRIORITY (
+            derivedColumn: N
+            heading {
+                heading: Priority
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column TITLE (
+            derivedColumn: N
+            heading {
+                heading: Task
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+    )
+
+    region operations-tabs (
+        name: Operations & Procurement Workbench
+        type: staticContent
+        layout {
+            sequence: 35
+            slot: body
+        }
+        appearance {
+            template: @/tabs-container
+            templateOptions: [
+                #DEFAULT#
+                t-TabsRegion-mod--fillLabels
+                t-TabsRegion-mod--pill
+            ]
+        }
+    )
+
+    region returned-quotations-report (
+        name: Vendor quotes received
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select q.quote_id,
+                       q.vendor_name,
+                       q.quoted_amount,
+                       q.currency,
+                       q.valid_until,
+                       q.lead_time_days,
+                       q.exclusions,
+                       q.scope_variance_flag,
+                       q.is_selected,
+                       q.selection_reason
+                from fc_quotations q
+                where q.tender_id = to_number(coalesce(:P5_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by q.quoted_amount asc
+                ```
+        }
+        layout {
+            sequence: 30
+            parentRegion: @operations-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column CURRENCY (
+            derivedColumn: N
+            heading {
+                heading: Currency
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column EXCLUSIONS (
+            derivedColumn: N
+            heading {
+                heading: Exclusions / Caveats
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column IS_SELECTED (
+            derivedColumn: N
+            heading {
+                heading: Selected
+            }
+            layout {
+                sequence: 9
+            }
+        )
+
+        column LEAD_TIME_DAYS (
+            derivedColumn: N
+            heading {
+                heading: Lead Time (Days)
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column QUOTED_AMOUNT (
+            derivedColumn: N
+            heading {
+                heading: Quoted Amount
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column QUOTE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column SCOPE_VARIANCE_FLAG (
+            derivedColumn: N
+            heading {
+                heading: Scope Variance
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column SELECTION_REASON (
+            derivedColumn: N
+            heading {
+                heading: Selection Reason
+            }
+            layout {
+                sequence: 10
+            }
+        )
+
+        column VALID_UNTIL (
+            derivedColumn: N
+            heading {
+                heading: Valid Until
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column VENDOR_NAME (
+            derivedColumn: N
+            heading {
+                heading: Vendor Name
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    region rfqs-report (
+        name: Vendor quote requests
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select rfq_id,
+                       rfq_code,
+                       vendor_name,
+                       vendor_email,
+                       spec_version,
+                       due_date,
+                       initcap(replace(status, '_', ' ')) as status,
+                       substr(draft_email_body, 1, 120) || '...' as draft_email_preview
+                from fc_rfqs
+                where tender_id = to_number(coalesce(:P5_TENDER_ID, to_char(fc_workflow_api.get_active_project(:APP_USER))))
+                order by rfq_id asc
+                ```
+        }
+        layout {
+            sequence: 20
+            parentRegion: @operations-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        reportLayout {
+            numberOfRows: 5
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DRAFT_EMAIL_PREVIEW (
+            derivedColumn: N
+            heading {
+                heading: Pre-Drafted Outreach Email Preview
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column DUE_DATE (
+            derivedColumn: N
+            heading {
+                heading: Quote Deadline
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column RFQ_CODE (
+            derivedColumn: N
+            heading {
+                heading: RFQ #
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column RFQ_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column SPEC_VERSION (
+            derivedColumn: N
+            heading {
+                heading: Spec Version
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column VENDOR_EMAIL (
+            derivedColumn: N
+            heading {
+                heading: Contact Email
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column VENDOR_NAME (
+            derivedColumn: N
+            heading {
+                heading: Specialist Vendor
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+    )
+
+    pageItem P5_BOQ_ID (
+        type: selectList
+        label {
+            label: BOQ line item
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select component_name || ' (' || initcap(replace(category, '_', ' ')) || ')' d, boq_id v
+                  from fc_boq_items
+                 where tender_id = :P5_TENDER_ID
+                 order by category, boq_id
+                ```
+            displayExtraValues: false
+            nullDisplayValue: - Choose a line item -
+        }
+        cascadingLov {
+            parentItems: P5_TENDER_ID
+        }
+        layout {
+            sequence: 52
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_GATE3_COMMENTS (
+        type: textarea
+        label {
+            label: Gate 3 comments
+            alignment: left
+        }
+        layout {
+            sequence: 60
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_IMAGE_URL (
+        type: textField
+        label {
+            label: Drawing or image link
+            alignment: left
+        }
+        layout {
+            sequence: 54
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_MARKUP_PCT (
+        type: numberField
+        label {
+            label: Target margin (%)
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_QUOTE_ID (
+        type: selectList
+        label {
+            label: Vendor quote
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select vendor_name || ' - ' || currency || ' ' || to_char(quoted_amount, 'FM999G999G999G990') || nvl2(lead_time_days, ' - ' || lead_time_days || ' days', null) d, quote_id v
+                  from fc_quotations
+                 where tender_id = :P5_TENDER_ID
+                 order by quoted_amount
+                ```
+            displayExtraValues: false
+            nullDisplayValue: - Choose a quote -
+        }
+        cascadingLov {
+            parentItems: P5_TENDER_ID
+        }
+        layout {
+            sequence: 40
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_RFQ_ID (
+        type: selectList
+        label {
+            label: Vendor RFQ
+            alignment: left
+        }
+        lov {
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select rfq_code || ' - ' || vendor_name || ' (' || initcap(replace(status, '_', ' ')) || ')' d, rfq_id v
+                  from fc_rfqs
+                 where tender_id = :P5_TENDER_ID
+                 order by rfq_id
+                ```
+            displayExtraValues: false
+            nullDisplayValue: - Choose an RFQ -
+        }
+        cascadingLov {
+            parentItems: P5_TENDER_ID
+        }
+        layout {
+            sequence: 30
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_SELECT_REASON (
+        type: textField
+        label {
+            label: Why this quote
+            alignment: left
+        }
+        layout {
+            sequence: 50
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_SPEC_DETAILS (
+        type: textField
+        label {
+            label: Specification (size, material, colour)
+            alignment: left
+        }
+        layout {
+            sequence: 56
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P5_TENDER_ID (
+        type: selectList
+        label {
+            label: Tender
+            alignment: left
+        }
+        settings {
+            pageActionOnSelection: submitPage
+            executeValidations: false
+        }
+        lov {
+            type: sharedComponent
+            lov: @tender-lov
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 10
+            region: @costing-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button approve-gate3 (
+        buttonName: APPROVE_GATE3
+        label: Approve Gate 3 budget
+        layout {
+            sequence: 50
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Approve Gate 3 (Operations & Costing) and freeze pricing buffer?
+            style: information
+        }
+        security {
+            authorizationScheme: @costing-role
+        }
+    )
+
+    button award-quote (
+        buttonName: AWARD_QUOTE
+        label: Award quote
+        layout {
+            sequence: 35
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check-square-o
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Award selected vendor quotation and freeze sub-contractor pricing?
+            style: information
+        }
+        security {
+            authorizationScheme: @costing-role
+        }
+    )
+
+    button bind-bom-image (
+        buttonName: BIND_BOM_IMAGE
+        label: Attach drawing to item
+        layout {
+            sequence: 42
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-paperclip
+        }
+    )
+
+    button calc-boq (
+        buttonName: CALC_BOQ
+        label: Recalculate totals
+        layout {
+            sequence: 40
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+    )
+
+    button decode-boq (
+        buttonName: DECODE_BOQ
+        label: Build BOQ from drawings
+        layout {
+            sequence: 10
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-calculator
+        }
+    )
+
+    button dispatch-rfq (
+        buttonName: DISPATCH_RFQ
+        label: Mark RFQ as sent
+        layout {
+            sequence: 25
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-paper-plane
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Dispatch approved RFQ specification package to selected specialist vendor?
+            style: information
+        }
+    )
+
+    button evaluate-compliance (
+        buttonName: EVALUATE_COMPLIANCE
+        label: Check compliance
+        layout {
+            sequence: 30
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-shield
+        }
+    )
+
+    button generate-invoice (
+        buttonName: GENERATE_INVOICE
+        label: Draft payment schedule
+        layout {
+            sequence: 44
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-dollar
+        }
+    )
+
+    button generate-rfqs (
+        buttonName: GENERATE_RFQS
+        label: Draft vendor RFQs
+        layout {
+            sequence: 20
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-envelope
+        }
+    )
+
+    button load-tender-p5 (
+        buttonName: LOAD_TENDER
+        label: Load tender
+        layout {
+            sequence: 5
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-refresh
+        }
+    )
+
+    button reconcile-boq (
+        buttonName: RECONCILE_BOQ
+        label: Apply addendum to BOQ
+        layout {
+            sequence: 45
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-wrench
+        }
+    )
+
+    button reissue-delta-rfq (
+        buttonName: REISSUE_DELTA_RFQ
+        label: Re-issue changed RFQs
+        layout {
+            sequence: 46
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-envelope-o
+        }
+    )
+
+    button reject-gate3 (
+        buttonName: REJECT_GATE3
+        label: Reject Gate 3
+        layout {
+            sequence: 60
+            region: @costing-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Reject Gate 3 and return for vendor re-negotiation?
+            style: warning
+        }
+        security {
+            authorizationScheme: @costing-role
+        }
+    )
+
+    process init-page-tender (
+        name: Initialize Page Tender Context
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P5_TENDER_ID is null then
+                    :P5_TENDER_ID := to_char(fc_workflow_api.get_active_project(:APP_USER));
+                    if :P5_TENDER_ID is not null then
+                        fc_workflow_api.set_active_project(to_number(:P5_TENDER_ID), :APP_USER);
+                    end if;
+                else
+                    fc_workflow_api.set_active_project(to_number(:P5_TENDER_ID), :APP_USER);
+                end if;
+                if :P5_MARKUP_PCT is null then
+                    select nvl(target_margin_pct, 25) into :P5_MARKUP_PCT from fc_tenders where tender_id = to_number(:P5_TENDER_ID);
+                end if;
+                for t in (select tender_code || ' · ' || client_name as label
+                            from fc_tenders
+                           where tender_id = fc_workflow_api.get_active_project(:APP_USER)) loop
+                    :FC_TENDER_LABEL := t.label;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 1
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 40958115118652361
+        }
+    )
+
+    process proc-approve-gate3 (
+        name: Execute Approve Gate 3 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.approve_gate3(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_user_name => :APP_USER,
+                    p_comments => :P5_GATE3_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Gate 3 Operations Budget Signed Off! Handed off to Multilingual Review.';
+                ```
+        }
+        execution {
+            sequence: 40
+        }
+        advanced {
+            executionMappingIdentifier: 40918117778205886
+        }
+        serverSideCondition {
+            type: request=Value
+            value: APPROVE_GATE3
+        }
+        security {
+            authorizationScheme: @costing-role
+        }
+    )
+
+    process proc-bind-bom-image (
+        name: Execute Bind BOM Image API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.bind_bom_image(
+                    p_boq_id => to_number(:P5_BOQ_ID),
+                    p_image_url => :P5_IMAGE_URL,
+                    p_spec_details => :P5_SPEC_DETAILS,
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Image and technical specifications bound to BOQ item.';
+                ```
+        }
+        execution {
+            sequence: 12
+        }
+        advanced {
+            executionMappingIdentifier: 40917733410205873
+        }
+        serverSideCondition {
+            type: request=Value
+            value: BIND_BOM_IMAGE
+        }
+    )
+
+    process proc-calc-boq (
+        name: Execute Calculate BOQ API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.calculate_boq_totals(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_markup_pct => nvl(to_number(:P5_MARKUP_PCT), 25.0),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'BOQ totals recalculated at ' || to_char(nvl(to_number(:P5_MARKUP_PCT), 25), 'FM990.0') || '% target margin, including the 5% contingency reserve.';
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 40917692679205873
+        }
+        serverSideCondition {
+            type: request=Value
+            value: CALC_BOQ
+        }
+    )
+
+    process proc-decode-boq (
+        name: AI Vision Decode Drawings API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.decode_sketches_to_boq(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'AI Vision disassembled drawings into 8 granular BOQ items mapped to benchmarks.';
+                ```
+        }
+        execution {
+            sequence: 5
+        }
+        advanced {
+            executionMappingIdentifier: 40917365042205873
+        }
+        serverSideCondition {
+            type: request=Value
+            value: DECODE_BOQ
+        }
+    )
+
+    process proc-evaluate-compliance (
+        name: Evaluate PE LEW Compliance API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.evaluate_compliance_and_fees(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Statutory compliance evaluated: PE endorsement (+SGD 2,800) and LEW (+SGD 1,500) integrated.';
+                ```
+        }
+        execution {
+            sequence: 8
+        }
+        advanced {
+            executionMappingIdentifier: 40917538278205873
+        }
+        serverSideCondition {
+            type: request=Value
+            value: EVALUATE_COMPLIANCE
+        }
+    )
+
+    process proc-generate-invoice (
+        name: Execute Generate Invoice API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.generate_client_invoice(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Official pro-forma invoice generated. Subtotal matches BOQ client totals exactly, including 5% contingency reserve.';
+                ```
+        }
+        execution {
+            sequence: 14
+        }
+        advanced {
+            executionMappingIdentifier: 40917867938205873
+        }
+        serverSideCondition {
+            type: request=Value
+            value: GENERATE_INVOICE
+        }
+    )
+
+    process proc-generate-rfqs (
+        name: Generate Bespoke RFQs API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_costing_api.generate_bespoke_rfqs(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Bespoke RFQ drafts generated for Kingsmen and Pico.';
+                ```
+        }
+        execution {
+            sequence: 7
+        }
+        advanced {
+            executionMappingIdentifier: 40917470874205873
+        }
+        serverSideCondition {
+            type: request=Value
+            value: GENERATE_RFQS
+        }
+    )
+
+    process proc-load-tender (
+        name: Execute Load Selected Tender
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P5_TENDER_ID is not null then
+                    fc_workflow_api.set_active_project(to_number(:P5_TENDER_ID), :APP_USER);
+                    begin
+                        select nvl(margin_pct, 25) into :P5_MARKUP_PCT
+                          from fc_tenders
+                         where tender_id = to_number(:P5_TENDER_ID);
+                    exception
+                        when others then null;
+                    end;
+                    apex_application.g_print_success_message := 'Active tender loaded: #' || :P5_TENDER_ID;
+                end if;
+                ```
+        }
+        execution {
+            sequence: 2
+        }
+        advanced {
+            executionMappingIdentifier: 41247733228592156
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: LOAD_TENDER:P5_TENDER_ID
+        }
+    )
+
+    process proc-reconcile-boq (
+        name: Reconcile BOQ with Addendum API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid number := nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    fc_costing_api.reconcile_boq_addendum(
+                        p_tender_id => l_tid,
+                        p_user_name => :APP_USER
+                    );
+                    apex_application.g_print_success_message := 'BOQ reconciled with Tender Addendum! Stale items updated, +2 demo pods and 63A power tap incorporated.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 35
+        }
+        advanced {
+            executionMappingIdentifier: 41345834205949830
+        }
+        serverSideCondition {
+            type: request=Value
+            value: RECONCILE_BOQ
+        }
+    )
+
+    process proc-reissue-delta-rfq (
+        name: Re-Issue Delta RFQs API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tid number := nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                begin
+                    fc_costing_api.reissue_delta_rfqs(
+                        p_tender_id => l_tid,
+                        p_user_name => :APP_USER
+                    );
+                    apex_application.g_print_success_message := 'Delta RFQs re-issued to Kingsmen & Pico with addendum scope variance highlights.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 38
+        }
+        advanced {
+            executionMappingIdentifier: 41345971079949830
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REISSUE_DELTA_RFQ
+        }
+    )
+
+    process proc-reject-gate3 (
+        name: Execute Reject Gate 3 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_workflow_api.reject_gate(
+                    p_tender_id => nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
+                    p_gate_number => 3,
+                    p_user_name => :APP_USER,
+                    p_comments => :P5_GATE3_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Gate 3 Operations Budget Rejected.';
+                ```
+        }
+        execution {
+            sequence: 50
+        }
+        advanced {
+            executionMappingIdentifier: 40918270734205886
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REJECT_GATE3
+        }
+        security {
+            authorizationScheme: @costing-role
+        }
+    )
+
+    process proc-select-quote (
+        name: Execute Select Quotation API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_quote_id number := to_number(:P5_QUOTE_ID);
+                begin
+                    if l_quote_id is null then
+                        select min(quote_id) into l_quote_id
+                        from fc_quotations
+                        where tender_id = nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER));
+                    end if;
+                    if l_quote_id is not null then
+                        fc_costing_api.select_quotation(
+                            p_quote_id => l_quote_id,
+                            p_reason => nvl(:P5_SELECT_REASON, 'Awarded based on optimal pricing, compliance, and delivery schedule'),
+                            p_user_name => :APP_USER
+                        );
+                        :P5_QUOTE_ID := to_char(l_quote_id);
+                        apex_application.g_print_success_message := 'Vendor Quote #' || l_quote_id || ' awarded successfully! Selected quotation recorded with justification and user (' || :APP_USER || ').';
+                    else
+                        apex_application.g_print_success_message := 'No quotation available to award.';
+                    end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 40918014785205886
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: AWARD_QUOTE:SELECT_QUOTE
+        }
+        security {
+            authorizationScheme: @costing-role
+        }
+    )
+
+    process proc-send-rfq (
+        name: Execute Record RFQ Sent API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_rfq_id number := to_number(:P5_RFQ_ID);
+                begin
+                    if l_rfq_id is null then
+                        select min(rfq_id) into l_rfq_id
+                        from fc_rfqs
+                        where tender_id = nvl(to_number(:P5_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER))
+                          and status = 'DRAFT';
+                    end if;
+                    if l_rfq_id is not null then
+                        fc_costing_api.record_rfq_sent(
+                            p_rfq_id => l_rfq_id,
+                            p_user_name => :APP_USER
+                        );
+                        :P5_RFQ_ID := to_char(l_rfq_id);
+                        apex_application.g_print_success_message := 'RFQ #' || l_rfq_id || ' dispatched to specialist vendor! Status updated to DISPATCHED with timestamp and user (' || :APP_USER || ').';
+                    else
+                        apex_application.g_print_success_message := 'No pending draft RFQs to dispatch.';
+                    end if;
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 40917971414205873
+        }
+        serverSideCondition {
+            type: requestIsContainedInValue
+            value: DISPATCH_RFQ:SEND_RFQ
+        }
+    )
+
+)
+

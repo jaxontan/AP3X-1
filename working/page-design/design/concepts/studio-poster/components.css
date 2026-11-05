@@ -1,0 +1,49 @@
+
+.brand-band {
+    background: var(--brand-primary);
+    color: var(--brand-primary-text);
+    padding: 32px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+}
+.brand-display {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 8px 0 16px;
+    line-height: 1.2;
+}
+.brand-eyebrow {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--brand-primary-text);
+}
+.brand-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 300px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.brand-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 4px;
+    padding: 20px;
+}
+.brand-stat {
+    display: flex;
+    flex-direction: column;
+}
+.brand-stat-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--brand-primary-text-safe);
+}
+.brand-stat-label {
+    font-size: 13px;
+    color: var(--brand-text-muted);
+}

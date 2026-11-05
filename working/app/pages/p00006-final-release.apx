@@ -1,0 +1,519 @@
+page 6 (
+    name: Proposal Quality & Release Hub
+    alias: FINAL-RELEASE
+    title: Proposal Release - Quality, Translation & Gates 4 & 5
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region release-buttons (
+        name: Quality Sign-off & Final Release
+        type: staticContent
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/buttons-container
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region release-form (
+        name: Release
+        type: staticContent
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    region translations-report (
+        name: Bahasa Indonesia translation
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select translation_id,
+                       section_title,
+                       source_lang,
+                       target_lang,
+                       source_text,
+                       translated_text,
+                       terminology_check,
+                       initcap(replace(approval_status, '_', ' ')) as approval_status,
+                       reviewed_by
+                from fc_translations
+                where tender_id = to_number(:P6_TENDER_ID)
+                order by translation_id asc
+                ```
+        }
+        layout {
+            sequence: 40
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column APPROVAL_STATUS (
+            derivedColumn: N
+            heading {
+                heading: Status
+            }
+            layout {
+                sequence: 8
+            }
+        )
+
+        column SECTION_TITLE (
+            derivedColumn: N
+            heading {
+                heading: Proposal Section
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column SOURCE_LANG (
+            derivedColumn: N
+            heading {
+                heading: Source
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column SOURCE_TEXT (
+            derivedColumn: N
+            heading {
+                heading: Original English
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column TARGET_LANG (
+            derivedColumn: N
+            heading {
+                heading: Target
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column TERMINOLOGY_CHECK (
+            derivedColumn: N
+            heading {
+                heading: Terminology
+            }
+            layout {
+                sequence: 7
+            }
+        )
+
+        column TRANSLATED_TEXT (
+            derivedColumn: N
+            heading {
+                heading: Bahasa Indonesia
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column TRANSLATION_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+    pageItem P6_GATE4_COMMENTS (
+        type: textarea
+        label {
+            label: Gate 4 comments (copy and translation)
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @release-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P6_GATE5_COMMENTS (
+        type: textarea
+        label {
+            label: Final release comments
+            alignment: left
+        }
+        layout {
+            sequence: 30
+            region: @release-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 6
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    pageItem P6_TENDER_ID (
+        type: selectList
+        label {
+            label: Tender
+            alignment: left
+        }
+        settings {
+            pageActionOnSelection: submitPage
+            executeValidations: false
+        }
+        lov {
+            type: sharedComponent
+            lov: @tender-lov
+            displayExtraValues: false
+        }
+        layout {
+            sequence: 10
+            region: @release-form
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
+    button approve-gate4 (
+        buttonName: APPROVE_GATE4
+        label: Approve Gate 4 (quality and translation)
+        layout {
+            sequence: 10
+            region: @release-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-check-circle
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Approve Gate 4 and verify fact-checked bilingual proposal documents?
+            style: information
+        }
+        security {
+            authorizationScheme: @copy-role
+        }
+    )
+
+    button reject-gate5 (
+        buttonName: REJECT_GATE5
+        label: Reject Final Release
+        layout {
+            sequence: 30
+            region: @release-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-times
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Reject release and flag blocking proposal issues?
+            style: warning
+        }
+        security {
+            authorizationScheme: @leadership-role
+        }
+    )
+
+    button release-proposal (
+        buttonName: RELEASE_PROPOSAL
+        label: Release proposal (Gate 5)
+        layout {
+            sequence: 20
+            region: @release-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            hot: true
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-flag
+        }
+        behavior {
+            requiresConfirmation: true
+        }
+        confirmation {
+            message: Authorize final client release for this tender proposal?
+            style: information
+        }
+        security {
+            authorizationScheme: @leadership-role
+        }
+    )
+
+    button translate-tender (
+        buttonName: TRANSLATE_TENDER
+        label: Translate to Bahasa Indonesia
+        layout {
+            sequence: 40
+            region: @release-buttons
+            slot: next
+        }
+        appearance {
+            buttonTemplate: @/text-with-icon
+            templateOptions: [
+                #DEFAULT#
+                t-Button--iconLeft
+            ]
+            icon: fa-language
+        }
+        behavior {
+            showProcessing: true
+        }
+    )
+
+    process init-page-tender (
+        name: Initialize Page Tender Context
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                if :P6_TENDER_ID is not null then
+                    fc_workflow_api.set_active_project(to_number(:P6_TENDER_ID), :APP_USER);
+                else
+                    declare
+                        l_active_id number := fc_workflow_api.get_active_project(:APP_USER);
+                    begin
+                        if l_active_id is not null then
+                            :P6_TENDER_ID := to_char(l_active_id);
+                        end if;
+                    end;
+                end if;
+                for t in (select tender_code || ' · ' || client_name as label
+                            from fc_tenders
+                           where tender_id = fc_workflow_api.get_active_project(:APP_USER)) loop
+                    :FC_TENDER_LABEL := t.label;
+                end loop;
+                ```
+        }
+        execution {
+            sequence: 1
+            point: beforeHeader
+        }
+        advanced {
+            executionMappingIdentifier: 40958378545652361
+        }
+    )
+
+    process proc-approve-gate4 (
+        name: Execute Approve Gate 4 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_stage varchar2(64);
+                    l_ok boolean;
+                begin
+                    l_stage := fc_workflow_api.get_current_stage(p_tender_id => to_number(:P6_TENDER_ID));
+                    fc_workflow_api.approve_gate(
+                        p_tender_id => to_number(:P6_TENDER_ID),
+                        p_gate_number => 4,
+                        p_user_name => :APP_USER,
+                        p_comments => :P6_GATE4_COMMENTS
+                    );
+                    l_ok := fc_workflow_api.is_gate_approved(p_tender_id => to_number(:P6_TENDER_ID), p_gate_number => 4);
+                    apex_application.g_print_success_message := 'Gate 4 approved by ' || initcap(:APP_USER) || '. The proposal is ready for leadership release.';
+                end;
+                ```
+        }
+        execution {
+            sequence: 10
+        }
+        advanced {
+            executionMappingIdentifier: 40919941928205887
+        }
+        serverSideCondition {
+            type: request=Value
+            value: APPROVE_GATE4
+        }
+        security {
+            authorizationScheme: @copy-role
+        }
+    )
+
+    process proc-reject-gate5 (
+        name: Execute Reject Gate 5 API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_workflow_api.reject_gate(
+                    p_tender_id => to_number(:P6_TENDER_ID),
+                    p_gate_number => 5,
+                    p_user_name => :APP_USER,
+                    p_comments => :P6_GATE5_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Release rejected and sent back for changes. Your comments are in the audit trail.';
+                ```
+        }
+        execution {
+            sequence: 30
+        }
+        advanced {
+            executionMappingIdentifier: 40920100785205887
+        }
+        serverSideCondition {
+            type: request=Value
+            value: REJECT_GATE5
+        }
+        security {
+            authorizationScheme: @leadership-role
+        }
+    )
+
+    process proc-release-proposal (
+        name: Execute Release Proposal API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_workflow_api.release_proposal(
+                    p_tender_id => to_number(:P6_TENDER_ID),
+                    p_user_name => :APP_USER,
+                    p_comments => :P6_GATE5_COMMENTS
+                );
+                apex_application.g_print_success_message := 'Proposal released by ' || initcap(:APP_USER) || '. All five gates are signed off.';
+                ```
+        }
+        execution {
+            sequence: 20
+        }
+        advanced {
+            executionMappingIdentifier: 40920072745205887
+        }
+        serverSideCondition {
+            type: request=Value
+            value: RELEASE_PROPOSAL
+        }
+        security {
+            authorizationScheme: @leadership-role
+        }
+    )
+
+    process proc-translate-tender (
+        name: Execute Bilingual Translation API
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                fc_workflow_api.execute_bilingual_translation(
+                    p_tender_id => to_number(:P6_TENDER_ID),
+                    p_user_name => :APP_USER
+                );
+                apex_application.g_print_success_message := 'Bahasa Indonesia draft ready below. A translation reviewer must check it before Gate 4.';
+                ```
+        }
+        execution {
+            sequence: 5
+        }
+        advanced {
+            executionMappingIdentifier: 40946693298214132
+        }
+        serverSideCondition {
+            type: request=Value
+            value: TRANSLATE_TENDER
+        }
+    )
+
+)
+

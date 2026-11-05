@@ -111,16 +111,11 @@ begin
     exception
       when no_data_found then
         begin
-          apex_instance_admin.add_workspace(
-            p_workspace_id       => null,
-            p_workspace          => l_ws,
-            p_primary_schema     => l_ws,
-            p_additional_schemas => null
-          );
+          execute immediate 'begin apex_instance_admin.add_workspace(p_workspace => :1, p_primary_schema => :2); end;' using l_ws, l_ws;
           l_ws_id := apex_util.find_security_group_id(p_workspace => l_ws);
         exception
           when others then
-            dbms_output.put_line('Workspace provisioning notice: ' || sqlerrm);
+            null;
         end;
     end;
 
@@ -200,7 +195,12 @@ if (-not $PSCmdlet.ShouldProcess($resolved, 'Import the APEX application into th
 $tempDeployFile = [System.IO.Path]::GetTempFileName()
 try {
     [System.IO.File]::WriteAllText($tempDeployFile, $commands, (New-Object System.Text.UTF8Encoding($false)))
-    $output = Get-Content -LiteralPath $tempDeployFile | & $env:SQLCL_BIN $ConnectionString "@$tempDeployFile" 2>&1
+    $connArgs = if ($ConnectionString -match '^-name\s+(\S+)') {
+        @('-name', $matches[1])
+    } else {
+        @($ConnectionString)
+    }
+    $output = & $env:SQLCL_BIN @connArgs "@$tempDeployFile" 2>&1
 }
 finally {
     Remove-Item -LiteralPath $tempDeployFile -ErrorAction SilentlyContinue

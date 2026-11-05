@@ -51,3 +51,4 @@ archive/
 
 # Local deployment marker written by scripts/deploy-apex-app.ps1
 working/last-deploy.json
+scratch/

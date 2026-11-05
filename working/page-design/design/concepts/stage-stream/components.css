@@ -1,0 +1,44 @@
+
+.brand-strip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.brand-step {
+    flex: 1;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    padding: 12px;
+    border-radius: 4px;
+}
+.brand-step-active {
+    border-color: var(--brand-primary);
+    background: var(--brand-surface);
+}
+.brand-work-item {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+.brand-work-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--brand-ink);
+}
+.brand-work-meta {
+    font-size: 13px;
+    color: var(--brand-text-muted);
+}
+.brand-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 300px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--brand-primary);
+    color: var(--brand-primary-text);
+}

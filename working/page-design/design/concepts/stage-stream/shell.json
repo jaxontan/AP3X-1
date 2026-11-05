@@ -1,0 +1,50 @@
+{
+  "app": "Flash Concepts Pitch Studio",
+  "user": "Michelle (Planning Lead)",
+  "nav": [
+    {
+      "label": "Pipeline",
+      "icon": "fa-table-chart",
+      "page": "home.html",
+      "current": true
+    },
+    {
+      "label": "Intake Review",
+      "icon": "fa-file-text-o",
+      "page": "intake.html"
+    },
+    {
+      "label": "Planning Studio",
+      "icon": "fa-lightbulb-o",
+      "page": "planning.html"
+    },
+    {
+      "label": "Design & Spatial",
+      "icon": "fa-cube",
+      "page": "spatial.html"
+    },
+    {
+      "label": "Operations & Costing",
+      "icon": "fa-calculator",
+      "page": "costing.html"
+    },
+    {
+      "label": "Final Quality & Release",
+      "icon": "fa-check-circle-o",
+      "page": "release.html"
+    },
+    {
+      "label": "Repositories",
+      "icon": "fa-database",
+      "page": "repos.html"
+    },
+    {
+      "label": "Administration",
+      "icon": "fa-sliders",
+      "page": "admin.html"
+    }
+  ],
+  "chrome": {
+    "titleBar": true
+  }
+}

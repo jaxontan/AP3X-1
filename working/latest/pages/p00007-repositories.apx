@@ -1,0 +1,250 @@
+page 7 (
+    name: Operational Repositories
+    alias: REPOSITORIES
+    title: Master Repositories - Venues & Compliance Rules
+    appearance {
+        pageTemplate: @/standard
+        templateOptions: #DEFAULT#
+    }
+    navigation {
+        cursorFocus: doNotFocusCursor
+    }
+    security {
+        formAutoComplete: false
+    }
+
+    region breadcrumb (
+        name: Breadcrumb
+        type: breadcrumb
+        source {
+            breadcrumb: @breadcrumb
+        }
+        layout {
+            sequence: 10
+            slot: breadcrumbBar
+        }
+        appearance {
+            template: @/title-bar
+            templateOptions: [
+                #DEFAULT#
+                t-BreadcrumbRegion--useBreadcrumbTitle
+            ]
+        }
+        componentAppearance {
+            breadcrumbTemplate: @/breadcrumb
+        }
+    )
+
+    region compliance-report (
+        name: Compliance rules
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select rule_id,
+                       jurisdiction,
+                       rule_code,
+                       description,
+                       threshold_condition,
+                       licensing_body,
+                       estimated_cost_sgd,
+                       is_active
+                from fc_compliance_rules
+                order by jurisdiction, rule_code
+                ```
+        }
+        layout {
+            sequence: 30
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column DESCRIPTION (
+            derivedColumn: N
+            heading {
+                heading: Description
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column ESTIMATED_COST_SGD (
+            derivedColumn: N
+            heading {
+                heading: Endorsement Cost (SGD)
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column JURISDICTION (
+            derivedColumn: N
+            heading {
+                heading: Country
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+        column LICENSING_BODY (
+            derivedColumn: N
+            heading {
+                heading: Regulatory Body
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column RULE_CODE (
+            derivedColumn: N
+            heading {
+                heading: Rule Code
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column RULE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+    )
+
+    region venues-report (
+        name: Venue library
+        type: classicReport
+        source {
+            location: localDatabase
+            type: sqlQuery
+            sqlQuery:
+                ```sql
+                select venue_id,
+                       venue_name,
+                       city,
+                       max_hall_height_m,
+                       door_clearance_width_m,
+                       floor_loading_capacity_kn,
+                       electrical_supply_spec,
+                       pe_trigger_height_m,
+                       loading_dock_guidelines
+                from fc_venues
+                order by venue_name asc
+                ```
+        }
+        layout {
+            sequence: 20
+            slot: body
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Region--noPadding
+            ]
+        }
+        componentAppearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+                t-Report--stretch
+                t-Report--rowHighlight
+            ]
+        }
+        pagination {
+            type: nextAndPreviousLinks
+        }
+
+        column CITY (
+            derivedColumn: N
+            heading {
+                heading: City
+            }
+            layout {
+                sequence: 3
+            }
+        )
+
+        column ELECTRICAL_SUPPLY_SPEC (
+            derivedColumn: N
+            heading {
+                heading: Power Spec
+            }
+            layout {
+                sequence: 6
+            }
+        )
+
+        column FLOOR_LOADING_CAPACITY_KN (
+            derivedColumn: N
+            heading {
+                heading: Floor Load (kN/m2)
+            }
+            layout {
+                sequence: 5
+            }
+        )
+
+        column MAX_HALL_HEIGHT_M (
+            derivedColumn: N
+            heading {
+                heading: Max Height (m)
+            }
+            layout {
+                sequence: 4
+            }
+        )
+
+        column VENUE_ID (
+            derivedColumn: N
+            heading {
+                heading: ID
+            }
+            layout {
+                sequence: 1
+            }
+        )
+
+        column VENUE_NAME (
+            derivedColumn: N
+            heading {
+                heading: Venue Name
+            }
+            layout {
+                sequence: 2
+            }
+        )
+
+    )
+
+)
+

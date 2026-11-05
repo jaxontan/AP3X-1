@@ -1,0 +1,65 @@
+file "css/brand.css" (
+    mimeType: text/css
+    charSet: utf-8
+)
+
+file "fonts/archivo-latin-wdth-normal.woff2" (
+    mimeType: font/woff2
+    charSet: utf-8
+)
+
+file "fonts/montserrat-latin-400-normal.woff2" (
+    mimeType: font/woff2
+    charSet: utf-8
+)
+
+file "fonts/montserrat-latin-500-normal.woff2" (
+    mimeType: font/woff2
+    charSet: utf-8
+)
+
+file "fonts/montserrat-latin-600-normal.woff2" (
+    mimeType: font/woff2
+    charSet: utf-8
+)
+
+file "fonts/montserrat-latin-700-normal.woff2" (
+    mimeType: font/woff2
+    charSet: utf-8
+)
+
+file "icons/app-icon-144-rounded.png" (
+    mimeType: image/png
+    charSet: utf-8
+)
+
+file "icons/app-icon-192.png" (
+    mimeType: image/png
+    charSet: utf-8
+)
+
+file "icons/app-icon-256-rounded.png" (
+    mimeType: image/png
+    charSet: utf-8
+)
+
+file "icons/app-icon-32.png" (
+    mimeType: image/png
+    charSet: utf-8
+)
+
+file "icons/app-icon-512.png" (
+    mimeType: image/png
+    charSet: utf-8
+)
+
+file "icons/app-mark.svg" (
+    mimeType: image/svg+xml
+    charSet: utf-8
+)
+
+file "js/app.js" (
+    mimeType: application/javascript
+    charSet: utf-8
+)
+

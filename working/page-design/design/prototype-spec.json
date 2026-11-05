@@ -1,0 +1,209 @@
+{
+  "app": {
+    "name": "Flash Concepts Pitch Studio"
+  },
+  "user": "Michelle (Planning Lead)",
+  "nav": [
+    {
+      "label": "Pipeline",
+      "icon": "fa-table-chart",
+      "current": true
+    },
+    {
+      "label": "Intake Review",
+      "icon": "fa-file-text-o"
+    },
+    {
+      "label": "Planning Studio",
+      "icon": "fa-lightbulb-o"
+    },
+    {
+      "label": "Design & Spatial",
+      "icon": "fa-cube"
+    },
+    {
+      "label": "Operations & Costing",
+      "icon": "fa-calculator"
+    },
+    {
+      "label": "Final Quality & Release",
+      "icon": "fa-check-circle-o"
+    },
+    {
+      "label": "Repositories",
+      "icon": "fa-database"
+    },
+    {
+      "label": "Administration",
+      "icon": "fa-sliders"
+    }
+  ],
+  "page": {
+    "title": "Tender Pipeline & Handover Dashboard",
+    "breadcrumb": [
+      "Flash Concepts",
+      "Pitches"
+    ],
+    "primaryAction": "Create Tender",
+    "secondaryAction": "Export Pipeline"
+  },
+  "kpis": [
+    {
+      "label": "Active Pitches",
+      "value": "14",
+      "note": "Peak season Q3/Q4 across SG & JKT",
+      "status": "info"
+    },
+    {
+      "label": "Turnaround Avg",
+      "value": "4.8 Days",
+      "note": "-52% vs baseline (Target: <5 days)",
+      "status": "success"
+    },
+    {
+      "label": "Pending Gate Sign-off",
+      "value": "3",
+      "note": "Gate 2 (1), Gate 3 (2)",
+      "status": "warning"
+    },
+    {
+      "label": "Sustainability Index",
+      "value": "Bronze (MICE)",
+      "note": "68% reusable structural assets",
+      "status": "success"
+    }
+  ],
+  "report": {
+    "title": "Active Pitches & Gate Workflow",
+    "columns": [
+      "Tender Code",
+      "Client",
+      "Office",
+      "Stage",
+      "Submission Due",
+      "Est. Budget",
+      "Workflow Status"
+    ],
+    "numeric": [
+      5
+    ],
+    "rows": [
+      [
+        "FC-2026-089",
+        "DBS Bank",
+        "Singapore",
+        "Operations Costing",
+        "12 Nov 2026",
+        "S$ 145,000",
+        {
+          "badge": "Gate 2 Approved",
+          "status": "info"
+        }
+      ],
+      [
+        "FC-2026-088",
+        "Singapore FinTech Festival",
+        "Singapore",
+        "Design & Spatial",
+        "18 Nov 2026",
+        "S$ 280,000",
+        {
+          "badge": "Gate 1 Approved",
+          "status": "info"
+        }
+      ],
+      [
+        "FC-2026-087",
+        "Wise Asia-Pac",
+        "Singapore",
+        "Final Release Review",
+        "08 Nov 2026",
+        "S$ 62,500",
+        {
+          "badge": "Gate 4 Approved",
+          "status": "success"
+        }
+      ],
+      [
+        "FC-2026-086",
+        "FedEx Regional",
+        "Jakarta",
+        "Intake Review",
+        "24 Nov 2026",
+        "IDR 1,120M",
+        {
+          "badge": "Intake Pending",
+          "status": "warning"
+        }
+      ],
+      [
+        "FC-2026-085",
+        "Friso Experience",
+        "Jakarta",
+        "Proposal Released",
+        "01 Nov 2026",
+        "IDR 1,350M",
+        {
+          "badge": "Gate 5 Released",
+          "status": "success"
+        }
+      ]
+    ]
+  },
+  "form": {
+    "title": "New Tender Quick Setup",
+    "fields": [
+      {
+        "label": "Client Name",
+        "type": "select",
+        "options": [
+          "DBS Bank",
+          "Singapore FinTech Festival",
+          "FedEx APAC",
+          "Wise Asia-Pac",
+          "Friso Consumer"
+        ],
+        "required": true
+      },
+      {
+        "label": "Project Title",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Operating Office",
+        "type": "select",
+        "options": [
+          "Singapore (HQ)",
+          "Jakarta (Regional)"
+        ],
+        "required": true
+      },
+      {
+        "label": "Primary Currency",
+        "type": "select",
+        "options": [
+          "SGD (S$)",
+          "IDR (Rp)"
+        ],
+        "required": true
+      },
+      {
+        "label": "Submission Deadline",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Intake Notes & Brief Summary",
+        "type": "textarea"
+      }
+    ],
+    "submit": "Initiate Pitch Workspace",
+    "cancel": "Cancel"
+  },
+  "empty": {
+    "title": "Actionable Bottlenecks",
+    "text": "No blocked tenders or overdue vendor RFQs. All teams running within SLA.",
+    "action": "View Full Workflow Telemetry"
+  }
+}
