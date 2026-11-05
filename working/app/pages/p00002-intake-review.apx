@@ -1090,6 +1090,31 @@ page 2 (
         }
     )
 
+    pageItem P2_SEARCH_ENGINE (
+        type: selectList
+        label {
+            label: Research focus
+            alignment: left
+        }
+        lov {
+            type: sharedComponent
+            lov: @search-engine-lov
+            displayExtraValues: false
+            displayNullValue: false
+        }
+        layout {
+            sequence: 10
+            region: @ai-research-section
+            slot: regionBody
+            alignment: left
+            columnSpan: 12
+        }
+        appearance {
+            template: @/optional-floating
+            templateOptions: #DEFAULT#
+        }
+    )
+
     pageItem P2_RESEARCH_QUERY (
         type: textField
         label {
@@ -1097,31 +1122,31 @@ page 2 (
             alignment: left
         }
         layout {
-            sequence: 10
+            sequence: 20
             region: @ai-research-section
             slot: regionBody
             alignment: left
+            columnSpan: 12
         }
         appearance {
             template: @/optional-floating
             templateOptions: #DEFAULT#
+            cssClasses: fc-research-query-wrap
         }
         advanced {
-            preText:
-                ```html
-                <div class="fc-phase-header">
-                    <span class="fc-phase-num">1</span>
-                    <span class="fc-phase-title">AI Client Deep-Search</span>
-                </div>
-                ```
             postText:
                 ```html
-                <div class="fc-prompt-chips">
-                    <span class="fc-chip-label">Quick prompts:</span>
-                    <button type="button" class="fc-chip" data-query="Recent ESG sustainability targets and net-zero commitments">🌱 Net-Zero / ESG</button>
-                    <button type="button" class="fc-chip" data-query="Executive leadership priorities and corporate strategy announcements">🏢 Corporate Strategy</button>
-                    <button type="button" class="fc-chip" data-query="MAS regulatory compliance standards and governance history">⚖️ Compliance &amp; Safety</button>
-                    <button type="button" class="fc-chip" data-query="Digital transformation and spatial technology roadmap">💡 Tech Roadmap</button>
+                <div class="fc-research-helper-box">
+                    <div class="fc-prompt-chips">
+                        <span class="fc-chip-label"><span class="fa fa-lightbulb-o" aria-hidden="true"></span> Suggested:</span>
+                        <button type="button" class="fc-chip" data-query="Recent ESG sustainability targets and net-zero commitments">🌱 Net-Zero / ESG</button>
+                        <button type="button" class="fc-chip" data-query="Executive leadership priorities and corporate strategy announcements">🏢 Corporate Strategy</button>
+                        <button type="button" class="fc-chip" data-query="Statutory compliance standards and safety governance history">⚖️ Compliance &amp; Safety</button>
+                        <button type="button" class="fc-chip" data-query="Digital transformation and spatial technology roadmap">💡 Tech Roadmap</button>
+                    </div>
+                    <div class="fc-search-hint">
+                        <span class="fa fa-info-circle" aria-hidden="true"></span> Click a suggested topic or enter a query, then click <strong>Search client info</strong>. Citations appear in the <strong>Research sources</strong> tab below.
+                    </div>
                 </div>
                 ```
         }
@@ -1142,36 +1167,6 @@ page 2 (
         appearance {
             template: @/optional-floating
             templateOptions: #DEFAULT#
-        }
-    )
-
-    pageItem P2_SEARCH_ENGINE (
-        type: selectList
-        label {
-            label: Research focus
-            alignment: left
-        }
-        lov {
-            type: sharedComponent
-            lov: @search-engine-lov
-            displayExtraValues: false
-            displayNullValue: false
-        }
-        layout {
-            sequence: 20
-            region: @ai-research-section
-            slot: regionBody
-            alignment: left
-        }
-        appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
-        }
-        advanced {
-            postText:
-                ```html
-                <div class="fc-search-hint"><span class="fa fa-info-circle" aria-hidden="true"></span> Retrieved citations appear in the <strong>Research sources</strong> tab below with one-click status review.</div>
-                ```
         }
     )
 
@@ -1424,7 +1419,6 @@ page 2 (
         }
         appearance {
             buttonTemplate: @/text-with-icon
-            hot: true
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
