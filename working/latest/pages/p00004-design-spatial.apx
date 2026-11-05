@@ -150,8 +150,37 @@ page 4 (
         }
     )
 
-    region drawing-packages-report (
+    region drawing-packages-tab (
         name: Drawing packages
+        type: staticContent
+        layout {
+            sequence: 30
+            parentRegion: @design-tabs
+            slot: tabs
+        }
+        appearance {
+            template: @/blank-with-attributes
+        }
+    )
+
+    region drawing-upload-form (
+        name: Upload & register drawing package
+        type: staticContent
+        layout {
+            sequence: 10
+            parentRegion: @drawing-packages-tab
+            slot: subRegions
+        }
+        appearance {
+            template: @/standard
+            templateOptions: [
+                #DEFAULT#
+            ]
+        }
+    )
+
+    region drawing-packages-report (
+        name: Registered drawing packages
         type: classicReport
         source {
             location: localDatabase
@@ -172,9 +201,9 @@ page 4 (
                 ```
         }
         layout {
-            sequence: 30
-            parentRegion: @design-tabs
-            slot: tabs
+            sequence: 20
+            parentRegion: @drawing-packages-tab
+            slot: subRegions
         }
         appearance {
             template: @/standard
@@ -690,42 +719,78 @@ page 4 (
         }
     )
 
-    pageItem P4_PKG_TITLE (
-        type: textField
+    pageItem P4_DRAWING_FILE (
+        type: fileUpload
         label {
-            label: Drawing package name
+            label: Drawing package file (.dwg, .dxf, .pdf, .zip)
             alignment: left
         }
+        display {
+            displayAs: inlineDropzone
+            dropzoneTitle: Drop Drawing Package (AutoCAD DWG, DXF, PDF, ZIP) Here
+            dropzoneDesc: Or click to browse and select drawing file
+        }
+        storage {
+            type: appTempFiles
+        }
         layout {
-            sequence: 35
-            region: @spatial-form
+            sequence: 10
+            region: @drawing-upload-form
             slot: regionBody
             alignment: left
-            startNewRow: false
             columnSpan: 6
         }
         appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
+            template: @/optional
+            templateOptions: [
+                #DEFAULT#
+            ]
+        }
+    )
+
+    pageItem P4_PKG_TITLE (
+        type: textField
+        label {
+            label: Drawing package title / notes
+            alignment: left
+        }
+        layout {
+            sequence: 20
+            region: @drawing-upload-form
+            slot: regionBody
+            alignment: left
+            startNewRow: false
+            columnSpan: 4
+        }
+        appearance {
+            template: @/optional
+            templateOptions: [
+                #DEFAULT#
+            ]
+            valuePlaceholder: e.g. NYP InnovSphere Main Stage 3D
         }
     )
 
     pageItem P4_PKG_VER (
         type: numberField
         label {
-            label: Drawing version
+            label: Version
             alignment: left
         }
         layout {
-            sequence: 80
-            region: @spatial-form
+            sequence: 30
+            region: @drawing-upload-form
             slot: regionBody
             alignment: left
-            columnSpan: 12
+            startNewRow: false
+            columnSpan: 2
         }
         appearance {
-            template: @/optional-floating
-            templateOptions: #DEFAULT#
+            template: @/optional
+            templateOptions: [
+                #DEFAULT#
+            ]
+            valuePlaceholder: 1.0
         }
     )
 
@@ -913,7 +978,7 @@ page 4 (
         label: Add addendum
         layout {
             sequence: 20
-            region: @drawing-packages-report
+            region: @drawing-upload-form
             slot: next
         }
         appearance {
@@ -981,10 +1046,10 @@ page 4 (
 
     button upload-package (
         buttonName: UPLOAD_PACKAGE
-        label: Register drawings
+        label: Upload & register drawing
         layout {
             sequence: 10
-            region: @drawing-packages-report
+            region: @drawing-upload-form
             slot: next
         }
         appearance {
@@ -992,8 +1057,12 @@ page 4 (
             templateOptions: [
                 #DEFAULT#
                 t-Button--iconLeft
+                t-Button--primary
             ]
             icon: fa-upload
+        }
+        behavior {
+            showProcessing: true
         }
     )
 
@@ -1382,15 +1451,27 @@ page 4 (
                 ```plsql
                 declare
                     l_pkg_id number;
+                    l_title varchar2(250) := :P4_PKG_TITLE;
                 begin
+                    if :P4_DRAWING_FILE is not null then
+                        begin
+                            select filename into l_title
+                              from apex_application_temp_files
+                             where name = :P4_DRAWING_FILE;
+                        exception
+                            when others then null;
+                        end;
+                    end if;
+                    l_title := coalesce(l_title, :P4_PKG_TITLE, 'NYP_InnovSphere_Stage_and_Pods_3D.dwg');
+
                     fc_design_api.upload_drawing_package(
                         p_tender_id => nvl(to_number(:P4_TENDER_ID), fc_workflow_api.get_active_project(:APP_USER)),
-                        p_title => nvl(:P4_PKG_TITLE, 'NYP_InnovSphere_Stage_and_Pods_3D.dwg'),
+                        p_title => l_title,
                         p_version => nvl(to_number(:P4_PKG_VER), 1.0),
                         p_user_name => :APP_USER,
                         x_package_id => l_pkg_id
                     );
-                    apex_application.g_print_success_message := 'Drawing Package registered! Drawing ID: ' || l_pkg_id || ' (' || nvl(:P4_PKG_TITLE, 'NYP_InnovSphere_Stage_and_Pods_3D.dwg') || ', v' || nvl(:P4_PKG_VER, '1.0') || ' ACTIVE) in /03_3D_Sketches/. Downstream BOQ items marked STALE (BR-06 cascade).';
+                    apex_application.g_print_success_message := 'Drawing Package uploaded & registered! Drawing ID: ' || l_pkg_id || ' (' || l_title || ', v' || nvl(:P4_PKG_VER, '1.0') || ' ACTIVE) in /03_3D_Sketches/. Downstream BOQ items marked STALE (BR-06 cascade).';
                 end;
                 ```
         }
@@ -1402,7 +1483,7 @@ page 4 (
         }
         serverSideCondition {
             type: requestIsContainedInValue
-            value: UPLOAD_PACKAGE:REGISTER_PACKAGE:REGISTER_DRAWING:P4_PKG_TITLE
+            value: UPLOAD_PACKAGE:REGISTER_PACKAGE:REGISTER_DRAWING:P4_PKG_TITLE:P4_DRAWING_FILE
         }
     )
 

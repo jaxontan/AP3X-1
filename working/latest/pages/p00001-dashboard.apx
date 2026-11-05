@@ -30,20 +30,19 @@ page 1 (
                       "01_Planning": [
                         { name: "NYP_Student_Roadshow_Brief_v1.0.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "3.42 MB", ver: "v1.0", author: "MICHELLE", page: 2 },
                         { name: "NYP_InnovSphere_Pitch_Deck_Master.pptx", badge: "PITCH DECK", badgeClass: "fc-badge-deck", size: "18.2 MB", ver: "v1.2", author: "MICHELLE", page: 3 },
-                        { name: "Public_Research_Findings_Report.pdf", badge: "RESEARCH", badgeClass: "fc-badge-pdf", size: "2.10 MB", ver: "v1.0", author: "MICHELLE", page: 3 },
-                        { name: "Gate_1_Planning_Handover_Manifest.pdf", badge: "GATE 1", badgeClass: "fc-badge-quote", size: "840 KB", ver: "v1.0", author: "MICHELLE", page: 3 }
+                        { name: "Public_Research_Findings_Report.pdf", badge: "RESEARCH", badgeClass: "fc-badge-pdf", size: "2.10 MB", ver: "v1.0", author: "MICHELLE", page: 3 }
                       ],
                       "02_Designing": [
                         { name: "NYP_Campus_Atrium_Floorplan_DWG.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "6.15 MB", ver: "v1.0", author: "ADI", page: 4 },
-                        { name: "NYP_InnovSphere_Modular_Kiosks_3D.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "11.80 MB", ver: "v1.1", author: "ADI", page: 4 },
-                        { name: "Key_Visuals_Modular_Renderings.png", badge: "2D VISUAL", badgeClass: "fc-badge-deck", size: "5.80 MB", ver: "v1.0", author: "ADI", page: 4 },
-                        { name: "Gate_2_Spatial_Signoff.pdf", badge: "GATE 2", badgeClass: "fc-badge-quote", size: "620 KB", ver: "v1.0", author: "ADI", page: 4 }
+                        { name: "NYP_InnovSphere_Modular_Kiosks_3D.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "11.80 MB", ver: "v1.1", author: "ADI", page: 4 }
                       ],
                       "03_Operations": [
                         { name: "Bill_of_Quantities_BOQ_v2.1.xlsx", badge: "BOQ XLS", badgeClass: "fc-badge-quote", size: "3.20 MB", ver: "v2.1", author: "WEI_LIN", page: 5 },
-                        { name: "Kingsmen_NYP_Honeycomb_Pods_Quote.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.42 MB", ver: "v1.0", author: "WEI_LIN", page: 5 },
-                        { name: "Venue_Regulatory_Compliance_Audit.pdf", badge: "COMPLIANCE", badgeClass: "fc-badge-pdf", size: "1.40 MB", ver: "v1.0", author: "WEI_LIN", page: 5 },
-                        { name: "Commercial_Pricing_and_Margin_Model.xlsx", badge: "PRICING", badgeClass: "fc-badge-quote", size: "2.90 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
+                        { name: "Kingsmen_NYP_Honeycomb_Pods_Quote.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.42 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
+                      ],
+                      "04_Custom_Uploads": [
+                        { name: "NYP_Campus_Site_Survey_Photos.zip", badge: "PHOTOS", badgeClass: "fc-badge-custom", size: "14.20 MB", ver: "v1.0", author: "COLLABORATOR", page: 1, date: "05-Nov-2026" },
+                        { name: "Client_Addendum_Technical_Specs.pdf", badge: "ADDENDUM", badgeClass: "fc-badge-pdf", size: "2.45 MB", ver: "v1.0", author: "CLIENT", page: 1, date: "04-Nov-2026" }
                       ]
                     }
                   },
@@ -60,152 +59,23 @@ page 1 (
                     page: 6,
                     folders: {
                       "01_Planning": [
-                        { name: "DBS_Spark_Tender_Brief_v2.0.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "4.83 MB", ver: "v2.0", author: "MICHELLE", page: 2 },
-                        { name: "DBS_Spark_HTML5_Presentation_Deck.html", badge: "PITCH DECK", badgeClass: "fc-badge-deck", size: "680 KB", ver: "v1.0", author: "ADI", page: 3 },
-                        { name: "Gate_1_Planning_Signoff.pdf", badge: "GATE 1", badgeClass: "fc-badge-quote", size: "750 KB", ver: "v1.0", author: "MICHELLE", page: 3 }
+                        { name: "DBS_Spark_Tender_Brief_v2.0.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "4.83 MB", ver: "v2.0", author: "MICHELLE", page: 2 }
                       ],
                       "02_Designing": [
-                        { name: "MBS_HallC_Floorplan_DWG.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "8.91 MB", ver: "v1.0", author: "MICHELLE", page: 4 },
-                        { name: "MBS_HallC_Spark_Nexus_3D_Arch.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "14.25 MB", ver: "v1.2", author: "ADI", page: 4 },
-                        { name: "Gate_2_Design_Approval.pdf", badge: "GATE 2", badgeClass: "fc-badge-quote", size: "580 KB", ver: "v1.0", author: "ADI", page: 4 }
+                        { name: "MBS_HallC_Floorplan_DWG.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "8.91 MB", ver: "v1.0", author: "MICHELLE", page: 4 }
                       ],
                       "03_Operations": [
-                        { name: "Kingsmen_Portal_Quotation_Signed.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.25 MB", ver: "v1.0", author: "WEI_LIN", page: 5 },
-                        { name: "Final_Release_Commercial_Invoice.pdf", badge: "INVOICE", badgeClass: "fc-badge-quote", size: "420 KB", ver: "v1.0", author: "WEI_LIN", page: 6 }
-                      ]
-                    }
-                  }
-                },
-                "10_October": {
-                  "FC-2026-088": {
-                    id: 2,
-                    code: "FC-2026-088",
-                    name: "FC-2026-088_FinTech_Pavilion",
-                    title: "Global Sustainability & Regional Trade Pavilion",
-                    client: "Singapore FinTech Festival",
-                    status: "IN_PROGRESS",
-                    statusText: "ACTIVE BID",
-                    statusClass: "fc-status-pill-blue",
-                    stage: "Step 3: 3D Spatial Design",
-                    page: 4,
-                    folders: {
-                      "01_Planning": [
-                        { name: "SFF_Sustainability_Pavilion_Brief.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "5.10 MB", ver: "v1.0", author: "MICHELLE", page: 2 },
-                        { name: "SFF_Green_Pavilion_Pitch.pptx", badge: "PITCH DECK", badgeClass: "fc-badge-deck", size: "1.80 MB", ver: "v1.0", author: "ADI", page: 3 }
+                        { name: "Kingsmen_Portal_Quotation_Signed.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.25 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
                       ],
-                      "02_Designing": [
-                        { name: "EXPO_Hall2_Grid_Layout.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "7.80 MB", ver: "v1.0", author: "MICHELLE", page: 4 },
-                        { name: "Pavilion_Timber_Frame_3D.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "16.40 MB", ver: "v1.0", author: "ADI", page: 4 }
-                      ],
-                      "03_Operations": [
-                        { name: "Pico_Fabrication_Quote.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "2.10 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
-                      ]
-                    }
-                  },
-                  "FC-2026-087": {
-                    id: 3,
-                    code: "FC-2026-087",
-                    name: "FC-2026-087_Wise_Exchange",
-                    title: "Wise Transparent Borderless Exchange Hub",
-                    client: "Wise Asia-Pac",
-                    status: "IN_PROGRESS",
-                    statusText: "ACTIVE BID",
-                    statusClass: "fc-status-pill-blue",
-                    stage: "Step 5: Multilingual Release",
-                    page: 6,
-                    folders: {
-                      "01_Planning": [
-                        { name: "Wise_Borderless_RFP.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "2.90 MB", ver: "v1.0", author: "MICHELLE", page: 2 },
-                        { name: "Wise_FinTech_Pitch_v3.html", badge: "PITCH DECK", badgeClass: "fc-badge-deck", size: "740 KB", ver: "v1.0", author: "ADI", page: 3 }
-                      ],
-                      "02_Designing": [
-                        { name: "Marina_Bay_Sands_L4_Floorplan.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "4.50 MB", ver: "v1.0", author: "MICHELLE", page: 4 },
-                        { name: "Wise_LED_Tunnel_Visual.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "9.20 MB", ver: "v1.0", author: "ADI", page: 4 }
-                      ],
-                      "03_Operations": [
-                        { name: "Cityneon_AV_Lighting_Estimate.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.10 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
-                      ]
-                    }
-                  }
-                },
-                "09_September": {
-                  "FC-2026-086": {
-                    id: 4,
-                    code: "FC-2026-086",
-                    name: "FC-2026-086_FedEx_Logistics",
-                    title: "APAC Logistics Innovation Summit 2026",
-                    client: "FedEx Regional",
-                    status: "WAITING",
-                    statusText: "PIPELINE",
-                    statusClass: "fc-status-pill-orange",
-                    stage: "Step 1: Intake & OCR",
-                    page: 2,
-                    folders: {
-                      "01_Planning": [
-                        { name: "FedEx_APAC_Summit_Brief.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "3.80 MB", ver: "v1.0", author: "MICHELLE", page: 2 },
-                        { name: "FedEx_Keynote_Deck.pptx", badge: "PITCH DECK", badgeClass: "fc-badge-deck", size: "2.40 MB", ver: "v1.0", author: "ADI", page: 3 }
-                      ],
-                      "02_Designing": [
-                        { name: "Suntec_Level3_Ballroom_Plan.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "5.60 MB", ver: "v1.0", author: "MICHELLE", page: 4 },
-                        { name: "Automated_Sortation_Mockup_3D.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "13.10 MB", ver: "v1.0", author: "ADI", page: 4 }
-                      ],
-                      "03_Operations": [
-                        { name: "Kingsmen_Stage_Build_Quote.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.90 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
-                      ]
-                    }
-                  },
-                  "FC-2026-085": {
-                    id: 5,
-                    code: "FC-2026-085",
-                    name: "FC-2026-085_Friso_Family",
-                    title: "Friso Family Discovery & Digestive Health Journey",
-                    client: "Friso Consumer",
-                    status: "WAITING",
-                    statusText: "PIPELINE",
-                    statusClass: "fc-status-pill-orange",
-                    stage: "Step 2: Planning Studio",
-                    page: 3,
-                    folders: {
-                      "01_Planning": [
-                        { name: "Friso_Discovery_Tender_Brief.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "3.20 MB", ver: "v1.0", author: "MICHELLE", page: 2 },
-                        { name: "Friso_Experiential_Storyline.pptx", badge: "PITCH DECK", badgeClass: "fc-badge-deck", size: "4.10 MB", ver: "v1.0", author: "ADI", page: 3 }
-                      ],
-                      "02_Designing": [
-                        { name: "Suntec_Hall401_Digestive_Tunnel.pdf", badge: "DWG PLAN", badgeClass: "fc-badge-dwg", size: "6.10 MB", ver: "v1.0", author: "MICHELLE", page: 4 },
-                        { name: "Sensory_Dome_Acoustics_3D.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "11.40 MB", ver: "v1.0", author: "ADI", page: 4 }
-                      ],
-                      "03_Operations": [
-                        { name: "Custom_Fabrication_RateCard.xlsx", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "1.80 MB", ver: "v1.0", author: "WEI_LIN", page: 5 }
-                      ]
-                    }
-                  },
-                  "FC-2026-006": {
-                    id: 22,
-                    code: "FC-2026-006",
-                    name: "FC-2026-006_FinTech_Summit",
-                    title: "FinTech Summit 2026",
-                    client: "Test Bank Corp",
-                    status: "WAITING",
-                    statusText: "PIPELINE",
-                    statusClass: "fc-status-pill-orange",
-                    stage: "Step 1: Intake & OCR",
-                    page: 2,
-                    folders: {
-                      "01_Planning": [
-                        { name: "TestBank_Summit_RFP.pdf", badge: "PDF BRIEF", badgeClass: "fc-badge-pdf", size: "2.10 MB", ver: "v1.0", author: "MICHELLE", page: 2 }
-                      ],
-                      "02_Designing": [
-                        { name: "TestBank_Booth_Concept.dwg", badge: "3D CAD", badgeClass: "fc-badge-3d", size: "8.50 MB", ver: "v1.0", author: "ADI", page: 4 }
-                      ],
-                      "03_Operations": [
-                        { name: "AV_Lighting_Budget.pdf", badge: "BOQ QUOTE", badgeClass: "fc-badge-quote", size: "950 KB", ver: "v1.0", author: "WEI_LIN", page: 5 }
+                      "04_Custom_Uploads": [
+                        { name: "DBS_Marina_Bay_Sands_Site_Photos.zip", badge: "PHOTOS", badgeClass: "fc-badge-custom", size: "22.40 MB", ver: "v1.0", author: "DBS_TEAM", page: 1, date: "15-Oct-2026" }
                       ]
                     }
                   }
                 }
               }
             };
-            
+
             let fcCurrentPath = ["2026", "11_November", "FC-2026-092"];
             let fcExpandedPaths = {
               "2026": true,
@@ -276,13 +146,14 @@ page 1 (
                       "</div>" +
                       "<div class=\"fc-tree-children " + (pExp ? "fc-expanded" : "") + "\">";
             
-                    var stageFolders = ["01_Planning", "02_Designing", "03_Operations"];
+                    var stageFolders = ["01_Planning", "02_Designing", "03_Operations", "04_Custom_Uploads"];
                     for (var s = 0; s < stageFolders.length; s++) {
                       var sName = stageFolders[s];
                       var sPath = pPath + "/" + sName;
                       var sAct = curStr === sPath;
                       var sIcon = sName === "01_Planning" ? "fc-tree-icon-planning fa-pencil-square-o" :
-                                 (sName === "02_Designing" ? "fc-tree-icon-designing fa-cube" : "fc-tree-icon-operations fa-calculator");
+                                 (sName === "02_Designing" ? "fc-tree-icon-designing fa-cube" :
+                                 (sName === "03_Operations" ? "fc-tree-icon-operations fa-calculator" : "fc-tree-icon-custom fa-cloud-upload"));
                       var fCount = (prj.folders && prj.folders[sName]) ? prj.folders[sName].length : 0;
             
                       html += "<div class=\"fc-tree-node\">" +
@@ -368,10 +239,10 @@ page 1 (
             function fcRenderExplorer() {
               var addrElem = document.getElementById("fc-address-path");
               if (addrElem) {
-                var phtml = "<span class=\"fc-addr-pill\" data-fc-path=\"\">C:\\FlashConcepts\\Projects</span>";
+                var phtml = "<span class=\"fc-addr-pill\" data-fc-path=\"\"><span class=\"fa fa-home\"></span> Projects</span>";
                 for (var a = 0; a < fcCurrentPath.length; a++) {
                   var subP = fcCurrentPath.slice(0, a + 1);
-                  phtml += " <span class=\"fc-addr-sep\">\\</span> <span class=\"fc-addr-pill\" data-fc-path=\"" + subP.join("/") + "\">" + fcCurrentPath[a] + "</span>";
+                  phtml += " <span class=\"fc-addr-sep\">/</span> <span class=\"fc-addr-pill\" data-fc-path=\"" + subP.join("/") + "\">" + fcCurrentPath[a] + "</span>";
                 }
                 addrElem.innerHTML = phtml;
               }
@@ -488,6 +359,21 @@ page 1 (
                       btnClass: "fc-btn-operations",
                       page: 5,
                       btnLabel: "Enter Costing Studio (Step 4) &rarr;"
+                    },
+                    "04_Custom_Uploads": {
+                      stepNum: "4",
+                      circleClass: "fc-step-circle-4",
+                      tagClass: "fc-tag-custom",
+                      tagLabel: "STAGE 4 &bull; CUSTOM UPLOADS",
+                      heroClass: "fc-hero-custom",
+                      icon: "fa-cloud-upload",
+                      desc: "Open repository for all team members, site survey photos, client addenda &amp; assets",
+                      ownerName: "All Team Members (Open Access)",
+                      avatarClass: "fc-avatar-all",
+                      avatarInit: "ALL",
+                      btnClass: "fc-btn-custom",
+                      page: 1,
+                      btnLabel: "+ Open &amp; Upload Files &rarr;"
                     }
                   };
             
@@ -531,7 +417,31 @@ page 1 (
                 var c4 = fcCurrentPath[3];
                 var prjData4 = (FC_DATA[y4] && FC_DATA[y4][m4] && FC_DATA[y4][m4][p4]);
                 var fileList = (prjData4 && prjData4.folders && prjData4.folders[c4]) || [];
-            
+
+                if (c4 === "04_Custom_Uploads") {
+                  itemsHtml += "<div class=\"fc-custom-upload-box\">" +
+                    "<div class=\"fc-custom-upload-icon\"><span class=\"fa fa-cloud-upload\"></span></div>" +
+                    "<div class=\"fc-custom-upload-content\">" +
+                      "<div class=\"fc-custom-upload-title\">04_Custom_Uploads &mdash; Open to Everyone</div>" +
+                      "<div class=\"fc-custom-upload-desc\">Central repository for all team members, site survey photos, client addenda, AutoCAD drawings, and project assets. Drag and drop any file or click to browse.</div>" +
+                    "</div>" +
+                    "<div class=\"fc-custom-upload-action\">" +
+                      "<input type=\"file\" id=\"fc-custom-file-input\" style=\"display:none;\" onchange=\"fcHandleCustomFileSelect(this, " + (prjData4 ? prjData4.id : 1) + ")\" />" +
+                      "<button type=\"button\" class=\"fc-upload-trigger-btn\" onclick=\"document.getElementById('fc-custom-file-input').click();\">" +
+                        "<span class=\"fa fa-plus-circle\"></span> Select File to Upload" +
+                      "</button>" +
+                    "</div>" +
+                  "</div>";
+                }
+
+                if (fileList.length === 0) {
+                  itemsHtml += "<div style=\"grid-column: 1 / -1; padding: 36px 20px; text-align: center; color: var(--brand-muted); background: var(--brand-ground); border: 1px dashed var(--brand-border); border-radius: 8px;\">" +
+                    "<span class=\"fa fa-folder-open-o\" style=\"font-size: 32px; display: block; margin-bottom: 8px; color: #7c3aed;\"></span>" +
+                    "<strong>This folder is currently empty.</strong><br/>" +
+                    (c4 === "04_Custom_Uploads" ? "Use the upload box above to add files." : "No files generated yet for this stage.") +
+                  "</div>";
+                }
+
                 if (fcViewMode === "grid") {
                   for (var f4 = 0; f4 < fileList.length; f4++) {
                     var item = fileList[f4];
@@ -578,7 +488,7 @@ page 1 (
                 if (depth === 0) countText = Object.keys(FC_DATA).length + " year(s)";
                 else if (depth === 1) countText = Object.keys(FC_DATA[fcCurrentPath[0]] || {}).length + " month(s)";
                 else if (depth === 2) countText = Object.keys((FC_DATA[fcCurrentPath[0]] && FC_DATA[fcCurrentPath[0]][fcCurrentPath[1]]) || {}).length + " project(s)";
-                else if (depth === 3) countText = "3 stage folders";
+                else if (depth === 3) countText = "4 folders";
                 else if (depth >= 4) {
                   var p4b = fcCurrentPath[2];
                   var c4b = fcCurrentPath[3];
@@ -590,7 +500,7 @@ page 1 (
               }
               var statusPathElem = document.getElementById("fc-status-path-label");
               if (statusPathElem) {
-                statusPathElem.textContent = fcCurrentPath.length === 0 ? "Projects Root" : fcCurrentPath.join(" \\ ");
+                statusPathElem.textContent = fcCurrentPath.length === 0 ? "Projects Root" : fcCurrentPath.join(" / ");
               }
             }
             
@@ -623,6 +533,60 @@ page 1 (
                   }
                 });
               }
+            }
+
+            function fcHandleCustomFileSelect(input, tenderId) {
+              var file = input.files && input.files[0];
+              if (!file) return;
+              if (typeof apex !== "undefined" && apex.message) {
+                apex.message.showPageSuccess("Uploading '" + file.name + "' (" + Math.round(file.size / 1024) + " KB)...");
+              }
+              apex.server.process("UPLOAD_CUSTOM_FILE", {
+                x01: tenderId || 1,
+                x02: file.name,
+                x03: file.size,
+                x04: file.type || "application/octet-stream",
+                x05: "Uploaded via Custom Uploads folder on " + (new Date()).toLocaleDateString()
+              }, {
+                dataType: "json",
+                success: function(pData) {
+                  if (typeof apex !== "undefined" && apex.message) {
+                    apex.message.showPageSuccess("File '" + file.name + "' uploaded successfully into 04_Custom_Uploads!");
+                  }
+                  fcRefreshFromDb();
+                },
+                error: function(err) {
+                  if (typeof apex !== "undefined" && apex.message) {
+                    apex.message.showErrors([{
+                      type: "error",
+                      location: "page",
+                      message: "Upload failed: " + (err.responseText || "Server error")
+                    }]);
+                  }
+                }
+              });
+              input.value = "";
+            }
+
+            function fcPromptUpload() {
+              var tenderId = 1;
+              if (fcCurrentPath.length >= 3) {
+                var y = fcCurrentPath[0], m = fcCurrentPath[1], p = fcCurrentPath[2];
+                var prj = FC_DATA[y] && FC_DATA[y][m] && FC_DATA[y][m][p];
+                if (prj && prj.id) tenderId = prj.id;
+              }
+              var fileInput = document.getElementById("fc-custom-file-input");
+              if (!fileInput) {
+                fileInput = document.createElement("input");
+                fileInput.type = "file";
+                fileInput.id = "fc-custom-file-input";
+                fileInput.style.display = "none";
+                document.body.appendChild(fileInput);
+              }
+              fileInput.onchange = function() {
+                fcHandleCustomFileSelect(this, tenderId);
+              };
+              fileInput.click();
             }
             ```
         executeWhenPageLoads:
@@ -711,25 +675,26 @@ page 1 (
                   <div class="fc-explorer-titlebar">
                     <div class="fc-explorer-title">
                       <span class="fa fa-folder-open"></span>
-                      <span>Flash Concepts Enterprise Explorer — Project File Repository</span>
+                      <div>
+                        <div style="font-weight:700; font-size:14px; color:var(--brand-ink);">Flash Concepts File Explorer &mdash; Project Hierarchy Hub</div>
+                        <div style="font-size:11px; color:var(--brand-muted);">Centralized project storage &bull; Multi-stage folders &bull; Custom uploads</div>
+                      </div>
                     </div>
-                    <div class="fc-win-controls">
-                      <span class="fc-win-dot fc-win-dot-min"></span>
-                      <span class="fc-win-dot fc-win-dot-max"></span>
-                      <span class="fc-win-dot fc-win-dot-close"></span>
+                    <div class="fc-header-actions">
+                      <a href="f?p=&APP_ID.:2:&SESSION.::&DEBUG.::" class="fc-tool-btn fc-tool-btn-intake" title="Register New Tender Intake"><span class="fa fa-plus-circle"></span> <span>+ New Tender Intake</span></a>
+                      <button type="button" class="fc-tool-btn fc-tool-btn-kanban" data-fc-action="open-kanban"><span class="fa fa-columns"></span> <span>Pipeline Kanban</span></button>
+                      <button type="button" class="fc-tool-btn" style="background:#7c3aed; color:#fff; border-color:#6d28d9; font-weight:600;" onclick="fcPromptUpload()"><span class="fa fa-cloud-upload"></span> <span>+ Upload File</span></button>
                     </div>
                   </div>
                   <div class="fc-explorer-toolbar">
                     <div class="fc-nav-group">
                       <button type="button" class="fc-tool-btn" title="Back" data-fc-action="up"><span class="fa fa-arrow-left"></span></button>
-                      <button type="button" class="fc-tool-btn" title="Up" data-fc-action="up"><span class="fa fa-arrow-up"></span></button>
-                      <button type="button" class="fc-tool-btn" title="Refresh &amp; Root" data-fc-action="root"><span class="fa fa-refresh"></span></button>
-                      <button type="button" class="fc-tool-btn fc-tool-btn-kanban" data-fc-action="open-kanban"><span class="fa fa-columns"></span> <span>Pipeline Kanban Board</span></button>
-                      <a href="f?p=&APP_ID.:2:&SESSION.::&DEBUG.::" class="fc-tool-btn fc-tool-btn-intake" title="Register New Tender Intake"><span class="fa fa-plus-circle"></span> <span>+ New Tender Intake</span></a>
+                      <button type="button" class="fc-tool-btn" title="Up one level" data-fc-action="up"><span class="fa fa-arrow-up"></span></button>
+                      <button type="button" class="fc-tool-btn" title="Root / Refresh" data-fc-action="root"><span class="fa fa-home"></span></button>
                     </div>
                     <div class="fc-address-bar">
-                      <span class="fa fa-desktop"></span>
-                      <span id="fc-address-path" class="fc-address-path">C:\FlashConcepts\Projects\2026\11_November\FC-2026-092\</span>
+                      <span class="fa fa-folder-open-o" style="color:#7c3aed;"></span>
+                      <span id="fc-address-path" class="fc-address-path">Projects</span>
                     </div>
                     <div class="fc-search-box">
                       <span class="fa fa-search"></span>
@@ -745,8 +710,8 @@ page 1 (
                       <div class="fc-sidebar-section">
                         <div class="fc-sidebar-heading">Quick Access</div>
                         <a href="f?p=&APP_ID.:2:&SESSION.::&DEBUG.::" class="fc-folder-item fc-folder-item-new" title="Create New Tender Intake"><span class="fc-folder-label"><span class="fa fa-plus-circle"></span> + New Tender Intake</span><span class="fc-folder-count">NEW</span></a>
-                        <div class="fc-folder-item fc-folder-item-active" data-fc-path="2026/11_November/FC-2026-092"><span class="fc-folder-label"><span class="fa fa-star"></span> FC-2026-092 (NYP)</span><span class="fc-folder-count">3</span></div>
-                        <div class="fc-folder-item" data-fc-path="2026/11_November/FC-2026-089"><span class="fc-folder-label"><span class="fa fa-clock-o"></span> FC-2026-089 (DBS)</span><span class="fc-folder-count">3</span></div>
+                        <div class="fc-folder-item fc-folder-item-active" data-fc-path="2026/11_November/FC-2026-092"><span class="fc-folder-label"><span class="fa fa-star"></span> FC-2026-092 (NYP)</span><span class="fc-folder-count">4</span></div>
+                        <div class="fc-folder-item" data-fc-path="2026/11_November/FC-2026-089"><span class="fc-folder-label"><span class="fa fa-clock-o"></span> FC-2026-089 (DBS)</span><span class="fc-folder-count">4</span></div>
                         <div class="fc-folder-item" data-fc-action="open-kanban"><span class="fc-folder-label"><span class="fa fa-columns"></span> Kanban Board</span><span class="fc-folder-count">3</span></div>
                       </div>
                       <div class="fc-sidebar-section">
@@ -767,7 +732,7 @@ page 1 (
                     </div>
                   </div>
                   <div class="fc-explorer-statusbar">
-                    <div class="fc-status-item"><span class="fa fa-folder-o"></span> <span id="fc-status-item-count">3 items</span></div>
+                    <div class="fc-status-item"><span class="fa fa-folder-o"></span> <span id="fc-status-item-count">4 folders</span></div>
                     <div class="fc-status-item"><span class="fa fa-map-marker"></span> <span id="fc-status-path-label"></span></div>
                   </div>
                 </div>
@@ -1009,6 +974,46 @@ page 1 (
         }
         advanced {
             executionMappingIdentifier: 40943034543885404
+        }
+    )
+
+    process upload-custom-file (
+        name: UPLOAD_CUSTOM_FILE
+        type: executeCode
+        source {
+            plsqlCode:
+                ```plsql
+                declare
+                    l_tender_id number := to_number(apex_application.g_x01);
+                    l_file_name varchar2(255) := apex_application.g_x02;
+                    l_file_size number := to_number(apex_application.g_x03);
+                    l_mime_type varchar2(100) := apex_application.g_x04;
+                    l_notes     varchar2(400) := apex_application.g_x05;
+                begin
+                    fc_planning_api.upload_custom_document(
+                        p_tender_id => nvl(l_tender_id, 1),
+                        p_file_name => l_file_name,
+                        p_file_size => l_file_size,
+                        p_mime_type => l_mime_type,
+                        p_user_name => coalesce(:APP_USER, 'TEAM_MEMBER'),
+                        p_notes     => l_notes
+                    );
+                    apex_json.initialize_clob_output;
+                    apex_json.open_object;
+                    apex_json.write('status', 'SUCCESS');
+                    apex_json.write('message', 'File uploaded successfully to 04_Custom_Uploads');
+                    apex_json.close_object;
+                    htp.p(apex_json.get_clob_output);
+                    apex_json.free_output;
+                end;
+                ```
+        }
+        execution {
+            sequence: 20
+            point: ajaxCallback
+        }
+        advanced {
+            executionMappingIdentifier: 40943034543885405
         }
     )
 
